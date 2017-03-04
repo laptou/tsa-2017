@@ -20,10 +20,10 @@ namespace IvyLock.Model
 		public IvySettingGroup()
 		{
 			Name = "IvyLock";
-			Add(new SecureSetting(NETSecureSettingsService.Default, "Passcode"));
-			Add(new Setting<string>(NETSettingsService.Default, "TestString"));
-			Add(new Setting<int>(NETSettingsService.Default, "TestNumber"));
-			Add(new Setting<bool>(NETSettingsService.Default, "TestBool"));
+			Add(new SecureSetting(XmlSecureSettingsService.Default, "Passcode"));
+			Add(new Setting<string>(XmlSettingsService.Default, "TestString"));
+			Add(new Setting<int>(XmlSettingsService.Default, "TestNumber"));
+			Add(new Setting<bool>(XmlSettingsService.Default, "TestBool"));
 		}
 	}
 
@@ -47,6 +47,8 @@ namespace IvyLock.Model
 		{
 			_service = service;
 			_service.SettingChanged += SettingChanged;
+
+			Name = name;
 
 			Type type = typeof(T);
 
@@ -107,6 +109,8 @@ namespace IvyLock.Model
 		public SecureSetting(ISecureSettingsService service, string name)
 		{
 			_service = service;
+
+			Name = name;
 		}
 
 		public string Name { get; protected set; }

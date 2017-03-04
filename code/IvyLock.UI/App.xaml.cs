@@ -13,18 +13,18 @@ namespace IvyLock.UI
 		{
 			base.OnActivated(e);
 
-			GlobalHook.Initialize();
-			GlobalHook.SetHook(HookType.CBT, info =>
-			{
-				return info;
-			});
+			//GlobalHook.Initialize();
+			//GlobalHook.SetHook(HookType.CBT, info =>
+			//{
+			//	return info;
+			//});
 		}
 
 		protected override void OnExit(ExitEventArgs e)
 		{
 			base.OnExit(e);
 
-			GlobalHook.Stop();
+			//GlobalHook.Stop();
 		}
 	}
 }
