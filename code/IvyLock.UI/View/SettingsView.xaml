@@ -1,0 +1,95 @@
+﻿<Window
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:IvyLock.UI.View"
+        xmlns:ViewModel="clr-namespace:IvyLock.UI.ViewModel" x:Class="IvyLock.UI.View.SettingsView"
+        mc:Ignorable="d"
+        Title="SettingsView" Height="512" Width="512" Background="{DynamicResource BackgroundDark}">
+    <Window.DataContext>
+        <ViewModel:SettingsViewModel/>
+    </Window.DataContext>
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition MinWidth="150"/>
+            <ColumnDefinition Width="2*"/>
+        </Grid.ColumnDefinitions>
+        <ListBox
+            Background="{DynamicResource BackgroundLight}" BorderBrush="{x:Null}"
+            ItemsSource="{Binding Settings}" SelectedValue="{Binding SettingGroup}"
+            HorizontalContentAlignment="Stretch" Padding="0">
+            <ListBox.ItemContainerStyle>
+                <Style TargetType="ListBoxItem">
+                    <Setter Property="Template">
+                        <Setter.Value>
+                            <ControlTemplate TargetType="ListBoxItem">
+                                <Border x:Name="border" Padding="4">
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto"/>
+                                            <ColumnDefinition/>
+                                        </Grid.ColumnDefinitions>
+                                        <Image Margin="2" Source="{Binding Icon}"/>
+                                        <TextBlock Grid.Column="1" Text="{Binding Name}" 
+                                            Foreground="{DynamicResource Foreground}" />
+                                    </Grid>
+                                </Border>
+                                <ControlTemplate.Triggers>
+                                    <Trigger Property="IsMouseOver" Value="True">
+                                        <Trigger.Setters>
+                                            <Setter TargetName="border" Property="Background" Value="{DynamicResource Control}" />
+                                        </Trigger.Setters>
+                                    </Trigger>
+                                    <Trigger Property="IsSelected" Value="True">
+                                        <Trigger.Setters>
+                                            <Setter TargetName="border" Property="Background" Value="{DynamicResource Highlight}" />
+                                        </Trigger.Setters>
+                                    </Trigger>
+                                </ControlTemplate.Triggers>
+                            </ControlTemplate>
+                        </Setter.Value>
+                    </Setter>
+
+                </Style>
+            </ListBox.ItemContainerStyle>
+        </ListBox>
+        <ListView Grid.Column="1" Background="{DynamicResource BackgroundDark}" BorderBrush="{x:Null}"
+                 ItemsSource="{Binding SettingGroup}" HorizontalContentAlignment="Stretch"
+                 Padding="0">
+            <ListView.ItemContainerStyle>
+                <Style TargetType="ListViewItem">
+                    <Setter Property="Template">
+                        <Setter.Value>
+                            <ControlTemplate TargetType="ListViewItem">
+                                <Border x:Name="border" Padding="4">
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto"/>
+                                            <ColumnDefinition/>
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Grid.Column="1" Text="{Binding Type}" 
+                                            Foreground="{DynamicResource Foreground}" />
+                                    </Grid>
+                                </Border>
+                                <ControlTemplate.Triggers>
+                                    <Trigger Property="IsMouseOver" Value="True">
+                                        <Trigger.Setters>
+                                            <Setter TargetName="border" Property="Background" Value="{DynamicResource Control}" />
+                                        </Trigger.Setters>
+                                    </Trigger>
+                                    <Trigger Property="IsSelected" Value="True">
+                                        <Trigger.Setters>
+                                            <Setter TargetName="border" Property="Background" Value="{DynamicResource Highlight}" />
+                                        </Trigger.Setters>
+                                    </Trigger>
+                                </ControlTemplate.Triggers>
+                            </ControlTemplate>
+                        </Setter.Value>
+                    </Setter>
+
+                </Style>
+            </ListView.ItemContainerStyle>
+        </ListView>
+    </Grid>
+</Window>

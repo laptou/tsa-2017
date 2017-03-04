@@ -93,7 +93,7 @@ namespace IvyLock {
 			}
 
 			/*String^ ToString() override {
-				return String::Format("{ x: {0} y: {1} cx: {2} cy: {3} style: {4} }", 
+				return String::Format("{ x: {0} y: {1} cx: {2} cy: {3} style: {4} }",
 					this->x, this->y, this->cx, this->cy, (WindowStyle)(this->style));
 			}*/
 		};
@@ -113,7 +113,7 @@ namespace IvyLock {
 			/*String^ ToString() override {
 				return String::Format("{ cs: {0} }", this->cs->ToString());
 			}*/
-		};		
+		};
 
 		[Serializable]
 		public ref struct Rect {

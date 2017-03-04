@@ -97,7 +97,7 @@ LRESULT HookProc(HookType hookType, int nCode, WPARAM wParam, LPARAM lParam) {
 
 		int nCode = Int32::Parse(data[0]);
 		UInt32 wParam = UInt32::Parse(data[1]);
-		Int64 lParam = Int64::Parse(data[2]);
+		LPARAM lParam = Int32::Parse(data[2]);
 		bool callNext = Boolean::Parse(data[3]);
 		IntPtr returnVal = IntPtr(Int64::Parse(data[4]));
 

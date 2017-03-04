@@ -1,0 +1,24 @@
+﻿<Window x:Class="IvyLock.UI.View.AuthenticationView"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:IvyLock.UI.View"
+        mc:Ignorable="d"
+        Title="AuthenticationView" Height="300" Width="300" FontFamily="Roboto">
+    <Grid Background="{DynamicResource BackgroundDark}">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="3*" />
+            <RowDefinition Height="2*" />
+        </Grid.RowDefinitions>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition />
+            <ColumnDefinition />
+            <ColumnDefinition />
+        </Grid.ColumnDefinitions>
+        <Image Source="/IvyLock.UI;component/Content/Logo 2 Inverted.png" Margin="0" Grid.Column="1" SnapsToDevicePixels="True" />
+        <PasswordBox Grid.ColumnSpan="3" HorizontalAlignment="Center"
+                     Margin="32,0" VerticalAlignment="Top" Grid.Row="1"
+                     local:IvyLock.Placeholder="Password" HorizontalContentAlignment="Center" Template="{DynamicResource PasswordBoxControlTemplate}" />
+    </Grid>
+</Window>

@@ -99,89 +99,98 @@ namespace IvyLock {
 
 				for each (Thread^ thread in threads)
 				{
-					if(thread->IsAlive)
+					if (thread->IsAlive)
 						thread->Abort();
 				}
 			}
 
 			static void PollThread() {
 				try {
-
 					threads->Add(Thread::CurrentThread);
 
 					NamedPipeServerStream^ npss = gcnew NamedPipeServerStream(
 						GlobalHook::Pipe,
 						PipeDirection::InOut,
 						NamedPipeServerStream::MaxAllowedServerInstances,
-						PipeTransmissionMode::Message);
-					npss->WaitForConnection();
-					npss->ReadMode = PipeTransmissionMode::Message;
+						PipeTransmissionMode::Message,
+						PipeOptions::Asynchronous);
 
-					Thread^ thread = gcnew Thread(gcnew ThreadStart(PollThread));
-					thread->Priority = ThreadPriority::BelowNormal;
-					thread->Start();
-
-					MemoryStream^ npms = gcnew MemoryStream;
-					array<byte>^ buffer = gcnew array<byte>(1000);
-					
-					StreamReader^ sr = gcnew StreamReader(npss);
-					StreamWriter^ sw = gcnew StreamWriter(npss);
-
-					String^ line = sr->ReadLine();
-
-					if (line == nullptr || String::IsNullOrWhiteSpace(line))
-						return;
-
-					array<String^>^ data = line->Split();
-					HookCallbackInfo^ info = gcnew HookCallbackInfo;
-
-					info->Process = Int32::Parse(data[0]);
-					info->Type = (HookType)Int32::Parse(data[1]);
-					info->nCode = Int32::Parse(data[2]);
-					info->wParam = UInt32::Parse(data[3]);
-					info->lParam = Int64::Parse(data[4]);
-
-					String^ extraLine = sr->ReadLine();
-
-					if (!String::IsNullOrWhiteSpace(extraLine)) {
-						IFormatter^ formatter = gcnew BinaryFormatter;
-						MemoryStream^ ms = gcnew MemoryStream(Convert::FromBase64String(extraLine));
-						info->Extra = formatter->Deserialize(ms);
-					}
-
-					if (Hooks->ContainsKey(info->Type)) {
-						List<HookCallback^>^ callbacks = Hooks[info->Type];
-						for each (HookCallback^ callback in callbacks)
-						{
-							try {
-								info = callback(info);
-							}
-							catch (Exception^) {
-								break;
-							}
-
-							if (!info->CallNext) break;
-						}
-					} else {
-						Console::WriteLine("Hook with no callback: " + info->Type.ToString());
-					}
-
-					sw->WriteLine(String::Format("{0}\t{1}\t{2}\t{3}\t{4}",
-						info->nCode,
-						info->wParam,
-						info->lParam,
-						info->CallNext,
-						info->ReturnValue));
-					sw->Flush();
-					npss->WaitForPipeDrain();
-					npss->Close();
-
-					threads->Remove(Thread::CurrentThread);
+					npss->BeginWaitForConnection(gcnew AsyncCallback(PollThreadAsync), npss);
 				}
 				catch (Exception^ ex) {
 					Console::WriteLine("NPSS Error: {0} ({1})", ex->Message, ex->GetType()->FullName);
 					Console::WriteLine(ex->StackTrace);
 				}
+			}
+
+			static void PollThreadAsync(IAsyncResult^ iar) {
+				NamedPipeServerStream^ npss = (NamedPipeServerStream^)iar->AsyncState;
+
+				npss->EndWaitForConnection(iar);
+
+				npss->ReadMode = PipeTransmissionMode::Message;
+
+				Thread^ thread = gcnew Thread(gcnew ThreadStart(PollThread));
+				thread->Priority = ThreadPriority::BelowNormal;
+				thread->Start();
+
+				MemoryStream^ npms = gcnew MemoryStream;
+				array<byte>^ buffer = gcnew array<byte>(1000);
+
+				StreamReader^ sr = gcnew StreamReader(npss);
+				StreamWriter^ sw = gcnew StreamWriter(npss);
+
+				String^ line = sr->ReadLine();
+
+				if (line == nullptr || String::IsNullOrWhiteSpace(line))
+					return;
+
+				array<String^>^ data = line->Split();
+				HookCallbackInfo^ info = gcnew HookCallbackInfo;
+
+				info->Process = Int32::Parse(data[0]);
+				info->Type = (HookType)Int32::Parse(data[1]);
+				info->nCode = Int32::Parse(data[2]);
+				info->wParam = UInt32::Parse(data[3]);
+				info->lParam = Int32::Parse(data[4]);
+
+				String^ extraLine = sr->ReadLine();
+
+				if (!String::IsNullOrWhiteSpace(extraLine)) {
+					IFormatter^ formatter = gcnew BinaryFormatter;
+					MemoryStream^ ms = gcnew MemoryStream(Convert::FromBase64String(extraLine));
+					info->Extra = formatter->Deserialize(ms);
+				}
+
+				if (Hooks->ContainsKey(info->Type)) {
+					List<HookCallback^>^ callbacks = Hooks[info->Type];
+					for each (HookCallback^ callback in callbacks)
+					{
+						try {
+							info = callback(info);
+						}
+						catch (Exception^) {
+							break;
+						}
+
+						if (!info->CallNext) break;
+					}
+				}
+				else {
+					Console::WriteLine("Hook with no callback: " + info->Type.ToString());
+				}
+
+				sw->WriteLine(String::Format("{0}\t{1}\t{2}\t{3}\t{4}",
+					info->nCode,
+					info->wParam,
+					info->lParam,
+					info->CallNext,
+					info->ReturnValue));
+				sw->Flush();
+				npss->WaitForPipeDrain();
+				npss->Close();
+
+				threads->Remove(Thread::CurrentThread);
 			}
 
 			property static String^ Pipe { String^ get() { return "IVYLOCK-NATIVE"; }; };
