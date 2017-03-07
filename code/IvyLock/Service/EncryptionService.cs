@@ -110,6 +110,8 @@ namespace IvyLock.Service
 
 		public string Hash<T>(T o)
 		{
+			if (o == null)
+				return null;
 			if (o is SecureString)
 				return Hash(o as SecureString);
 

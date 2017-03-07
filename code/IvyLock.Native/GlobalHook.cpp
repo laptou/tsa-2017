@@ -93,7 +93,7 @@ LRESULT HookProc(HookType hookType, int nCode, WPARAM wParam, LPARAM lParam) {
 
 		StreamReader^ sr = gcnew StreamReader(npcs);
 
-		array<String^>^ data = sr->ReadLine()->Split();
+		cli::array<String^>^ data = sr->ReadLine()->Split();
 
 		int nCode = Int32::Parse(data[0]);
 		UInt32 wParam = UInt32::Parse(data[1]);
@@ -114,7 +114,7 @@ LRESULT HookProc(HookType hookType, int nCode, WPARAM wParam, LPARAM lParam) {
 	}
 	catch (Exception^ ex) {
 		marshal_context^ mc = gcnew marshal_context;
-		MessageBox(NULL, mc->marshal_as<LPCTSTR>(ex->Message + "\n" + ex->StackTrace), mc->marshal_as<LPCTSTR>(ex->GetType()->FullName), MB_OK);
+		// MessageBox(NULL, mc->marshal_as<LPCTSTR>(ex->Message + "\n" + ex->StackTrace), mc->marshal_as<LPCTSTR>(ex->GetType()->FullName), MB_OK);
 		return CallNextHookEx(NULL, nCode, wParam, lParam);
 	}
 }

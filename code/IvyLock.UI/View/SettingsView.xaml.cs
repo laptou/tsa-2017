@@ -1,4 +1,8 @@
-﻿using System.Windows;
+﻿using IvyLock.Model;
+using IvyLock.Service;
+using System;
+using System.Windows;
+using Xceed.Wpf.Toolkit;
 
 namespace IvyLock.UI.View
 {

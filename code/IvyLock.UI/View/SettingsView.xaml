@@ -4,35 +4,46 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:IvyLock.UI.View" xmlns:xctk="http://schemas.xceed.com/wpf/xaml/toolkit"
-        xmlns:ViewModel="clr-namespace:IvyLock.UI.ViewModel" x:Class="IvyLock.UI.View.SettingsView"
+        xmlns:ViewModel="clr-namespace:IvyLock.UI.ViewModel" xmlns:i="http://schemas.microsoft.com/expression/2010/interactivity" xmlns:ei="http://schemas.microsoft.com/expression/2010/interactions" x:Class="IvyLock.UI.View.SettingsView"
         mc:Ignorable="d"
-        Title="SettingsView" Height="512" Width="512" Background="{DynamicResource BackgroundDark}">
+        Title="Settings" Height="512" MinWidth="600" Background="{DynamicResource BackgroundDark}" Icon="/IvyLock.UI;component/Content/Logo 2.ico" SizeToContent="Width">
     <Window.DataContext>
         <ViewModel:SettingsViewModel/>
     </Window.DataContext>
+    <Window.Resources>
+        <CollectionViewSource x:Key="Source" 
+                              Source="{Binding SettingGroup.Settings, BindsDirectlyToSource=True, Mode=OneWay}" 
+                              IsLiveGroupingRequested="True">
+            <CollectionViewSource.GroupDescriptions>
+                <PropertyGroupDescription PropertyName="Category"/>
+            </CollectionViewSource.GroupDescriptions>
+        </CollectionViewSource>
+    </Window.Resources>
     <Grid>
         <Grid.ColumnDefinitions>
-            <ColumnDefinition MinWidth="150"/>
-            <ColumnDefinition Width="2*"/>
+            <ColumnDefinition Width="Auto" MinWidth="200" MaxWidth="300"/>
+            <ColumnDefinition MinWidth="300" Width="*"/>
         </Grid.ColumnDefinitions>
+        
         <ListBox
             Background="{DynamicResource BackgroundLight}" BorderBrush="{x:Null}"
-            ItemsSource="{Binding Settings}" SelectedValue="{Binding SettingGroup}"
-            HorizontalContentAlignment="Stretch" Padding="0">
+            ItemsSource="{Binding Settings}" SelectedValue="{Binding SettingGroup, Mode=TwoWay}"
+            ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+            HorizontalContentAlignment="Stretch" Padding="0" Margin="0">
             <ListBox.ItemContainerStyle>
                 <Style TargetType="{x:Type ListBoxItem}">
                     <Setter Property="Template">
                         <Setter.Value>
                             <ControlTemplate TargetType="{x:Type ListBoxItem}">
-                                <Border x:Name="border" Padding="4">
+                                <Border x:Name="border" Padding="4" Margin="0" Background="Transparent">
                                     <Grid>
                                         <Grid.ColumnDefinitions>
                                             <ColumnDefinition Width="Auto"/>
                                             <ColumnDefinition/>
                                         </Grid.ColumnDefinitions>
-                                        <Image Margin="2" Source="{Binding Icon}"/>
-                                        <TextBlock Grid.Column="1" Text="{Binding Name}" 
-                                            Foreground="{DynamicResource Foreground}" />
+                                        <Image x:Name="image" Margin="2" Source="{Binding Icon}" Height="24" SnapsToDevicePixels="False" />
+                                        <TextBlock x:Name="text" Grid.Column="1" Text="{Binding Name}" 
+                                            Foreground="{DynamicResource Foreground}" VerticalAlignment="Center" Margin="5,0" />
                                     </Grid>
                                 </Border>
                                 <ControlTemplate.Triggers>
@@ -42,118 +53,121 @@
                                     <Trigger Property="IsSelected" Value="True">
                                         <Setter TargetName="border" Property="Background" Value="{DynamicResource Highlight}" />
                                     </Trigger>
+                                    <DataTrigger Binding="{Binding Name}" Value="IvyLock">
+                                        <Setter TargetName="image" Property="Height" Value="48" />
+                                        <Setter TargetName="text" Property="FontSize" Value="16" />
+                                        <Setter TargetName="text" Property="FontFamily" Value="{DynamicResource Header}" />
+                                    </DataTrigger>
                                 </ControlTemplate.Triggers>
                             </ControlTemplate>
                         </Setter.Value>
                     </Setter>
-
+                    <Setter Property="Padding" Value="0" />
+                    <Setter Property="Margin" Value="0" />
+                    <Setter Property="BorderThickness" Value="0" />
                 </Style>
             </ListBox.ItemContainerStyle>
         </ListBox>
-        <ListView Grid.Column="1" Background="{DynamicResource BackgroundDark}" BorderBrush="{x:Null}"
-                 ItemsSource="{Binding SettingGroup}" HorizontalContentAlignment="Stretch"
-                 Padding="0">
-            <ListView.Resources>
-                <ControlTemplate TargetType="{x:Type ListViewItem}" x:Key="SecureString">
-                    <Border x:Name="border" Padding="4">
-                        <Grid>
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="Auto"/>
-                                <ColumnDefinition/>
-                            </Grid.ColumnDefinitions>
-                            <TextBlock Text="{Binding Name}" 
-                                    Foreground="{DynamicResource Foreground}" 
-                                    VerticalAlignment="Center" Margin="5,0" />
-                            <xctk:WatermarkPasswordBox Grid.Column="1"
-                                                       Watermark="hit enter to change"/>
-                        </Grid>
-                    </Border>
-                    <ControlTemplate.Triggers>
-                        <Trigger Property="IsMouseOver" Value="True">
-                            <Setter TargetName="border" Property="Background" Value="{DynamicResource Control}" />
-                        </Trigger>
-                    </ControlTemplate.Triggers>
-                </ControlTemplate>
-                <ControlTemplate TargetType="{x:Type ListViewItem}" x:Key="String">
-                    <Border x:Name="border" Padding="4">
-                        <Grid>
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="Auto"/>
-                                <ColumnDefinition/>
-                            </Grid.ColumnDefinitions>
-                            <TextBlock Text="{Binding Name}" 
-                                    Foreground="{DynamicResource Foreground}" 
-                                    VerticalAlignment="Center" Margin="5,0"/>
-                            <xctk:WatermarkTextBox Watermark="hit enter to change"
-                                     Text="{Binding Value}"
-                                     Grid.Column="1"/>
-                        </Grid>
-                    </Border>
-                    <ControlTemplate.Triggers>
-                        <Trigger Property="IsMouseOver" Value="True">
-                            <Setter TargetName="border" Property="Background" Value="{DynamicResource Control}" />
-                        </Trigger>
-                    </ControlTemplate.Triggers>
-                </ControlTemplate>
-                <ControlTemplate TargetType="{x:Type ListViewItem}" x:Key="Number">
-                    <Border x:Name="border" Padding="4">
-                        <Grid>
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="Auto"/>
-                                <ColumnDefinition/>
-                            </Grid.ColumnDefinitions>
-                            <TextBlock Text="{Binding Name}" 
-                                    Foreground="{DynamicResource Foreground}"
-                                    VerticalAlignment="Center" Margin="5,0"/>
-                            <xctk:IntegerUpDown
-                                     Text="{Binding Value}"
-                                     Grid.Column="1"/>
-                        </Grid>
-                    </Border>
-                    <ControlTemplate.Triggers>
-                        <Trigger Property="IsMouseOver" Value="True">
-                            <Setter TargetName="border" Property="Background" Value="{DynamicResource Control}" />
-                        </Trigger>
-                    </ControlTemplate.Triggers>
-                </ControlTemplate>
-                <ControlTemplate TargetType="{x:Type ListViewItem}" x:Key="Bool">
-                    <Border x:Name="border" Padding="4">
-                        <Grid>
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="Auto"/>
-                                <ColumnDefinition/>
-                            </Grid.ColumnDefinitions>
-                            <TextBlock Text="{Binding Name}" 
-                                    Foreground="{DynamicResource Foreground}"
-                                    VerticalAlignment="Center" Margin="5,0"/>
-                            <CheckBox
-                                    IsChecked="{Binding Value}"
-                                    Grid.Column="1" HorizontalAlignment="Right"/>
-                        </Grid>
-                    </Border>
-                    <ControlTemplate.Triggers>
-                        <Trigger Property="IsMouseOver" Value="True">
-                            <Setter TargetName="border" Property="Background" Value="{DynamicResource Control}" />
-                        </Trigger>
-                    </ControlTemplate.Triggers>
-                </ControlTemplate>
-            </ListView.Resources>
+        <ListView 
+            Grid.Column="1" Background="{DynamicResource BackgroundDark}" BorderBrush="{x:Null}"
+            ItemsSource="{Binding Source={StaticResource Source}}" HorizontalContentAlignment="Stretch"
+            ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+            Padding="0" Margin="0">
+            <ListView.GroupStyle>
+                <GroupStyle>
+                    <GroupStyle.HeaderTemplate>
+                        <DataTemplate>
+                            <Border Padding="4" Background="{DynamicResource BackgroundLight}">
+                                <TextBlock FontSize="14" Text="{Binding Name}" Margin="9,0" FontWeight="Bold"
+                                       Foreground="{DynamicResource Foreground}" FontFamily="{DynamicResource Header}"/>
+                            </Border>
+                        </DataTemplate>
+                    </GroupStyle.HeaderTemplate>
+                </GroupStyle>
+            </ListView.GroupStyle>
             <ListView.ItemContainerStyle>
                 <Style TargetType="{x:Type ListViewItem}">
-                    <Style.Triggers>
-                        <DataTrigger Binding="{Binding Type}" Value="SecureString">
-                            <Setter Property="Template" Value="{StaticResource SecureString}"/>
-                        </DataTrigger>
-                        <DataTrigger Binding="{Binding Type}" Value="String">
-                            <Setter Property="Template" Value="{StaticResource String}"/>
-                        </DataTrigger>
-                        <DataTrigger Binding="{Binding Type}" Value="Number">
-                            <Setter Property="Template" Value="{StaticResource Number}"/>
-                        </DataTrigger>
-                        <DataTrigger Binding="{Binding Type}" Value="Boolean">
-                            <Setter Property="Template" Value="{StaticResource Bool}"/>
-                        </DataTrigger>
-                    </Style.Triggers>
+                    <Setter Property="Template">
+                        <Setter.Value>
+                            <ControlTemplate TargetType="{x:Type ListViewItem}">
+                                <Border x:Name="border" Padding="4" Background="Transparent" Height="32">
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto"/>
+                                            <ColumnDefinition/>
+                                        </Grid.ColumnDefinitions>
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition />
+                                            <RowDefinition Height="Auto"/>
+                                        </Grid.RowDefinitions>
+                                        <TextBlock Text="{Binding Name}" 
+                                            Foreground="{DynamicResource Foreground}" 
+                                            VerticalAlignment="Center" Margin="5,0" />
+                                        <TextBlock x:Name="desc" Text="{Binding Description}" FontSize="10" Grid.Row="1"
+                                            Foreground="{DynamicResource ForegroundSecondary}" 
+                                            VerticalAlignment="Center" Margin="5,0" />
+                                        <ContentPresenter x:Name="content" Grid.Column="1" Grid.RowSpan="2"/>
+                                    </Grid>
+                                </Border>
+                                <ControlTemplate.Triggers>
+                                    <Trigger Property="IsMouseOver" Value="True">
+                                        <Setter TargetName="border" Property="Background" Value="{DynamicResource Control}" />
+                                    </Trigger>
+                                    <DataTrigger Binding="{Binding Description}" Value="{x:Null}">
+                                        <Setter TargetName="desc" Property="Visibility" Value="Collapsed" />
+                                    </DataTrigger>
+                                    <DataTrigger Binding="{Binding Type}" Value="Password">
+                                        <Setter TargetName="content" Property="Content">
+                                            <Setter.Value>
+                                                <Grid>
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="*" />
+                                                        <ColumnDefinition Width="Auto" />
+                                                    </Grid.ColumnDefinitions>
+                                                    <PasswordBox 
+                                                        x:Name="pwdBox" 
+                                                        local:PasswordBoxHelper.Placeholder="type to change passcode"
+                                                        local:PasswordBoxHelper.EncryptedPassword="{Binding Value, Mode=OneWayToSource}"
+                                                        local:PasswordBoxHelper.Watch="True" Template="{DynamicResource PasswordBoxControlTemplate}">
+                                                    </PasswordBox>
+                                                </Grid>
+                                            </Setter.Value>
+                                        </Setter>
+                                    </DataTrigger>
+                                    <DataTrigger Binding="{Binding Type}" Value="Number">
+                                        <Setter TargetName="content" Property="Content">
+                                            <Setter.Value>
+                                                <xctk:IntegerUpDown
+                                                    Grid.Column="1"
+                                                    VerticalAlignment="Center"/>
+                                            </Setter.Value>
+                                        </Setter>
+                                    </DataTrigger>
+                                    <DataTrigger Binding="{Binding Type}" Value="String">
+                                        <Setter TargetName="content" Property="Content">
+                                            <Setter.Value>
+                                                <xctk:WatermarkTextBox
+                                                    Watermark="hit enter to change"
+                                                    Text="{Binding Value}"
+                                                    Grid.Column="1"
+                                                    VerticalAlignment="Center"/>
+                                            </Setter.Value>
+                                        </Setter>
+                                    </DataTrigger>
+                                    <DataTrigger Binding="{Binding Type}" Value="Boolean">
+                                        <Setter TargetName="content" Property="Content">
+                                            <Setter.Value>
+                                                <CheckBox
+                                                    IsChecked="{Binding Value}"
+                                                    Grid.Column="1" HorizontalAlignment="Right"
+                                                    VerticalAlignment="Center"/>
+                                            </Setter.Value>
+                                        </Setter>
+                                    </DataTrigger>
+                                </ControlTemplate.Triggers>
+                            </ControlTemplate>
+                        </Setter.Value>
+                    </Setter>
                 </Style>
             </ListView.ItemContainerStyle>
         </ListView>

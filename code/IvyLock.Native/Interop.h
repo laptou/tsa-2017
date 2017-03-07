@@ -2,8 +2,12 @@
 
 #include "Enums.h"
 #include <msclr\marshal.h>
+#include <string>
+#include "Stdafx.h"
 
 using namespace System;
+using namespace System::Diagnostics;
+using namespace std;
 using namespace msclr::interop;
 
 namespace IvyLock {
@@ -151,6 +155,10 @@ namespace IvyLock {
 				GetWindowRect(HWND(hWnd.ToPointer()), rect);
 				Rect^ rectM = gcnew Rect(*rect);
 				return rectM;
+			}
+
+			static Process^ GetProcessForHwnd(IntPtr hWnd) {
+				
 			}
 		};
 	}

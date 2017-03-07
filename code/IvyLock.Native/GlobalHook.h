@@ -135,24 +135,26 @@ namespace IvyLock {
 				thread->Start();
 
 				MemoryStream^ npms = gcnew MemoryStream;
-				array<byte>^ buffer = gcnew array<byte>(1000);
+				cli::array<byte>^ buffer = gcnew cli::array<byte>(1000);
 
 				StreamReader^ sr = gcnew StreamReader(npss);
 				StreamWriter^ sw = gcnew StreamWriter(npss);
 
 				String^ line = sr->ReadLine();
 
+				Console::WriteLine(line);
+
 				if (line == nullptr || String::IsNullOrWhiteSpace(line))
 					return;
 
-				array<String^>^ data = line->Split();
+				cli::array<String^>^ data = line->Split();
 				HookCallbackInfo^ info = gcnew HookCallbackInfo;
 
-				info->Process = Int32::Parse(data[0]);
-				info->Type = (HookType)Int32::Parse(data[1]);
-				info->nCode = Int32::Parse(data[2]);
+				info->Process = int::Parse(data[0]);
+				info->Type = (HookType)int::Parse(data[1]);
+				info->nCode = int::Parse(data[2]);
 				info->wParam = UInt32::Parse(data[3]);
-				info->lParam = Int32::Parse(data[4]);
+				info->lParam = Int64::Parse(data[4]);
 
 				String^ extraLine = sr->ReadLine();
 

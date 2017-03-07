@@ -54,7 +54,6 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
-    <None Include="ivylock.pfx" />
     <None Include="ivylock.snk" />
   </ItemGroup>
   <ItemGroup>
@@ -62,7 +61,7 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\IvyLock.Native\IvyLock.Native.vcxproj">
-      <Project>{791bb8a9-cd0d-42b8-b6b6-e077249cdbf5}</Project>
+      <Project>{ac11dd2f-2c3e-456b-825d-5ceba9361a71}</Project>
       <Name>IvyLock.Native</Name>
     </ProjectReference>
     <ProjectReference Include="..\IvyLock\IvyLock.csproj">

@@ -1,140 +1,300 @@
 ﻿using IvyLock.Service;
 using System;
-using System.Linq;
-using System.Collections.ObjectModel;
-using System.ComponentModel;
-using System.Security;
-using System.Windows.Media.Imaging;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.Linq;
+using System.Reflection;
+using System.Runtime.Serialization;
+using System.Security;
+using System.Windows;
+using System.Windows.Media;
+using System.Windows.Media.Imaging;
+using System.Xml.Serialization;
 
 namespace IvyLock.Model
 {
-	public abstract class SettingGroup : ObservableCollection<ISetting>
+	public enum SettingCategory
 	{
-		public string Name { get; set; }
-		public BitmapSource Icon { get; set; }
-	}
-
-	public class IvySettingGroup : SettingGroup
-	{
-		public IvySettingGroup()
-		{
-			Name = "IvyLock";
-			Add(new SecureSetting(XmlSecureSettingsService.Default, "Passcode"));
-			Add(new Setting<string>(XmlSettingsService.Default, "TestString"));
-			Add(new Setting<int>(XmlSettingsService.Default, "TestNumber"));
-			Add(new Setting<bool>(XmlSettingsService.Default, "TestBool"));
-		}
-	}
-
-	public interface ISetting : INotifyPropertyChanged
-	{
-		string Name { get; }
-		SettingType Type { get; }
-		object Value { set; }
-	}
-
-	public interface ISetting<T> : ISetting
-	{
-		new T Value { set; }
-	}
-
-	public class Setting<T> : ISetting<T>
-	{
-		private ISettingsService _service;
-
-		public Setting(ISettingsService service, string name)
-		{
-			_service = service;
-			_service.SettingChanged += SettingChanged;
-
-			Name = name;
-
-			Type type = typeof(T);
-
-			if (type == typeof(string))
-				Type = SettingType.String;
-			else if (type == typeof(bool))
-				Type = SettingType.Boolean;
-			else if (type == typeof(SecureString))
-				throw new InvalidOperationException("Use SecureSetting instead!");
-			else if (type == typeof(byte) || type == typeof(short) || type == typeof(int) || type == typeof(long))
-				Type = SettingType.Number;
-			else if (type.IsEnum)
-				Type = SettingType.Enum;
-			else
-				Type = SettingType.Object;
-		}
-
-		private void SettingChanged(string setting)
-		{
-			if (string.Equals(setting, Name))
-				PropertyChanged(this, new PropertyChangedEventArgs("Value"));
-		}
-
-		public string Name { get; protected set; }
-		public SettingType Type { get; protected set; }
-		public T Value
-		{
-			get { return _service.Get<T>(Name); }
-			set { _service.Set(Name, value); }
-		}
-		public IEnumerable<T> EnumValues
-		{
-			get
-			{
-				if (Type != SettingType.Enum)
-					throw new InvalidOperationException();
-
-				return typeof(T).GetEnumValues().Cast<T>();
-			}
-		}
-
-		object ISetting.Value
-		{
-			set
-			{
-				if (value is T)
-					Value = (T)value;
-			}
-		}
-
-		public event PropertyChangedEventHandler PropertyChanged;
-	}
-
-	public class SecureSetting : ISetting<SecureString>
-	{
-		private ISecureSettingsService _service;
-
-		public SecureSetting(ISecureSettingsService service, string name)
-		{
-			_service = service;
-
-			Name = name;
-		}
-
-		public string Name { get; protected set; }
-		public SettingType Type { get { return SettingType.SecureString; } }
-
-		public SecureString Value
-		{
-			set { _service.Set(Name, value); }
-		}
-
-		object ISetting.Value
-		{
-			set
-			{
-				if (value is SecureString)
-					Value = (SecureString)value;
-			}
-		}
-
-		public event PropertyChangedEventHandler PropertyChanged;
+		Security, Misc
 	}
 
 	public enum SettingType
 	{
-		Enum, String, SecureString, Boolean, Number, Object
+		Number, Enum, String, Password, Boolean
+	}
+
+	public class IvyLockSettings : SettingGroup
+	{
+		#region Fields
+
+		private SecureString _password;
+
+		#endregion Fields
+
+		#region Constructors
+
+		public IvyLockSettings()
+		{
+			Name = "IvyLock";
+			Application.Current.Dispatcher.Invoke(() =>
+				Icon = new BitmapImage(new Uri("pack://application:,,,/IvyLock.UI;component/Content/Logo 2.ico")));
+		}
+
+		public IvyLockSettings(SerializationInfo info, StreamingContext context) : base(info, context)
+		{
+		}
+
+		#endregion Constructors
+
+		#region Properties
+
+		[Setting(Category = SettingCategory.Security, Description = "Password used to unlock this app.")]
+		public SecureString Password { set { _password = value; } }
+
+		[Setting(Category = SettingCategory.Security, Description = "Password used to unlock this app.")]
+		public int Timeout { get; set; }
+
+		#endregion Properties
+	}
+
+	public class ProcessSettings : SettingGroup
+	{
+		#region Fields
+
+		private SecureString _password;
+
+		private string _path;
+
+		private bool _usePassword;
+
+		#endregion Fields
+
+		#region Constructors
+
+		public ProcessSettings()
+		{
+		}
+
+		public ProcessSettings(Process process)
+		{
+			Name = process.MainModule.FileVersionInfo.FileDescription;
+			Path = process.MainModule.FileName;
+		}
+
+		public ProcessSettings(SerializationInfo info, StreamingContext context) : base(info, context)
+		{
+		}
+
+		#endregion Constructors
+
+		#region Properties
+
+		[XmlIgnore]
+		[Setting(Category = SettingCategory.Security, Description = "Password used to unlock this app.")]
+		public SecureString Password
+		{
+			get { return _password; }
+			set { Hash = EncryptionService.Default.Hash(Password); Set(value, ref _password); }
+		}
+
+		[Setting(Hide = true)]
+		public string Hash { get; set; }
+
+		[Setting(Hide = true)]
+		public string Path
+		{
+			get
+			{
+				return _path;
+			}
+			set
+			{
+				_path = value;
+
+				Name = FileVersionInfo.GetVersionInfo(value).FileDescription;
+				Application.Current.Dispatcher.Invoke(() =>
+					Icon = Icon = System.Drawing.Icon.ExtractAssociatedIcon(value).ToImageSource());
+			}
+		}
+
+		[Setting(
+			Category = SettingCategory.Security,
+			Name = "Use Password",
+			Description = "Whether this app has a unique password.")]
+		public bool UsePassword
+		{
+			get { return _usePassword; }
+			set { Set(value, ref _usePassword); }
+		}
+
+		#endregion Properties
+	}
+
+	public class Setting : Model
+	{
+		#region Fields
+
+		private SettingGroup _settings;
+
+		private object _value;
+
+		#endregion Fields
+
+		#region Constructors
+
+		public Setting(SettingGroup settings)
+		{
+			_settings = settings;
+		}
+
+		#endregion Constructors
+
+		#region Properties
+
+		public SettingCategory Category { get; set; }
+		public string Description { get; set; }
+		public string Key { get; set; }
+		public string Name { get; set; }
+		public SettingType Type { get; set; }
+
+		public object Value
+		{
+			get { return _value; }
+			set { Set(value, ref _value); }
+		}
+
+		#endregion Properties
+
+		#region Methods
+
+		private void Update()
+		{
+		}
+
+		#endregion Methods
+	}
+
+	[AttributeUsage(AttributeTargets.Property, Inherited = false, AllowMultiple = false)]
+	public sealed class SettingAttribute : Attribute
+	{
+		#region Constructors
+
+		public SettingAttribute()
+		{
+		}
+
+		#endregion Constructors
+
+		#region Properties
+
+		public SettingCategory Category { get; set; }
+		public string DependsOn { get; set; }
+		public string Description { get; set; }
+		public bool Hide { get; set; }
+		public bool Ignore { get; set; }
+		public string Name { get; set; }
+		public Func<object, bool> Predicate { get; set; }
+
+		#endregion Properties
+	}
+
+	[XmlInclude(typeof(IvyLockSettings)), XmlInclude(typeof(ProcessSettings))]
+	public abstract class SettingGroup : Model, ISerializable
+	{
+		#region Constructors
+
+		public SettingGroup()
+		{
+		}
+
+		public SettingGroup(SerializationInfo info, StreamingContext context)
+		{
+			PropertyInfo[] properties = GetType().GetProperties();
+
+			foreach (PropertyInfo pi in properties)
+			{
+				if (pi.PropertyType == typeof(SecureString))
+					continue;
+
+				pi.SetValue(this, info.GetValue(pi.Name, pi.PropertyType));
+			}
+		}
+
+		#endregion Constructors
+
+		#region Properties
+
+		[XmlIgnore]
+		[Setting(Ignore = true)]
+		public ImageSource Icon { get; protected set; }
+
+		[Setting(Hide = true)]
+		public string Name { get; set; }
+
+		[XmlIgnore]
+		[Setting(Ignore = true)]
+		public IEnumerable<Setting> Settings
+		{
+			get { return GetSettings(); }
+		}
+
+		#endregion Properties
+
+		#region Methods
+
+		public void GetObjectData(SerializationInfo info, StreamingContext context)
+		{
+			foreach (Setting s in GetSettings(true))
+			{
+				info.AddValue(s.Key, s.Value, s.Value.GetType());
+			}
+		}
+
+		private IEnumerable<Setting> GetSettings(bool includeHidden = false)
+		{
+			PropertyInfo[] properties = GetType().GetProperties();
+
+			foreach (PropertyInfo pi in properties)
+			{
+				Setting s = new Setting(this);
+				s.Key = pi.Name;
+				s.Name = pi.Name;
+
+				if (pi.PropertyType == typeof(string))
+					s.Type = SettingType.String;
+				if (pi.PropertyType == typeof(SecureString))
+					s.Type = SettingType.Password;
+				if (pi.PropertyType == typeof(bool))
+					s.Type = SettingType.Boolean;
+				if (pi.PropertyType == typeof(int))
+					s.Type = SettingType.Number;
+
+				SettingAttribute attr = pi.GetCustomAttribute<SettingAttribute>();
+				if (attr != null)
+				{
+					if (attr.Ignore || (attr.Hide && !includeHidden))
+						continue;
+
+					s.Name = attr.Name ?? s.Name;
+					s.Category = attr.Category;
+					s.Description = attr.Description;
+
+					if (pi.PropertyType != typeof(SecureString))
+						s.Value = pi.GetValue(this);
+				}
+				s.PropertyChanged += OnSettingChanged;
+
+				yield return s;
+			}
+		}
+
+		private void OnSettingChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)
+		{
+			Setting s = sender as Setting;
+			GetType().GetProperty(s.Key).SetValue(this, s.Value);
+			RaisePropertyChanged(s.Key);
+		}
+
+		#endregion Methods
 	}
 }

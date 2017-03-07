@@ -1,6 +1,9 @@
 ﻿using IvyLock.Native;
 using System;
 using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Documents;
+using System.Windows.Media;
 
 namespace IvyLock.UI
 {
@@ -13,18 +16,22 @@ namespace IvyLock.UI
 		{
 			base.OnActivated(e);
 
-			//GlobalHook.Initialize();
-			//GlobalHook.SetHook(HookType.CBT, info =>
-			//{
-			//	return info;
-			//});
+			GlobalHook.Initialize();
+			GlobalHook.SetHook(HookType.CBT, info =>
+			{
+				if((CBTType)info.nCode == CBTType.CreateWnd)
+				{
+
+				}
+				return info;
+			});
 		}
 
 		protected override void OnExit(ExitEventArgs e)
 		{
 			base.OnExit(e);
 
-			//GlobalHook.Stop();
+			GlobalHook.Stop();
 		}
 	}
 }

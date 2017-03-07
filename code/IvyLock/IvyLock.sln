@@ -4,15 +4,12 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 VisualStudioVersion = 14.0.25420.1
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IvyLock", "IvyLock.csproj", "{82831821-04DF-4BA4-8DA5-D1F408CC59EE}"
-	ProjectSection(ProjectDependencies) = postProject
-		{791BB8A9-CD0D-42B8-B6B6-E077249CDBF5} = {791BB8A9-CD0D-42B8-B6B6-E077249CDBF5}
-	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IvyLock.TestConsole", "..\IvyLock.TestConsole\IvyLock.TestConsole.csproj", "{A3092D36-5542-43F2-B4F4-10772C989166}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "IvyLock.Native", "..\IvyLock.Native\IvyLock.Native.vcxproj", "{791BB8A9-CD0D-42B8-B6B6-E077249CDBF5}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IvyLock.UI", "..\IvyLock.UI\IvyLock.UI.csproj", "{18BC0D80-62B6-41DA-A626-590878A66986}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "IvyLock.Native", "..\IvyLock.Native\IvyLock.Native.vcxproj", "{AC11DD2F-2C3E-456B-825D-5CEBA9361A71}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -48,18 +45,6 @@ Global
 		{A3092D36-5542-43F2-B4F4-10772C989166}.Release|x64.Build.0 = Release|Any CPU
 		{A3092D36-5542-43F2-B4F4-10772C989166}.Release|x86.ActiveCfg = Release|Any CPU
 		{A3092D36-5542-43F2-B4F4-10772C989166}.Release|x86.Build.0 = Release|Any CPU
-		{791BB8A9-CD0D-42B8-B6B6-E077249CDBF5}.Debug|Any CPU.ActiveCfg = Debug|Win32
-		{791BB8A9-CD0D-42B8-B6B6-E077249CDBF5}.Debug|Any CPU.Build.0 = Debug|Win32
-		{791BB8A9-CD0D-42B8-B6B6-E077249CDBF5}.Debug|x64.ActiveCfg = Debug|x64
-		{791BB8A9-CD0D-42B8-B6B6-E077249CDBF5}.Debug|x64.Build.0 = Debug|x64
-		{791BB8A9-CD0D-42B8-B6B6-E077249CDBF5}.Debug|x86.ActiveCfg = Debug|Win32
-		{791BB8A9-CD0D-42B8-B6B6-E077249CDBF5}.Debug|x86.Build.0 = Debug|Win32
-		{791BB8A9-CD0D-42B8-B6B6-E077249CDBF5}.Release|Any CPU.ActiveCfg = Release|Win32
-		{791BB8A9-CD0D-42B8-B6B6-E077249CDBF5}.Release|Any CPU.Build.0 = Release|Win32
-		{791BB8A9-CD0D-42B8-B6B6-E077249CDBF5}.Release|x64.ActiveCfg = Release|x64
-		{791BB8A9-CD0D-42B8-B6B6-E077249CDBF5}.Release|x64.Build.0 = Release|x64
-		{791BB8A9-CD0D-42B8-B6B6-E077249CDBF5}.Release|x86.ActiveCfg = Release|Win32
-		{791BB8A9-CD0D-42B8-B6B6-E077249CDBF5}.Release|x86.Build.0 = Release|Win32
 		{18BC0D80-62B6-41DA-A626-590878A66986}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{18BC0D80-62B6-41DA-A626-590878A66986}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{18BC0D80-62B6-41DA-A626-590878A66986}.Debug|x64.ActiveCfg = Debug|Any CPU
@@ -72,6 +57,17 @@ Global
 		{18BC0D80-62B6-41DA-A626-590878A66986}.Release|x64.Build.0 = Release|Any CPU
 		{18BC0D80-62B6-41DA-A626-590878A66986}.Release|x86.ActiveCfg = Release|Any CPU
 		{18BC0D80-62B6-41DA-A626-590878A66986}.Release|x86.Build.0 = Release|Any CPU
+		{AC11DD2F-2C3E-456B-825D-5CEBA9361A71}.Debug|Any CPU.ActiveCfg = Debug|x64
+		{AC11DD2F-2C3E-456B-825D-5CEBA9361A71}.Debug|Any CPU.Build.0 = Debug|x64
+		{AC11DD2F-2C3E-456B-825D-5CEBA9361A71}.Debug|x64.ActiveCfg = Debug|x64
+		{AC11DD2F-2C3E-456B-825D-5CEBA9361A71}.Debug|x64.Build.0 = Debug|x64
+		{AC11DD2F-2C3E-456B-825D-5CEBA9361A71}.Debug|x86.ActiveCfg = Debug|Win32
+		{AC11DD2F-2C3E-456B-825D-5CEBA9361A71}.Debug|x86.Build.0 = Debug|Win32
+		{AC11DD2F-2C3E-456B-825D-5CEBA9361A71}.Release|Any CPU.ActiveCfg = Release|Win32
+		{AC11DD2F-2C3E-456B-825D-5CEBA9361A71}.Release|x64.ActiveCfg = Release|x64
+		{AC11DD2F-2C3E-456B-825D-5CEBA9361A71}.Release|x64.Build.0 = Release|x64
+		{AC11DD2F-2C3E-456B-825D-5CEBA9361A71}.Release|x86.ActiveCfg = Release|Win32
+		{AC11DD2F-2C3E-456B-825D-5CEBA9361A71}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
