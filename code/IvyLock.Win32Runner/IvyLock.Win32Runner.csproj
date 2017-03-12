@@ -4,25 +4,24 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{A3092D36-5542-43F2-B4F4-10772C989166}</ProjectGuid>
-    <OutputType>Exe</OutputType>
+    <ProjectGuid>{CB425052-E428-49DF-993B-BD92B3550E1D}</ProjectGuid>
+    <OutputType>WinExe</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>IvyLock.TestConsole</RootNamespace>
-    <AssemblyName>IvyLock.TestConsole</AssemblyName>
+    <RootNamespace>IvyLock.Win32Runner</RootNamespace>
+    <AssemblyName>IvyLock.Win32Runner</AssemblyName>
     <TargetFrameworkVersion>v4.5.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <PlatformTarget>AnyCPU</PlatformTarget>
+    <PlatformTarget>x86</PlatformTarget>
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
-    <OutputPath>..\IvyLock\bin\Debug\</OutputPath>
+    <OutputPath>bin\Debug\</OutputPath>
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
-    <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <PlatformTarget>AnyCPU</PlatformTarget>
@@ -32,6 +31,9 @@
     <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup>
+    <StartupObject />
   </PropertyGroup>
   <PropertyGroup>
     <SignAssembly>true</SignAssembly>
@@ -58,24 +60,9 @@
     <None Include="ivylock.snk" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="stdafx.cpp" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\IvyLock.Native.x64\IvyLock.Native.x64.vcxproj">
-      <Project>{992e4482-ccc7-4f7a-a1b3-160c9fbf73be}</Project>
-      <Name>IvyLock.Native.x64</Name>
-    </ProjectReference>
     <ProjectReference Include="..\IvyLock.Native\IvyLock.Native.vcxproj">
       <Project>{ac11dd2f-2c3e-456b-825d-5ceba9361a71}</Project>
       <Name>IvyLock.Native</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\IvyLock.Win32Runner\IvyLock.Win32Runner.csproj">
-      <Project>{cb425052-e428-49df-993b-bd92b3550e1d}</Project>
-      <Name>IvyLock.Win32Runner</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\IvyLock\IvyLock.csproj">
-      <Project>{82831821-04DF-4BA4-8DA5-D1F408CC59EE}</Project>
-      <Name>IvyLock</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

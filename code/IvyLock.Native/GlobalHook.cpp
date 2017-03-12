@@ -3,11 +3,13 @@
 #include <Windows.h>
 #include <msclr\marshal.h>
 
-using namespace IvyLock::Native;
+using namespace IvyLock::Native::ARCH;
 using namespace System::Runtime::InteropServices;
 using namespace msclr::interop;
 
-std::map<int, HHOOK> IvyLock::Native::GlobalHookImpl::Hooks;
+std::map<int, HHOOK> IvyLock::Native::ARCH::GlobalHookImpl::Hooks;
+
+bool queueThreadRunning = false;
 
 HMODULE WINAPI ModuleFromAddress(PVOID pv)
 {
@@ -33,28 +35,95 @@ HMODULE GetCurrentModule()
 	return hModule;
 }
 
-LRESULT HookProc(HookType hookType, int nCode, WPARAM wParam, LPARAM lParam) {
+void HookThread() {
+	queueThreadRunning = true;
 	try {
 		NamedPipeClientStream^ npcs = gcnew NamedPipeClientStream(".", GlobalHook::Pipe, PipeDirection::InOut);
 
 		npcs->Connect(250);
 
-		StreamWriter^ sw = gcnew StreamWriter(npcs);
-
 		System::Diagnostics::Process^ currentProcess = System::Diagnostics::Process::GetCurrentProcess();
+		StreamWriter^ sw = gcnew StreamWriter(npcs);
+		IFormatter^ serialiser = gcnew BinaryFormatter;
+		CancellationTokenSource^ cts = gcnew CancellationTokenSource(1000);
 
-		sw->WriteLine(String::Format(
-			"{4}\t{3}\t{0}\t{1}\t{2}",
-			nCode,
-			wParam,
-			lParam,
-			(int)hookType,
-			currentProcess->Id));
+		while (true)
+		{
+			HookCallbackInfo^ hci = GlobalHook::queue->Take(cts->Token);
+
+			HookType hookType = hci->Type;
+			int nCode = hci->nCode;
+			WPARAM wParam = hci->wParam;
+			LPARAM lParam = hci->lParam;
+			Object^ extra = hci->Extra;
+			String^ base64 = "";
+
+			if (extra != nullptr) {
+
+				MemoryStream^ ms = gcnew MemoryStream;
+				serialiser->Serialize(ms, extra);
+				base64 = Convert::ToBase64String(ms->ToArray());
+				ms->Close();
+			}
+
+			sw->WriteLine(String::Format(
+				"{4}\t{3}\t{0}\t{1}\t{2}",
+				nCode,
+				wParam,
+				lParam,
+				(int)hookType,
+				currentProcess->Id
+				)); 
+			sw->WriteLine(base64);
+			sw->Flush();
+		}
+	}
+	catch (TimeoutException^) {}
+	catch (OperationCanceledException^) {}
+	catch (Exception^ ex) {
+
+		while (ex->InnerException != nullptr)
+			ex = ex->InnerException;
+
+		marshal_context^ mc = gcnew marshal_context;
+		MessageBox(NULL,
+			mc->marshal_as<LPCTSTR>(ex->Message + "\n" + ex->StackTrace),
+			mc->marshal_as<LPCTSTR>(ex->GetType()->FullName), MB_OK);
+
+		queueThreadRunning = false;
+	}
+}
+
+LRESULT HookProc(HookType hookType, int nCode, WPARAM wParam, LPARAM lParam) {
+	try {
+		if (!queueThreadRunning) {
+			Thread^ thread = gcnew Thread(gcnew ThreadStart(HookThread));
+			thread->Start();
+		}
+
+		HookCallbackInfo^ info = gcnew HookCallbackInfo();
+		info->nCode = nCode;
+		info->wParam = wParam;
+		info->lParam = lParam;
+		info->Type = hookType;
 
 		Object^ extra = nullptr;
 		if (hookType == HookType::GetMessage) {
 			MSG* msg = (MSG*)lParam;
+
+			if (msg->message != WM_CREATE)
+				return CallNextHookEx(NULL, nCode, wParam, lParam);
+
 			extra = gcnew Message(*msg);
+		}
+
+		if (hookType == HookType::CallWndProc) {
+			CWPSTRUCT *cwp = (CWPSTRUCT*)lParam;
+
+			if (cwp->message != WM_CREATE)
+				return CallNextHookEx(NULL, nCode, wParam, lParam);
+
+			extra = gcnew CallWndProc(*cwp);
 		}
 
 		if (hookType == HookType::CBT) {
@@ -76,55 +145,22 @@ LRESULT HookProc(HookType hookType, int nCode, WPARAM wParam, LPARAM lParam) {
 			}
 		}
 
-		if (extra != nullptr) {
-			IFormatter^ serialiser = gcnew BinaryFormatter;
-			MemoryStream^ ms = gcnew MemoryStream;
-			serialiser->Serialize(ms, extra);
-			String^ base64 = Convert::ToBase64String(ms->ToArray());
-			sw->WriteLine(base64);
-		}
-		else {
-			sw->WriteLine();
-		}
+		info->Extra = extra;
 
-		sw->Flush();
-
-		npcs->WaitForPipeDrain();
-
-		StreamReader^ sr = gcnew StreamReader(npcs);
-
-		cli::array<String^>^ data = sr->ReadLine()->Split();
-
-		int nCode = Int32::Parse(data[0]);
-		UInt32 wParam = UInt32::Parse(data[1]);
-		LPARAM lParam = Int32::Parse(data[2]);
-		bool callNext = Boolean::Parse(data[3]);
-		IntPtr returnVal = IntPtr(Int64::Parse(data[4]));
-
-		if (npcs->IsConnected)
-			npcs->Close();
-
-		if (callNext)
-			return CallNextHookEx(NULL, nCode, (WPARAM)wParam, (LPARAM)lParam);
-		else
-			return LRESULT(returnVal.ToInt64());
+		GlobalHook::queue->Add(info);
 	}
-	catch (TimeoutException^ tex) {
-		FreeLibraryAndExitThread(GetCurrentModule(), 0);
+	finally {
 	}
-	catch (Exception^ ex) {
-		marshal_context^ mc = gcnew marshal_context;
-		// MessageBox(NULL, mc->marshal_as<LPCTSTR>(ex->Message + "\n" + ex->StackTrace), mc->marshal_as<LPCTSTR>(ex->GetType()->FullName), MB_OK);
-		return CallNextHookEx(NULL, nCode, wParam, lParam);
-	}
+
+	return CallNextHookEx(NULL, nCode, wParam, lParam);
 }
 
-HHOOK IvyLock::Native::GlobalHookImpl::GetHook(int hookType)
+HHOOK IvyLock::Native::ARCH::GlobalHookImpl::GetHook(int hookType)
 {
 	return GlobalHookImpl::Hooks.at(hookType);
 }
 
-HHOOK IvyLock::Native::GlobalHookImpl::SetHook(int hookType)
+HHOOK IvyLock::Native::ARCH::GlobalHookImpl::SetHook(int hookType)
 {
 	HOOKPROC proc = HOOKPROC();
 
@@ -182,13 +218,13 @@ HHOOK IvyLock::Native::GlobalHookImpl::SetHook(int hookType)
 	return hook;
 }
 
-void IvyLock::Native::GlobalHookImpl::ReleaseHook(int hookType)
+void IvyLock::Native::ARCH::GlobalHookImpl::ReleaseHook(int hookType)
 {
 	UnhookWindowsHookEx(GlobalHookImpl::GetHook(hookType));
 	GlobalHookImpl::Hooks.erase(hookType);
 }
 
-IntPtr IvyLock::Native::GlobalHook::SetHook(HookType hookType, HookCallback ^ callback)
+IntPtr IvyLock::Native::ARCH::GlobalHook::SetHook(HookType hookType, HookCallback ^ callback)
 {
 	if (!GlobalHook::Hooks->ContainsKey(hookType))
 		GlobalHook::Hooks->Add(hookType, gcnew List<HookCallback^>);
@@ -197,7 +233,7 @@ IntPtr IvyLock::Native::GlobalHook::SetHook(HookType hookType, HookCallback ^ ca
 	return IntPtr(GlobalHookImpl::SetHook((int)hookType));
 }
 
-void IvyLock::Native::GlobalHook::ReleaseHook(HookType hookType)
+void IvyLock::Native::ARCH::GlobalHook::ReleaseHook(HookType hookType)
 {
 	if (!GlobalHook::Hooks->ContainsKey(hookType))
 		return;

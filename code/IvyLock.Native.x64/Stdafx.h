@@ -3,7 +3,7 @@
 // but are changed infrequently
 
 #pragma once
-#ifdef WIN32
+#ifdef Win32
 #define ARCH x86
 #else
 #define ARCH x64

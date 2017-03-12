@@ -36,6 +36,8 @@ namespace IvyLock.UI.ViewModel
 			{
 				foreach (SettingGroup sg in iss)
 					Settings.Add(sg);
+
+				SettingGroup = _settings.OfType<IvyLockSettings>().FirstOrDefault();
 			});
 		}
 

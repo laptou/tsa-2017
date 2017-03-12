@@ -1,0 +1,144 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg width="100%" height="100%" viewBox="0 0 960 544" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xml:space="preserve" style="fill-rule:evenodd;clip-rule:evenodd;stroke-linejoin:round;stroke-miterlimit:1.41421;">
+    <g id="Artboard1" transform="matrix(1,0,0,1.13333,0,0)">
+        <rect x="0" y="0" width="960" height="480" style="fill:none;"/>
+        <g transform="matrix(0.975,0,0,0.794118,8,63.5294)">
+            <rect x="0" y="320" width="640" height="160" style="fill:rgb(128,128,128);"/>
+        </g>
+        <g transform="matrix(1,0,0,0.882353,-0.0529247,18.3443)">
+            <text x="32.459px" y="350.585px" style="font-family:'RobotoCondensed-Bold', 'Roboto Condensed';font-weight:700;font-size:32px;fill:none;stroke:rgb(128,128,128);stroke-width:5.33px;">SER<tspan x="82.865px " y="350.585px ">V</tspan>ICES</text>
+            <text x="32.459px" y="350.585px" style="font-family:'RobotoCondensed-Bold', 'Roboto Condensed';font-weight:700;font-size:32px;fill:white;">SER<tspan x="82.865px " y="350.585px ">V</tspan>ICES</text>
+        </g>
+        <g transform="matrix(1,0,0,0.882353,32,28.2353)">
+            <g transform="matrix(0.949086,0,0,0.916667,4.09609,33.3333)">
+                <path d="M160.053,448L33.615,448L33.615,352L160.053,352L160.053,448ZM36.425,354.909L36.425,445.091L157.243,445.091L157.243,354.909L36.425,354.909Z" style="fill:white;"/>
+            </g>
+            <g transform="matrix(1,0,0,1,0.464469,-17.5891)">
+                <text x="65.368px" y="415.277px" style="font-family:'RobotoCondensed-Regular', 'Roboto Condensed';font-size:16px;fill:white;">RUNNING</text>
+                <text x="57.293px" y="431.277px" style="font-family:'RobotoCondensed-Regular', 'Roboto Condensed';font-size:16px;fill:white;">PROCESSES</text>
+            </g>
+        </g>
+        <g transform="matrix(1,0,0,0.882353,32,28.2353)">
+            <g transform="matrix(0.949086,0,0,0.916667,132.096,33.3333)">
+                <path d="M160.053,448L33.615,448L33.615,352L160.053,352L160.053,448ZM36.425,354.909L36.425,445.091L157.243,445.091L157.243,354.909L36.425,354.909Z" style="fill:white;"/>
+            </g>
+            <g transform="matrix(1,0,0,1,128.464,-25.5891)">
+                <text x="69.907px" y="415.277px" style="font-family:'RobotoCondensed-Regular', 'Roboto Condensed';font-size:16px;fill:white;">L<tspan x="77px " y="415.277px ">O</tspan>CKED</text>
+                <text x="47.707px" y="431.277px" style="font-family:'RobotoCondensed-Regular', 'Roboto Condensed';font-size:16px;fill:white;">APPLICA<tspan x="103.543px " y="431.277px ">T</tspan>IONS</text>
+                <text x="61.547px" y="447.277px" style="font-family:'RobotoCondensed-Regular', 'Roboto Condensed';font-size:16px;fill:white;">D<tspan x="70.516px 78.727px 86.438px " y="447.277px 447.277px 447.277px ">ATA</tspan>BASE</text>
+            </g>
+        </g>
+        <g transform="matrix(1,0,0,0.882353,32,28.2353)">
+            <g transform="matrix(0.949086,0,0,0.916667,260.096,33.3333)">
+                <path d="M160.053,448L33.615,448L33.615,352L160.053,352L160.053,448ZM36.425,354.909L36.425,445.091L157.243,445.091L157.243,354.909L36.425,354.909Z" style="fill:white;"/>
+            </g>
+            <g transform="matrix(1,0,0,1,256.464,-25.5891)">
+                <text x="48.825px" y="415.277px" style="font-family:'RobotoCondensed-Regular', 'Roboto Condensed';font-size:16px;fill:white;">ENCR<tspan x="83.864px " y="415.277px ">Y</tspan>PTION /</text>
+                <text x="54.008px" y="431.277px" style="font-family:'RobotoCondensed-Regular', 'Roboto Condensed';font-size:16px;fill:white;">DECR<tspan x="88.274px " y="431.277px ">Y</tspan>PTION</text>
+                <text x="68.414px" y="447.277px" style="font-family:'RobotoCondensed-Regular', 'Roboto Condensed';font-size:16px;fill:white;">SER<tspan x="92.993px " y="447.277px ">V</tspan>ICE</text>
+            </g>
+        </g>
+        <g transform="matrix(1,0,0,0.882353,160,28.2353)">
+            <g transform="matrix(0.949086,0,0,0.916667,260.096,33.3333)">
+                <path d="M160.053,448L33.615,448L33.615,352L160.053,352L160.053,448ZM36.425,354.909L36.425,445.091L157.243,445.091L157.243,354.909L36.425,354.909Z" style="fill:white;"/>
+            </g>
+            <g transform="matrix(1,0,0,1,256.464,-25.5891)">
+                <text x="64.121px" y="415.277px" style="font-family:'RobotoCondensed-Regular', 'Roboto Condensed';font-size:16px;fill:white;">MESSAGE</text>
+                <text x="47.606px" y="431.277px" style="font-family:'RobotoCondensed-Regular', 'Roboto Condensed';font-size:16px;fill:white;">IN<tspan x="61.286px " y="431.277px ">T</tspan>ERCEPTION</text>
+                <text x="68.414px" y="447.277px" style="font-family:'RobotoCondensed-Regular', 'Roboto Condensed';font-size:16px;fill:white;">SER<tspan x="92.993px " y="447.277px ">V</tspan>ICE</text>
+            </g>
+        </g>
+        <g transform="matrix(0.95,0,0,0.841028,8,35.2941)">
+            <rect x="0" y="0" width="320" height="318.938" style="fill:rgb(239,143,143);"/>
+        </g>
+        <g transform="matrix(1,0,0,0.882353,128,-225.882)">
+            <g transform="matrix(0.949086,0,0,0.916667,4.09609,33.3333)">
+                <path d="M160.053,448L33.615,448L33.615,352L160.053,352L160.053,448ZM36.425,354.909L36.425,445.091L157.243,445.091L157.243,354.909L36.425,354.909Z" style="fill:white;"/>
+            </g>
+            <g transform="matrix(1,0,0,1,0.464469,-9.58914)">
+                <text x="65.411px" y="415.277px" style="font-family:'RobotoCondensed-Regular', 'Roboto Condensed';font-size:16px;fill:white;">PROCESS</text>
+            </g>
+        </g>
+        <g transform="matrix(1,0,0,0.882353,2.84217e-14,-225.882)">
+            <g transform="matrix(0.949086,0,0,0.916667,4.09609,33.3333)">
+                <path d="M160.053,448L33.615,448L33.615,352L160.053,352L160.053,448ZM36.425,354.909L36.425,445.091L157.243,445.091L157.243,354.909L36.425,354.909Z" style="fill:white;"/>
+            </g>
+            <g transform="matrix(1,0,0,1,0.464469,-17.6673)">
+                <text x="82.215px" y="415.277px" style="font-family:'RobotoCondensed-Regular', 'Roboto Condensed';font-size:16px;fill:white;">APP</text>
+                <text x="63.282px" y="431.277px" style="font-family:'RobotoCondensed-Regular', 'Roboto Condensed';font-size:16px;fill:white;">SE<tspan x="79.672px 88.125px " y="431.277px 431.277px ">TT</tspan>INGS</text>
+            </g>
+        </g>
+        <g transform="matrix(1,0,0,0.882353,128,-141.176)">
+            <g transform="matrix(0.949086,0,0,0.916667,4.09609,33.3333)">
+                <path d="M160.053,448L33.615,448L33.615,352L160.053,352L160.053,448ZM36.425,354.909L36.425,445.091L157.243,445.091L157.243,354.909L36.425,354.909Z" style="fill:white;"/>
+            </g>
+            <g transform="matrix(1,0,0,1,0.464469,-9.58914)">
+                <text x="67.18px" y="415.277px" style="font-family:'RobotoCondensed-Regular', 'Roboto Condensed';font-size:16px;fill:white;">WINDOW</text>
+            </g>
+        </g>
+        <g transform="matrix(1,0,0,0.882353,5.68434e-14,-141.176)">
+            <g transform="matrix(0.949086,0,0,0.916667,4.09609,33.3333)">
+                <path d="M160.053,448L33.615,448L33.615,352L160.053,352L160.053,448ZM36.425,354.909L36.425,445.091L157.243,445.091L157.243,354.909L36.425,354.909Z" style="fill:white;"/>
+            </g>
+            <g transform="matrix(1,0,0,1,0.464469,-9.58914)">
+                <text x="67.18px" y="415.277px" style="font-family:'RobotoCondensed-Regular', 'Roboto Condensed';font-size:16px;fill:white;">WINDOW</text>
+            </g>
+        </g>
+        <g transform="matrix(0.95,0,0,0.841028,328,35.2941)">
+            <rect x="0" y="0" width="320" height="318.938" style="fill:rgb(191,239,143);"/>
+        </g>
+        <g transform="matrix(0.95,0,0,1.28367,648,35.2941)">
+            <rect x="0" y="0" width="320" height="318.938" style="fill:rgb(143,239,239);"/>
+        </g>
+        <g transform="matrix(1,0,0,0.882353,-0.7248,-264.009)">
+            <text x="32.459px" y="350.585px" style="font-family:'RobotoCondensed-Bold', 'Roboto Condensed';font-weight:700;font-size:32px;fill:none;stroke:rgb(239,143,143);stroke-width:5.33px;">MODELS</text>
+            <text x="32.459px" y="350.585px" style="font-family:'RobotoCondensed-Bold', 'Roboto Condensed';font-weight:700;font-size:32px;fill:white;">MODELS</text>
+        </g>
+        <g transform="matrix(1,0,0,0.882353,317.713,-264.009)">
+            <text x="32.459px" y="350.585px" style="font-family:'RobotoCondensed-Bold', 'Roboto Condensed';font-weight:700;font-size:32px;fill:none;stroke:rgb(191,239,143);stroke-width:5.33px;">VIEW MODELS</text>
+            <text x="32.459px" y="350.585px" style="font-family:'RobotoCondensed-Bold', 'Roboto Condensed';font-weight:700;font-size:32px;fill:white;">VIEW MODELS</text>
+        </g>
+        <g transform="matrix(1,0,0,0.882353,639.213,-264.009)">
+            <text x="32.459px" y="350.585px" style="font-family:'RobotoCondensed-Bold', 'Roboto Condensed';font-weight:700;font-size:32px;fill:none;stroke:rgb(143,239,239);stroke-width:5.33px;">VIEWS</text>
+            <text x="32.459px" y="350.585px" style="font-family:'RobotoCondensed-Bold', 'Roboto Condensed';font-weight:700;font-size:32px;fill:white;">VIEWS</text>
+        </g>
+        <g transform="matrix(1,0,0,0.882353,384,-225.882)">
+            <g transform="matrix(0.949086,0,0,0.916667,4.09609,33.3333)">
+                <path d="M160.053,448L33.615,448L33.615,352L160.053,352L160.053,448ZM36.425,354.909L36.425,445.091L157.243,445.091L157.243,354.909L36.425,354.909Z" style="fill:white;"/>
+            </g>
+            <g transform="matrix(1,0,0,1,0.308219,-17.6673)">
+                <text x="65.411px" y="415.277px" style="font-family:'RobotoCondensed-Regular', 'Roboto Condensed';font-size:16px;fill:white;">PROCESS</text>
+                <text x="81.582px" y="431.277px" style="font-family:'RobotoCondensed-Regular', 'Roboto Condensed';font-size:16px;fill:white;">LIST</text>
+            </g>
+        </g>
+        <g transform="matrix(1,0,0,0.882353,384,-141.176)">
+            <g transform="matrix(0.949086,0,0,0.916667,4.09609,33.3333)">
+                <path d="M160.053,448L33.615,448L33.615,352L160.053,352L160.053,448ZM36.425,354.909L36.425,445.091L157.243,445.091L157.243,354.909L36.425,354.909Z" style="fill:white;"/>
+            </g>
+            <g transform="matrix(1,0,0,1,0.308219,-17.6673)">
+                <text x="63.282px" y="415.277px" style="font-family:'RobotoCondensed-Regular', 'Roboto Condensed';font-size:16px;fill:white;">SE<tspan x="79.672px 88.125px " y="415.277px 415.277px ">TT</tspan>INGS</text>
+                <text x="81.582px" y="431.277px" style="font-family:'RobotoCondensed-Regular', 'Roboto Condensed';font-size:16px;fill:white;">LIST</text>
+            </g>
+        </g>
+        <g transform="matrix(1,0,0,0.882353,704,-225.882)">
+            <g transform="matrix(0.949086,0,0,0.916667,4.09609,33.3333)">
+                <path d="M160.053,448L33.615,448L33.615,352L160.053,352L160.053,448ZM36.425,354.909L36.425,445.091L157.243,445.091L157.243,354.909L36.425,354.909Z" style="fill:white;"/>
+            </g>
+            <g transform="matrix(1,0,0,1,0.308219,-25.5891)">
+                <text x="65.411px" y="415.277px" style="font-family:'RobotoCondensed-Regular', 'Roboto Condensed';font-size:16px;fill:white;">PROCESS</text>
+                <text x="75.559px" y="431.277px" style="font-family:'RobotoCondensed-Regular', 'Roboto Condensed';font-size:16px;fill:white;">LIST<tspan x="103.465px " y="431.277px "> </tspan>&amp;</text>
+                <text x="63.282px" y="447.277px" style="font-family:'RobotoCondensed-Regular', 'Roboto Condensed';font-size:16px;fill:white;">SE<tspan x="79.672px 88.125px " y="447.277px 447.277px ">TT</tspan>INGS</text>
+            </g>
+        </g>
+        <g transform="matrix(1,0,0,0.882353,704,-141.176)">
+            <g transform="matrix(0.949086,0,0,0.916667,4.09609,33.3333)">
+                <path d="M160.053,448L33.615,448L33.615,352L160.053,352L160.053,448ZM36.425,354.909L36.425,445.091L157.243,445.091L157.243,354.909L36.425,354.909Z" style="fill:white;"/>
+            </g>
+            <g transform="matrix(1,0,0,1,0.308219,-19.2298)">
+                <text x="67.77px" y="415.277px" style="font-family:'RobotoCondensed-Regular', 'Roboto Condensed';font-size:16px;fill:white;">IVYL<tspan x="96.215px " y="415.277px ">O</tspan>CK</text>
+                <text x="63.282px" y="431.277px" style="font-family:'RobotoCondensed-Regular', 'Roboto Condensed';font-size:16px;fill:white;">SE<tspan x="79.672px 88.125px " y="431.277px 431.277px ">TT</tspan>INGS</text>
+            </g>
+        </g>
+    </g>
+</svg>
