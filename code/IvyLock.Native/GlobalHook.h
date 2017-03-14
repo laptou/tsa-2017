@@ -2,13 +2,13 @@
 
 #include <map>
 #include <allocators>
-#include "Enums.h"
 #include "Interop.h"
 
 using namespace System;
 using namespace System::Diagnostics;
 using namespace System::Threading;
 using namespace System::Threading::Tasks;
+using namespace System::Reflection;
 using namespace System::IO;
 using namespace System::IO::Pipes;
 using namespace System::Runtime::Serialization;
@@ -16,67 +16,43 @@ using namespace System::Runtime::Serialization::Formatters::Binary;
 using namespace System::Linq;
 using namespace System::Collections::Generic;
 using namespace System::Collections::Concurrent;
+using namespace System::Collections::ObjectModel;
+using namespace IvyLock::Native;
 
 namespace IvyLock {
 	namespace Native {
 		namespace ARCH {
-			static public ref class Keystroke {
+			public ref class Binder : SerializationBinder
+			{
 			public:
-				ref struct Info {
-					short RepeatCount;
-					byte ScanCode;
-					bool Extended;
-					bool Alt;
-					bool PreviousState;
-					bool TransitionState;
-				};
+				Type^ BindToType(String^ assemblyName, String^ typeName) override
+				{
+					try 
+					{
+						Type^ tyType = nullptr;
+						List<Assembly^>^ assemblies = gcnew List<Assembly^>(AppDomain::CurrentDomain->GetAssemblies());
+						Assembly^ assembly = Enumerable::FirstOrDefault<Assembly^>(assemblies, gcnew Func<Assembly^, bool>(Binder::predicate));
 
-				static Info^ DecodeLParam(long lParam) {
-					Info^ info = gcnew Info;
-					info->RepeatCount = lParam & 0xFFFF;
-					info->ScanCode = (lParam >> 15) & 0xFF;
-					info->Extended = (lParam >> 23) & 0x1;
-					info->Alt = (lParam >> 28) & 0x1;
-					info->PreviousState = (lParam >> 29) & 0x1;
-					info->TransitionState = (lParam >> 30) & 0x1;
-					return info;
+						if(typeName->Contains("x86") && Environment::Is64BitProcess)
+							tyType = assembly->GetType(typeName->Replace("x86", "x64"));
+
+						return tyType;
+					}
+					catch (Exception^)
+					{
+						return nullptr;
+					}
 				}
-
-				static LPARAM EncodeLParam(Info^ info) {
-					LPARAM lParam = 0;
-					lParam += info->RepeatCount;
-					lParam += info->ScanCode << 16;
-					lParam += info->Extended << 24;
-					lParam += info->Alt << 29;
-					lParam += info->PreviousState << 30;
-					lParam += info->TransitionState << 31;
-					return lParam;
+			private:
+				static bool predicate(Assembly^ arg) {
+					return arg->FullName->StartsWith("IvyLock.Native");
 				}
 			};
 
-			public ref class HookCallbackInfo {
-			public:
-				property int Process;
-				property HookType Type;
-				property int nCode;
-				property UInt32 wParam;
-				property long lParam;
-				property bool CallNext;
-				property IntPtr ReturnValue;
-				property Object^ Extra;
-
-				HookCallbackInfo() {
-					CallNext = true;
-					ReturnValue = IntPtr(1);
-				}
-			};
-
-			public delegate HookCallbackInfo^ HookCallback(HookCallbackInfo^ info);
-
-			static public ref class GlobalHook
+			public ref class GlobalHook abstract sealed
 			{
 			private:
-				static List<Thread^>^ threads;
+				static ObservableCollection<Thread^>^ threads;
 
 				static void PollThread() {
 					try {
@@ -100,20 +76,22 @@ namespace IvyLock {
 				static void PollThreadAsync(IAsyncResult^ iar) {
 					NamedPipeServerStream^ npss = (NamedPipeServerStream^)iar->AsyncState;
 
-					npss->EndWaitForConnection(iar);
-
-					npss->ReadMode = PipeTransmissionMode::Message;
-
-					StreamReader^ sr = gcnew StreamReader(npss);
-					StreamWriter^ sw = gcnew StreamWriter(npss);
-
 					Thread^ thread = gcnew Thread(gcnew ThreadStart(PollThread));
+					thread->Name = "Server Thread";
 					thread->Priority = ThreadPriority::BelowNormal;
 					thread->Start();
 
 					try {
+						npss->EndWaitForConnection(iar);
+
+						npss->ReadMode = PipeTransmissionMode::Message;
+
+						StreamReader^ sr = gcnew StreamReader(npss);
+						StreamWriter^ sw = gcnew StreamWriter(npss);
+
 						while (npss->IsConnected) {
 							String^ line = sr->ReadLine();
+							// Console::WriteLine(line);
 
 							if (line == nullptr || String::IsNullOrWhiteSpace(line))
 								return;
@@ -131,6 +109,7 @@ namespace IvyLock {
 
 							if (!String::IsNullOrWhiteSpace(extraLine)) {
 								IFormatter^ formatter = gcnew BinaryFormatter;
+								// formatter->Binder = gcnew Binder;
 								MemoryStream^ ms = gcnew MemoryStream(Convert::FromBase64String(extraLine));
 								info->Extra = formatter->Deserialize(ms);
 								ms->Close();
@@ -189,9 +168,11 @@ namespace IvyLock {
 				}
 
 				static void Start() {
-					threads = gcnew List<Thread^>;
+					threads = gcnew ObservableCollection<Thread^>;
+					threads->CollectionChanged += gcnew System::Collections::Specialized::NotifyCollectionChangedEventHandler(&IvyLock::Native::ARCH::GlobalHook::OnCollectionChanged);
 
 					Thread^ thread = gcnew Thread(gcnew ThreadStart(PollThread));
+					thread->Name = "Server Thread";
 					thread->Priority = ThreadPriority::BelowNormal;
 					thread->Start();
 				}
@@ -209,10 +190,15 @@ namespace IvyLock {
 					}
 				}
 
-				property static String^ Pipe { String^ get() { return "IVYLOCK-NATIVE"; }; };
+				property static String^ Pipe { String^ get() { return PIPE_NAME; }; };
+
+				static void OnCollectionChanged(System::Object ^sender,
+					System::Collections::Specialized::NotifyCollectionChangedEventArgs ^e) {
+					Console::WriteLine("Num worker threads: {0}", threads->Count);
+				}
 			};
 
-			static private class GlobalHookImpl {
+			private class GlobalHookImpl abstract sealed {
 			private:
 #pragma data_seg (".MY_HOOK_DATA")
 				static std::map<int, HHOOK> Hooks;
@@ -222,6 +208,10 @@ namespace IvyLock {
 				static HHOOK GetHook(int hookType);
 				static HHOOK SetHook(int hookType);
 				static void ReleaseHook(int hookType);
+			};
+
+			public struct HookCallbackInfoNative {
+				UINT32 hookType; int nCode; WPARAM wParam; LPARAM lParam;
 			};
 		}
 	}

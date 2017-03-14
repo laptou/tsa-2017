@@ -64,6 +64,10 @@
       <Project>{ac11dd2f-2c3e-456b-825d-5ceba9361a71}</Project>
       <Name>IvyLock.Native</Name>
     </ProjectReference>
+    <ProjectReference Include="..\IvyLock\IvyLock.csproj">
+      <Project>{82831821-04df-4ba4-8da5-d1f408cc59ee}</Project>
+      <Name>IvyLock</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

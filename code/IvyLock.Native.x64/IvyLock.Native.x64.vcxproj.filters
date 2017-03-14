@@ -28,9 +28,6 @@
     <ClCompile Include="..\IvyLock.Native\AssemblyInfo.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\IvyLock.Native\Enums.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="..\IvyLock.Native\GlobalHook.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -42,9 +39,6 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\IvyLock.Native\Enums.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="..\IvyLock.Native\GlobalHook.h">
       <Filter>Header Files</Filter>
     </ClInclude>

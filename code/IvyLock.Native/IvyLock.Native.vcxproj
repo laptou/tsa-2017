@@ -141,7 +141,6 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Enums.h" />
     <ClInclude Include="GlobalHook.h" />
     <ClInclude Include="Interop.h" />
     <ClInclude Include="resource.h" />
@@ -149,7 +148,6 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="AssemblyInfo.cpp" />
-    <ClCompile Include="Enums.cpp" />
     <ClCompile Include="GlobalHook.cpp" />
     <ClCompile Include="Interop.cpp" />
     <ClCompile Include="Stdafx.cpp">
@@ -167,6 +165,12 @@
   </ItemGroup>
   <ItemGroup>
     <Image Include="app.ico" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\IvyLock\IvyLock.csproj">
+      <Project>{82831821-04df-4ba4-8da5-d1f408cc59ee}</Project>
+      <CopyLocalSatelliteAssemblies>true</CopyLocalSatelliteAssemblies>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

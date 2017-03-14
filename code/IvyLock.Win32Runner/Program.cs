@@ -3,8 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using IvyLock.Native.x86;
 using System.Threading;
+using IvyLock.Native;
+using IvyLock.Native.x86;
 
 namespace IvyLock.Win32Runner
 {
@@ -12,8 +13,6 @@ namespace IvyLock.Win32Runner
 	{
 		static void Main(string[] args)
 		{
-			GlobalHook.Start();
-
 			foreach (string arg in args)
 			{
 				HookType ht;

@@ -100,7 +100,7 @@
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
-      <PreprocessorDefinitions>IVYLOCKNATIVE_EXPORTS;Win64;_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>IVYLOCKNATIVE_EXPORTS;_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PrecompiledHeader>Create</PrecompiledHeader>
     </ClCompile>
     <Link>
@@ -142,17 +142,21 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\IvyLock.Native\AssemblyInfo.cpp" />
-    <ClCompile Include="..\IvyLock.Native\Enums.cpp" />
     <ClCompile Include="..\IvyLock.Native\GlobalHook.cpp" />
     <ClCompile Include="..\IvyLock.Native\Interop.cpp" />
     <ClCompile Include="Stdafx.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\IvyLock.Native\Enums.h" />
     <ClInclude Include="..\IvyLock.Native\GlobalHook.h" />
     <ClInclude Include="..\IvyLock.Native\Interop.h" />
     <ClInclude Include="..\IvyLock.Native\resource.h" />
     <ClInclude Include="Stdafx.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\IvyLock\IvyLock.csproj">
+      <Project>{82831821-04df-4ba4-8da5-d1f408cc59ee}</Project>
+      <CopyLocalSatelliteAssemblies>true</CopyLocalSatelliteAssemblies>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

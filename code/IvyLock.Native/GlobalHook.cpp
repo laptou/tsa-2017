@@ -3,6 +3,7 @@
 #include <Windows.h>
 #include <msclr\marshal.h>
 
+using namespace IvyLock::Native;
 using namespace IvyLock::Native::ARCH;
 using namespace System::Runtime::InteropServices;
 using namespace msclr::interop;
@@ -10,6 +11,7 @@ using namespace msclr::interop;
 std::map<int, HHOOK> IvyLock::Native::ARCH::GlobalHookImpl::Hooks;
 
 bool queueThreadRunning = false;
+bool loadedDependencies = false;
 
 HMODULE WINAPI ModuleFromAddress(PVOID pv)
 {
@@ -45,11 +47,17 @@ void HookThread() {
 		System::Diagnostics::Process^ currentProcess = System::Diagnostics::Process::GetCurrentProcess();
 		StreamWriter^ sw = gcnew StreamWriter(npcs);
 		IFormatter^ serialiser = gcnew BinaryFormatter;
-		CancellationTokenSource^ cts = gcnew CancellationTokenSource(1000);
 
 		while (true)
 		{
-			HookCallbackInfo^ hci = GlobalHook::queue->Take(cts->Token);
+			HookCallbackInfo^ hci = nullptr;
+			try {
+				CancellationTokenSource^ cts = gcnew CancellationTokenSource(1000);
+				hci = GlobalHook::queue->Take(cts->Token);
+			}
+			catch (OperationCanceledException^) {
+				continue;
+			}
 
 			HookType hookType = hci->Type;
 			int nCode = hci->nCode;
@@ -66,79 +74,75 @@ void HookThread() {
 				ms->Close();
 			}
 
-			sw->WriteLine(String::Format(
+			String^ line = String::Format(
 				"{4}\t{3}\t{0}\t{1}\t{2}",
 				nCode,
 				wParam,
 				lParam,
 				(int)hookType,
 				currentProcess->Id
-				)); 
+			);
+			// Console::WriteLine(line);
+			sw->WriteLine(line);
 			sw->WriteLine(base64);
 			sw->Flush();
 		}
 	}
 	catch (TimeoutException^) {}
-	catch (OperationCanceledException^) {}
+	catch (IOException^) {}
 	catch (Exception^ ex) {
-
-		while (ex->InnerException != nullptr)
-			ex = ex->InnerException;
-
-		marshal_context^ mc = gcnew marshal_context;
-		MessageBox(NULL,
-			mc->marshal_as<LPCTSTR>(ex->Message + "\n" + ex->StackTrace),
-			mc->marshal_as<LPCTSTR>(ex->GetType()->FullName), MB_OK);
+		if (Debugger::IsAttached)
+			Debugger::Break();
 
 		queueThreadRunning = false;
 	}
 }
 
-LRESULT HookProc(HookType hookType, int nCode, WPARAM wParam, LPARAM lParam) {
+DWORD WINAPI HookProcThread(LPVOID lpParam) {
 	try {
 		if (!queueThreadRunning) {
 			Thread^ thread = gcnew Thread(gcnew ThreadStart(HookThread));
+			thread->Name = "HookThread";
 			thread->Start();
 		}
 
+		HookCallbackInfoNative* hcin = (HookCallbackInfoNative*)lpParam;
 		HookCallbackInfo^ info = gcnew HookCallbackInfo();
-		info->nCode = nCode;
-		info->wParam = wParam;
-		info->lParam = lParam;
-		info->Type = hookType;
+		info->nCode = hcin->nCode;
+		info->wParam = hcin->wParam;
+		info->lParam = hcin->lParam;
+		info->Type = (HookType)hcin->hookType;
 
 		Object^ extra = nullptr;
-		if (hookType == HookType::GetMessage) {
-			MSG* msg = (MSG*)lParam;
+		if (info->Type == HookType::GetMessage) {
+			MSG* msg = (MSG*)info->lParam;
 
 			if (msg->message != WM_CREATE)
-				return CallNextHookEx(NULL, nCode, wParam, lParam);
+				return CallNextHookEx(NULL, info->nCode, info->wParam, info->lParam);
 
-			extra = gcnew Message(*msg);
+			extra = NativeInterop::MessageFromNative(*msg);
 		}
 
-		if (hookType == HookType::CallWndProc) {
-			CWPSTRUCT *cwp = (CWPSTRUCT*)lParam;
+		if (info->Type == HookType::CallWndProc) {
+			CWPSTRUCT *cwp = (CWPSTRUCT*)info->lParam;
 
 			if (cwp->message != WM_CREATE)
-				return CallNextHookEx(NULL, nCode, wParam, lParam);
+				return CallNextHookEx(NULL, info->nCode, info->wParam, info->lParam);
 
-			extra = gcnew CallWndProc(*cwp);
+			extra = NativeInterop::CallWndProcFromNative(*cwp);
 		}
 
-		if (hookType == HookType::CBT) {
-			switch (nCode)
+		if (info->Type == HookType::CBT) {
+			switch (info->nCode)
 			{
 			case HCBT_ACTIVATE:
-				extra = gcnew CBTActivate(*(CBTACTIVATESTRUCT*)lParam);
+				extra = NativeInterop::CBTActivateFromNative(*(CBTACTIVATESTRUCT*)info->lParam);
 				break;
 			case HCBT_CREATEWND:
-				// CBT_CREATEWND* cbtcw = (CBT_CREATEWND*)lParam;
-				extra = gcnew CBTCreateWnd(*(CBT_CREATEWND*)lParam);
+				extra = NativeInterop::CBTCreateWndFromNative(*(CBT_CREATEWND*)info->lParam);
 				break;
 			case HCBT_MOVESIZE:
-				// RECT* r = (RECT*)lParam;
-				extra = gcnew Rect(*(RECT*)lParam);
+				extra = NativeInterop::RectFromNative(*(RECT*)info->lParam);
 				break;
 			default:
 				break;
@@ -149,10 +153,25 @@ LRESULT HookProc(HookType hookType, int nCode, WPARAM wParam, LPARAM lParam) {
 
 		GlobalHook::queue->Add(info);
 	}
-	finally {
+	catch (Exception^ ex) {
+		if (Debugger::IsAttached)
+			Debugger::Break();
 	}
+}
 
-	return CallNextHookEx(NULL, nCode, wParam, lParam);
+LRESULT HookProc(UINT32 hookType, int nCode, WPARAM wParam, LPARAM lParam) {
+	// can't use the CLR here or we end up with a problem when the user tries to start a new process
+	HookCallbackInfoNative* hcin = (HookCallbackInfoNative*)malloc(sizeof(struct HookCallbackInfoNative));
+	hcin->hookType = hookType;
+	hcin->nCode = nCode;
+	hcin->wParam = wParam;
+	hcin->lParam = lParam;
+	LPDWORD threadId;
+
+	// so gotta create thread the native way, and then use CLR in our fancy new thread
+	CreateThread(NULL, 0, HookProcThread, hcin, 0, threadId);
+
+	return 0; 
 }
 
 HHOOK IvyLock::Native::ARCH::GlobalHookImpl::GetHook(int hookType)
@@ -164,53 +183,30 @@ HHOOK IvyLock::Native::ARCH::GlobalHookImpl::SetHook(int hookType)
 {
 	HOOKPROC proc = HOOKPROC();
 
+#define HookCase(type) \
+case type: \
+	proc = [](int nCode, WPARAM wParam, LPARAM lParam) -> LRESULT { \
+		return HookProc((UINT32)type, nCode, wParam, lParam); \
+	}; \
+	break;
+
 	switch ((HookType)hookType)
 	{
-	case HookType::CallWndProc:
-		proc = [](int nCode, WPARAM wParam, LPARAM lParam) -> LRESULT { return HookProc(HookType::CallWndProc, nCode, wParam, lParam); };
-		break;
-	case HookType::CallWndProcRet:
-		proc = [](int nCode, WPARAM wParam, LPARAM lParam) -> LRESULT { return HookProc(HookType::CallWndProcRet, nCode, wParam, lParam); };
-		break;
-	case HookType::CBT:
-		proc = [](int nCode, WPARAM wParam, LPARAM lParam) -> LRESULT { return HookProc(HookType::CBT, nCode, wParam, lParam); };
-		break;
-	case HookType::Debug:
-		proc = [](int nCode, WPARAM wParam, LPARAM lParam) -> LRESULT { return HookProc(HookType::Debug, nCode, wParam, lParam); };
-		break;
-	case HookType::ForegroundIdle:
-		proc = [](int nCode, WPARAM wParam, LPARAM lParam) -> LRESULT { return HookProc(HookType::ForegroundIdle, nCode, wParam, lParam); };
-		break;
-	case HookType::GetMessage:
-		proc = [](int nCode, WPARAM wParam, LPARAM lParam) -> LRESULT { return HookProc(HookType::GetMessage, nCode, wParam, lParam); };
-		break;
-	case HookType::Hardware:
-		proc = [](int nCode, WPARAM wParam, LPARAM lParam) -> LRESULT { return HookProc(HookType::Hardware, nCode, wParam, lParam); };
-		break;
-	case HookType::JournalPlayback:
-		proc = [](int nCode, WPARAM wParam, LPARAM lParam) -> LRESULT { return HookProc(HookType::JournalPlayback, nCode, wParam, lParam); };
-		break;
-	case HookType::JournalRecord:
-		proc = [](int nCode, WPARAM wParam, LPARAM lParam) -> LRESULT { return HookProc(HookType::JournalRecord, nCode, wParam, lParam); };
-		break;
-	case HookType::Keyboard:
-		proc = [](int nCode, WPARAM wParam, LPARAM lParam) -> LRESULT { return HookProc(HookType::Keyboard, nCode, wParam, lParam); };
-		break;
-	case HookType::KeyboardLowLevel:
-		proc = [](int nCode, WPARAM wParam, LPARAM lParam) -> LRESULT { return HookProc(HookType::KeyboardLowLevel, nCode, wParam, lParam); };
-		break;
-	case HookType::Mouse:
-		proc = [](int nCode, WPARAM wParam, LPARAM lParam) -> LRESULT { return HookProc(HookType::Mouse, nCode, wParam, lParam); };
-		break;
-	case HookType::MouseLowLevel:
-		proc = [](int nCode, WPARAM wParam, LPARAM lParam) -> LRESULT { return HookProc(HookType::MouseLowLevel, nCode, wParam, lParam); };
-		break;
-	case HookType::Shell:
-		proc = [](int nCode, WPARAM wParam, LPARAM lParam) -> LRESULT { return HookProc(HookType::Shell, nCode, wParam, lParam); };
-		break;
-	case HookType::SysMsgFilter:
-		proc = [](int nCode, WPARAM wParam, LPARAM lParam) -> LRESULT { return HookProc(HookType::SysMsgFilter, nCode, wParam, lParam); };
-		break;
+		HookCase(HookType::CallWndProc)
+		HookCase(HookType::CallWndProcRet)
+		HookCase(HookType::CBT)
+		HookCase(HookType::Debug)
+		HookCase(HookType::ForegroundIdle)
+		HookCase(HookType::GetMessage)
+		HookCase(HookType::Hardware)
+		HookCase(HookType::JournalPlayback)
+		HookCase(HookType::JournalRecord)
+		HookCase(HookType::Keyboard)
+		HookCase(HookType::KeyboardLowLevel)
+		HookCase(HookType::Mouse)
+		HookCase(HookType::MouseLowLevel)
+		HookCase(HookType::Shell)
+		HookCase(HookType::SysMsgFilter)
 	}
 
 	HHOOK hook = SetWindowsHookEx(hookType, proc, GetCurrentModule(), 0);

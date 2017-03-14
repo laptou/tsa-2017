@@ -14,16 +14,6 @@ namespace IvyLock.UI
 	/// </summary>
 	public partial class App : Application
 	{
-		// Need to ensure delegate is not collected while we're using it,
-		// storing it in a class field is simplest way to do this.
-		static WinEventDelegate procDelegate = new WinEventDelegate(WinEventProc);
-		static IntPtr hookHandle;
-
-		private static void WinEventProc(IntPtr hWinEventHook, uint eventType, IntPtr hwnd, int idObject, 
-			int idChild, uint dwEventThread, uint dwmsEventTime)
-		{
-			
-		}
 
 		protected override void OnActivated(EventArgs e)
 		{

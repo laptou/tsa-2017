@@ -15,6 +15,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "IvyLock.Native.x64", "..\Iv
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IvyLock.Win32Runner", "..\IvyLock.Win32Runner\IvyLock.Win32Runner.csproj", "{CB425052-E428-49DF-993B-BD92B3550E1D}"
 EndProject
+Project("{54435603-DBB4-11D2-8724-00A0C9A8B90C}") = "IvyLock.Installer", "..\IvyLock.Installer\IvyLock.Installer.vdproj", "{AA2F3222-0C73-43F5-A68D-D98A740CA3EB}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -94,6 +96,12 @@ Global
 		{CB425052-E428-49DF-993B-BD92B3550E1D}.Release|x64.Build.0 = Release|Any CPU
 		{CB425052-E428-49DF-993B-BD92B3550E1D}.Release|x86.ActiveCfg = Release|Any CPU
 		{CB425052-E428-49DF-993B-BD92B3550E1D}.Release|x86.Build.0 = Release|Any CPU
+		{AA2F3222-0C73-43F5-A68D-D98A740CA3EB}.Debug|Any CPU.ActiveCfg = Debug
+		{AA2F3222-0C73-43F5-A68D-D98A740CA3EB}.Debug|x64.ActiveCfg = Debug
+		{AA2F3222-0C73-43F5-A68D-D98A740CA3EB}.Debug|x86.ActiveCfg = Debug
+		{AA2F3222-0C73-43F5-A68D-D98A740CA3EB}.Release|Any CPU.ActiveCfg = Release
+		{AA2F3222-0C73-43F5-A68D-D98A740CA3EB}.Release|x64.ActiveCfg = Release
+		{AA2F3222-0C73-43F5-A68D-D98A740CA3EB}.Release|x86.ActiveCfg = Release
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

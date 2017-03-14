@@ -8,3 +8,5 @@
 #else
 #define ARCH x64
 #endif
+
+#define PIPE_NAME "IVYLOCK-NATIVE"

@@ -1,4 +1,4 @@
-﻿using IvyLock.Native.x64;
+﻿using IvyLock.Native;
 using System;
 using System.ComponentModel;
 using System.Diagnostics;
@@ -23,24 +23,24 @@ namespace IvyLock.TestConsole
 				Console.WriteLine("Running in 32-bit mode");
 
 			try
-			{
-				GlobalHook.Start();
+			{ 
+				Native.x64.GlobalHook.Start();
 
-				Func<int, string> formatProcess = pid =>
+				Func<Process, string> formatProcess = process =>
 				{
-					Process process = Process.GetProcessById(pid);
-					bool x64;
-					IsWow64Process(process.Handle, out x64);
+					bool isWow64 = true;
+					if (!IsWow64Process(process.Handle, out isWow64)) // false means failure
+						throw new Win32Exception(Marshal.GetLastWin32Error());
 					return string.Format("{0} [{1}] ({2})",
 						Path.GetFileName(process.MainModule.FileVersionInfo.FileName),
 						process.MainModule.FileVersionInfo.FileDescription,
-						x64 ? "x64" : "x86");
+						Environment.Is64BitOperatingSystem ? (isWow64 ? "x86" : "x64") : "x86");
 				};
 
 				Process runner = null;
 				CancellationTokenSource cts = new CancellationTokenSource();
 
-				if (Environment.Is64BitProcess)
+				if (Environment.Is64BitProcess && false)
 				{
 					ProcessStartInfo psi = new ProcessStartInfo("IvyLock.Win32Runner.exe", "CBT");
 					psi.UseShellExecute = false;
@@ -50,17 +50,16 @@ namespace IvyLock.TestConsole
 					
 					Task.Factory.StartNew(() => 
 					{
-						while (true)
-						{
-							string line = runner.StandardError.ReadLine();
-							if(!string.IsNullOrWhiteSpace(line))
-								Console.WriteLine(line);
-						}
+						Console.WriteLine(runner.StandardError.ReadToEnd());
 					}, cts.Token);
 				}
 
-				IntPtr cbt = GlobalHook.SetHook(HookType.CBT, info =>
+				HookCallback hookproc = info =>
 				{
+					Process process = Process.GetProcessById(info.Process);
+					if (process.ProcessName == "ScriptedSandbox64")
+						return info;
+
 					try
 					{
 						CBTType type = (CBTType)info.nCode;
@@ -70,7 +69,7 @@ namespace IvyLock.TestConsole
 								CBTActivate cbta = (CBTActivate)info.Extra;
 								string cbtas = String.Format("{{ Mouse: {0} }}", cbta.fMouse);
 								Console.WriteLine(string.Format(
-									"CBT\t{3}\t{0}\t{1}\t{2}", type, info.wParam, cbtas, formatProcess(info.Process)
+									"CBT\t{3}\t{0}\t{1}\t{2}", type, info.wParam, cbtas, formatProcess(process)
 									));
 								break;
 
@@ -80,7 +79,7 @@ namespace IvyLock.TestConsole
 									cbtcw.cs.x, cbtcw.cs.y, cbtcw.cs.cx, cbtcw.cs.cy, (WindowStyle)(cbtcw.cs.style));
 
 								Console.WriteLine(string.Format(
-									"CBT\t{3}\t{0}\t{1}\t{2}", type, info.wParam, cbtcws, formatProcess(info.Process)
+									"CBT\t{3}\t{0}\t{1}\t{2}", type, info.wParam, cbtcws, formatProcess(process)
 									));
 								break;
 
@@ -89,40 +88,49 @@ namespace IvyLock.TestConsole
 								string rs = String.Format("{{ left: {0} top: {1} right: {2} bottom: {3} }}",
 									r.left, r.top, r.right, r.bottom);
 								Console.WriteLine(string.Format(
-									"CBT\t{3}\t{0}\t{1}\t{2}", type, info.wParam, rs, formatProcess(info.Process)
+									"CBT\t{3}\t{0}\t{1}\t{2}", type, info.wParam, rs, formatProcess(process)
 									));
 								break;
 
 							case CBTType.KeySkipped:
+								
 								Keystroke.Info kinf = Keystroke.DecodeLParam(info.lParam);
 								string kinfs = string.Format(
 									"{{ RepeatCount: {0} Alt: {1} Extended: {2} PreviousState: {3} ScanCode: {4} }}",
 									kinf.RepeatCount, kinf.Alt, kinf.Extended,
 									kinf.PreviousState, kinf.ScanCode);
 								Console.WriteLine(string.Format(
-									"CBT\t{3}\t{0}\t{1}\t{2}", type, (VirtualKey)info.wParam, kinfs, formatProcess(info.Process)
+									"CBT\t{3}\t{0}\t{1}\t{2}", type, (VirtualKey)info.wParam, kinfs, formatProcess(process)
 									));
 								break;
 
 							case CBTType.SysCommand:
 								Console.WriteLine(string.Format(
-									"CBT\t{3}\t{0}\t{1}\t{2}", type, (SystemCommand)info.wParam, info.lParam, formatProcess(info.Process)
+									"CBT\t{3}\t{0}\t{1}\t{2}", type, (SystemCommand)info.wParam, info.lParam, formatProcess(process)
 									));
 								break;
 
 							default:
 								Console.WriteLine(string.Format(
-									"CBT\t{3}\t{0}\t{1}\t{2}", type, info.wParam, info.lParam, formatProcess(info.Process)
+									"CBT\t{3}\t{0}\t{1}\t{2}", type, info.wParam, info.lParam, formatProcess(process)
 									));
 								break;
 						}
+					}
+					catch (Win32Exception w32ex)
+					{
+						Console.WriteLine("Win32 Error: {0} ({1})", w32ex.Message, w32ex.NativeErrorCode);
+
+						Console.ReadLine();
 					}
 					catch (Exception ex)
 					{
 						Console.Write(ex);
 					}
 					return info;
-				});
+				};
+
+				IntPtr cbt = Native.x64.GlobalHook.SetHook(HookType.CBT, hookproc);
 
 				if (cbt == IntPtr.Zero)
 					throw new Win32Exception(Marshal.GetLastWin32Error());
@@ -131,13 +139,13 @@ namespace IvyLock.TestConsole
 
 				Console.ReadLine();
 
-				GlobalHook.Stop();
-
 				if (runner != null)
-				{
 					runner.Kill();
-					cts.Cancel();
-				}
+
+				IvyLock.Native.x64.GlobalHook.Stop();
+
+				Console.ReadLine();
+
 			}
 			catch (Win32Exception w32ex)
 			{
