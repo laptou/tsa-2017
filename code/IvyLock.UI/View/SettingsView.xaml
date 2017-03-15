@@ -6,7 +6,7 @@
         xmlns:local="clr-namespace:IvyLock.UI.View" xmlns:xctk="http://schemas.xceed.com/wpf/xaml/toolkit"
         xmlns:ViewModel="clr-namespace:IvyLock.UI.ViewModel" xmlns:i="http://schemas.microsoft.com/expression/2010/interactivity" xmlns:ei="http://schemas.microsoft.com/expression/2010/interactions" x:Class="IvyLock.UI.View.SettingsView"
         mc:Ignorable="d"
-        Title="Settings" Height="512" MinWidth="600" Background="{DynamicResource BackgroundDark}" Icon="/IvyLock.UI;component/Content/Logo 2.ico" SizeToContent="Width">
+        Title="Settings" Height="512" MinWidth="600" Background="{DynamicResource BackgroundDark}" Icon="/IvyLock.UI;component/Content/Logo 2.ico" SizeToContent="Width" Style="{DynamicResource IvyWindow}">
     <Window.DataContext>
         <ViewModel:SettingsViewModel/>
     </Window.DataContext>
@@ -94,7 +94,7 @@
                                     <Grid>
                                         <Grid.ColumnDefinitions>
                                             <ColumnDefinition Width="Auto"/>
-                                            <ColumnDefinition/>
+                                            <ColumnDefinition MinWidth="200"/>
                                         </Grid.ColumnDefinitions>
                                         <Grid.RowDefinitions>
                                             <RowDefinition />
@@ -105,7 +105,7 @@
                                             VerticalAlignment="Center" Margin="5,0" />
                                         <TextBlock x:Name="desc" Text="{Binding Description}" FontSize="10" Grid.Row="1"
                                             Foreground="{DynamicResource ForegroundSecondary}" 
-                                            VerticalAlignment="Center" Margin="5,0" />
+                                            VerticalAlignment="Center" Margin="5,0" TextWrapping="Wrap"/>
                                         <ContentPresenter x:Name="content" Grid.Column="1" Grid.RowSpan="2"/>
                                     </Grid>
                                 </Border>

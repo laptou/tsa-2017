@@ -85,10 +85,9 @@
   <ItemGroup>
     <Compile Include="BlockingQueue.cs" />
     <Compile Include="IconExtensions.cs" />
-    <Compile Include="Model\Model.cs" />
-    <Compile Include="Model\Setting.cs" />
     <Compile Include="Native\Enums.cs" />
     <Compile Include="Native\GlobalHook.cs" />
+    <Compile Include="ProcessExtensions.cs" />
     <Compile Include="Properties\AssemblyInfo.cs">
       <SubType>Code</SubType>
     </Compile>
@@ -102,9 +101,6 @@
       <DependentUpon>Settings.settings</DependentUpon>
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
     </Compile>
-    <Compile Include="Service\EncryptionService.cs" />
-    <Compile Include="Service\ProcessService.cs" />
-    <Compile Include="Service\SettingsService.cs" />
     <EmbeddedResource Include="Properties\Resources.resx">
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>

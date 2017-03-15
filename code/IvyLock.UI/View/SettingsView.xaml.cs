@@ -3,6 +3,7 @@ using IvyLock.Service;
 using System;
 using System.Windows;
 using Xceed.Wpf.Toolkit;
+using System.ComponentModel;
 
 namespace IvyLock.UI.View
 {
@@ -14,6 +15,13 @@ namespace IvyLock.UI.View
 		public SettingsView()
 		{
 			InitializeComponent();
+		}
+
+		protected override void OnClosing(CancelEventArgs e)
+		{
+			Hide();
+			e.Cancel = true;
+			base.OnClosing(e);
 		}
 	}
 }

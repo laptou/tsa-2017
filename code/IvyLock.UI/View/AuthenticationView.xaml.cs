@@ -1,4 +1,5 @@
-﻿using System.Windows;
+﻿using System;
+using System.Windows;
 
 namespace IvyLock.UI.View
 {
@@ -10,6 +11,11 @@ namespace IvyLock.UI.View
 		public AuthenticationView()
 		{
 			InitializeComponent();
+		}
+
+		private void AuthenticationViewModel_CloseRequested()
+		{
+			Close();
 		}
 	}
 }

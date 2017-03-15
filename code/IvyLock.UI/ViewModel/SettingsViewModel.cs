@@ -1,48 +1,42 @@
 ﻿using IvyLock.Model;
-using System.Collections.ObjectModel;
+using IvyLock.Service;
 using System;
-using System.Threading.Tasks;
+using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Linq;
-using IvyLock.Service;
+using System.Reflection;
+using System.Threading.Tasks;
 
 namespace IvyLock.UI.ViewModel
 {
 	public class SettingsViewModel : ViewModel
 	{
-
 		#region Fields
 
-		ISettingsService iss = XmlSettingsService.Default;
-		SettingGroup _settingGroup;
-		ObservableCollection<SettingGroup> _settings = new ObservableCollection<SettingGroup>();
+		private ISettingsService iss = XmlSettingsService.Default;
+		private IProcessService ips = ManagedProcessService.Default;
+		private SettingGroup _settingGroup;
+		private ObservableCollection<SettingGroup> _settings = new ObservableCollection<SettingGroup>();
 
 		#endregion Fields
-
 
 		#region Constructors
 
 		public SettingsViewModel()
 		{
-			if (!iss.Any(s => s is IvyLockSettings))
-				iss.Set(new IvyLockSettings());
-			
 			RunTimeAsync(LoadProcesses).ContinueWith(LoadSettings);
 		}
 
 		private void LoadSettings(Task processTask)
 		{
-			UI(() =>
-			{
-				foreach (SettingGroup sg in iss)
-					Settings.Add(sg);
+			foreach (SettingGroup sg in iss)
+				if (sg.Valid)
+					UI(() => Settings.Add(sg));
 
-				SettingGroup = _settings.OfType<IvyLockSettings>().FirstOrDefault();
-			});
+			SettingGroup = _settings.OfType<IvyLockSettings>().FirstOrDefault();
 		}
 
 		#endregion Constructors
-
 
 		#region Properties
 
@@ -51,30 +45,63 @@ namespace IvyLock.UI.ViewModel
 
 		#endregion Properties
 
-
 		#region Methods
 
 		private async Task LoadProcesses()
 		{
+
+			Func<Process, bool> f = p =>
+			{
+				try
+				{
+					return
+						FileVersionInfo.GetVersionInfo(p.GetPath()).FileDescription != null &&
+						p.MainWindowHandle != IntPtr.Zero;
+				}
+				catch { return false; }
+			};
+
+
+			iss = XmlSettingsService.Default;
+			ips = ManagedProcessService.Default;
+			ips.ProcessChanged += (pid, path, type) =>
+			{
+				if(type == ProcessOperation.Started)
+				{
+					if(!iss.OfType<ProcessSettings>().Any(ps => ps.Path.Equals(path)))
+					{
+						try
+						{
+							Process p = Process.GetProcessById(pid);
+
+							if (f(p))
+							{
+								ProcessSettings ps = new ProcessSettings(p);
+								iss.Set(ps);
+								Settings.Add(ps);
+							}
+						}
+						catch (Exception)
+						{
+						}
+					}
+				}
+			};
+
+			if (!iss.Any(s => s is IvyLockSettings))
+				iss.Set(new IvyLockSettings());
+
 			await Task.Run(() =>
 			{
-				Func<Process, bool> f = p =>
-				{
-					try {
-						return 
-							p.MainModule.FileVersionInfo.FileDescription != null &&
-							p.MainWindowHandle != IntPtr.Zero;
-					}
-					catch { return false; }
-				};
-
 				foreach (
 					Process process in
 					from process in Process.GetProcesses()
-					where  f(process)
-					orderby process.MainModule.FileVersionInfo.FileDescription
+					where f(process)
+					orderby FileVersionInfo.GetVersionInfo(process.GetPath()).FileDescription
 					select process)
 				{
+					if (process.MainModule.FileName.Equals(Assembly.GetEntryAssembly().Location))
+						continue;
 					try
 					{
 						ProcessSettings ps = new ProcessSettings(process);
@@ -82,7 +109,7 @@ namespace IvyLock.UI.ViewModel
 						if (!iss.Any(s => s is ProcessSettings && ((ProcessSettings)s).Path == ps.Path))
 							iss.Set(ps);
 					}
-					catch (Exception)
+					catch 
 					{
 					}
 				}

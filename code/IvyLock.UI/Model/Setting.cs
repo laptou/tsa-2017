@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.Serialization;
@@ -25,11 +26,14 @@ namespace IvyLock.Model
 
 	public class IvyLockSettings : SettingGroup
 	{
+
+
 		#region Fields
 
 		private SecureString _password;
 
 		#endregion Fields
+
 
 		#region Constructors
 
@@ -46,15 +50,28 @@ namespace IvyLock.Model
 
 		#endregion Constructors
 
+
 		#region Properties
 
-		[Setting(Category = SettingCategory.Security, Description = "Password used to unlock this app.")]
-		public SecureString Password { set { _password = value; } }
+		[Setting(Hide = true)]
+		public string Hash { get; set; }
 
-		[Setting(Category = SettingCategory.Security, Description = "Password used to unlock this app.")]
-		public int Timeout { get; set; }
+		[XmlIgnore]
+		[Setting(Category = SettingCategory.Security, Description = "Password used to unlock IvyLock settings.")]
+		public SecureString Password
+		{
+			get { return _password; }
+			set
+			{
+				Set(value, ref _password);
+
+				if (value != null)
+					Hash = EncryptionService.Default.Hash(Password);
+			}
+		}
 
 		#endregion Properties
+
 	}
 
 	public class ProcessSettings : SettingGroup
@@ -69,6 +86,7 @@ namespace IvyLock.Model
 
 		#endregion Fields
 
+
 		#region Constructors
 
 		public ProcessSettings()
@@ -77,8 +95,8 @@ namespace IvyLock.Model
 
 		public ProcessSettings(Process process)
 		{
-			Name = process.MainModule.FileVersionInfo.FileDescription;
-			Path = process.MainModule.FileName;
+			Name = FileVersionInfo.GetVersionInfo(process.GetPath()).FileDescription;
+			Path = process.GetPath();
 		}
 
 		public ProcessSettings(SerializationInfo info, StreamingContext context) : base(info, context)
@@ -87,18 +105,27 @@ namespace IvyLock.Model
 
 		#endregion Constructors
 
-		#region Properties
 
-		[XmlIgnore]
-		[Setting(Category = SettingCategory.Security, Description = "Password used to unlock this app.")]
-		public SecureString Password
-		{
-			get { return _password; }
-			set { Hash = EncryptionService.Default.Hash(Password); Set(value, ref _password); }
-		}
+		#region Properties
 
 		[Setting(Hide = true)]
 		public string Hash { get; set; }
+
+		[XmlIgnore]
+		[Setting(
+			Category = SettingCategory.Security, 
+			Description = "Unique password used to unlock this app.")]
+		public SecureString Password
+		{
+			get { return _password; }
+			set
+			{
+				Set(value, ref _password);
+
+				if(value != null)
+					Hash = EncryptionService.Default.Hash(Password);
+			}
+		}
 
 		[Setting(Hide = true)]
 		public string Path
@@ -111,6 +138,12 @@ namespace IvyLock.Model
 			{
 				_path = value;
 
+				if (!File.Exists(_path))
+				{
+					Valid = false;
+					return;
+				}
+
 				Name = FileVersionInfo.GetVersionInfo(value).FileDescription;
 				Application.Current.Dispatcher.Invoke(() =>
 					Icon = Icon = System.Drawing.Icon.ExtractAssociatedIcon(value).ToImageSource());
@@ -120,7 +153,7 @@ namespace IvyLock.Model
 		[Setting(
 			Category = SettingCategory.Security,
 			Name = "Use Password",
-			Description = "Whether this app has a unique password.")]
+			Description = "Whether this app is locked by IvyLock.")]
 		public bool UsePassword
 		{
 			get { return _usePassword; }
@@ -128,10 +161,13 @@ namespace IvyLock.Model
 		}
 
 		#endregion Properties
+
 	}
 
 	public class Setting : Model
 	{
+
+
 		#region Fields
 
 		private SettingGroup _settings;
@@ -139,6 +175,7 @@ namespace IvyLock.Model
 		private object _value;
 
 		#endregion Fields
+
 
 		#region Constructors
 
@@ -148,6 +185,7 @@ namespace IvyLock.Model
 		}
 
 		#endregion Constructors
+
 
 		#region Properties
 
@@ -165,6 +203,7 @@ namespace IvyLock.Model
 
 		#endregion Properties
 
+
 		#region Methods
 
 		private void Update()
@@ -172,11 +211,14 @@ namespace IvyLock.Model
 		}
 
 		#endregion Methods
+
 	}
 
 	[AttributeUsage(AttributeTargets.Property, Inherited = false, AllowMultiple = false)]
 	public sealed class SettingAttribute : Attribute
 	{
+
+
 		#region Constructors
 
 		public SettingAttribute()
@@ -184,6 +226,7 @@ namespace IvyLock.Model
 		}
 
 		#endregion Constructors
+
 
 		#region Properties
 
@@ -196,11 +239,14 @@ namespace IvyLock.Model
 		public Func<object, bool> Predicate { get; set; }
 
 		#endregion Properties
+
 	}
 
 	[XmlInclude(typeof(IvyLockSettings)), XmlInclude(typeof(ProcessSettings))]
 	public abstract class SettingGroup : Model, ISerializable
 	{
+
+
 		#region Constructors
 
 		public SettingGroup()
@@ -222,6 +268,7 @@ namespace IvyLock.Model
 
 		#endregion Constructors
 
+
 		#region Properties
 
 		[XmlIgnore]
@@ -238,7 +285,12 @@ namespace IvyLock.Model
 			get { return GetSettings(); }
 		}
 
+		[XmlIgnore]
+		[Setting(Ignore = true)]
+		public bool Valid { get; protected set; } = true;
+
 		#endregion Properties
+
 
 		#region Methods
 
@@ -296,5 +348,6 @@ namespace IvyLock.Model
 		}
 
 		#endregion Methods
+
 	}
 }

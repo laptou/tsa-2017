@@ -61,18 +61,6 @@
     <Content Include="stdafx.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\IvyLock.Native.x64\IvyLock.Native.x64.vcxproj">
-      <Project>{992e4482-ccc7-4f7a-a1b3-160c9fbf73be}</Project>
-      <Name>IvyLock.Native.x64</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\IvyLock.Native\IvyLock.Native.vcxproj">
-      <Project>{ac11dd2f-2c3e-456b-825d-5ceba9361a71}</Project>
-      <Name>IvyLock.Native</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\IvyLock.Win32Runner\IvyLock.Win32Runner.csproj">
-      <Project>{cb425052-e428-49df-993b-bd92b3550e1d}</Project>
-      <Name>IvyLock.Win32Runner</Name>
-    </ProjectReference>
     <ProjectReference Include="..\IvyLock\IvyLock.csproj">
       <Project>{82831821-04DF-4BA4-8DA5-D1F408CC59EE}</Project>
       <Name>IvyLock</Name>

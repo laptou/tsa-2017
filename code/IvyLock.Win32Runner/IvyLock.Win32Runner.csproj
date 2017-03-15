@@ -60,10 +60,6 @@
     <None Include="ivylock.snk" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\IvyLock.Native\IvyLock.Native.vcxproj">
-      <Project>{ac11dd2f-2c3e-456b-825d-5ceba9361a71}</Project>
-      <Name>IvyLock.Native</Name>
-    </ProjectReference>
     <ProjectReference Include="..\IvyLock\IvyLock.csproj">
       <Project>{82831821-04df-4ba4-8da5-d1f408cc59ee}</Project>
       <Name>IvyLock</Name>

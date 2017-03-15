@@ -27,13 +27,13 @@ namespace IvyLock {
 			public:
 				Type^ BindToType(String^ assemblyName, String^ typeName) override
 				{
-					try 
+					try
 					{
 						Type^ tyType = nullptr;
 						List<Assembly^>^ assemblies = gcnew List<Assembly^>(AppDomain::CurrentDomain->GetAssemblies());
 						Assembly^ assembly = Enumerable::FirstOrDefault<Assembly^>(assemblies, gcnew Func<Assembly^, bool>(Binder::predicate));
 
-						if(typeName->Contains("x86") && Environment::Is64BitProcess)
+						if (typeName->Contains("x86") && Environment::Is64BitProcess)
 							tyType = assembly->GetType(typeName->Replace("x86", "x64"));
 
 						return tyType;
@@ -211,7 +211,59 @@ namespace IvyLock {
 			};
 
 			public struct HookCallbackInfoNative {
-				UINT32 hookType; int nCode; WPARAM wParam; LPARAM lParam;
+				UINT32 hookType; 
+				int nCode; 
+				WPARAM wParam; 
+				LPARAM lParam;
+
+				HookCallbackInfo^ toManaged() {
+					HookCallbackInfoNative* hcin = this;
+
+					HookCallbackInfo^ info = gcnew HookCallbackInfo();
+					info->nCode = hcin->nCode;
+					info->wParam = hcin->wParam;
+					info->lParam = hcin->lParam;
+					info->Type = (HookType)hcin->hookType;
+
+					Object^ extra = nullptr;
+					if (info->Type == HookType::GetMessage) {
+						MSG* msg = (MSG*)info->lParam;
+
+						extra = NativeInterop::MessageFromNative(*msg);
+					}
+
+					if (info->Type == HookType::CallWndProc) {
+						CWPSTRUCT *cwp = (CWPSTRUCT*)info->lParam;
+
+						extra = NativeInterop::CallWndProcFromNative(*cwp);
+					}
+
+					if (info->Type == HookType::CBT) {
+						switch (info->nCode)
+						{
+						case HCBT_ACTIVATE:
+							extra = NativeInterop::CBTActivateFromNative(*(CBTACTIVATESTRUCT*)info->lParam);
+							break;
+						case HCBT_CREATEWND:
+							CBT_CREATEWND cw = *(CBT_CREATEWND*)info->lParam;
+							extra = NativeInterop::CBTCreateWndFromNative(cw, *cw.lpcs);
+							break;
+						case HCBT_MOVESIZE:
+							extra = NativeInterop::RectFromNative(*(RECT*)info->lParam);
+							break;
+						case HCBT_MINMAX:
+							RECT rect = RECT();
+							GetWindowRect(HWND(info->wParam), &rect);
+							extra = NativeInterop::RectFromNative(rect);
+							break;
+						default:
+							break;
+						}
+					}
+
+					info->Extra = extra;
+					return info;
+				}
 			};
 		}
 	}

@@ -1,7 +1,7 @@
 #include "stdafx.h"
 #include "GlobalHook.h"
+#include "blocking_queue.h"
 #include <Windows.h>
-#include <msclr\marshal.h>
 
 using namespace IvyLock::Native;
 using namespace IvyLock::Native::ARCH;
@@ -11,7 +11,7 @@ using namespace msclr::interop;
 std::map<int, HHOOK> IvyLock::Native::ARCH::GlobalHookImpl::Hooks;
 
 bool queueThreadRunning = false;
-bool loadedDependencies = false;
+bool procThreadRunning = false;
 
 HMODULE WINAPI ModuleFromAddress(PVOID pv)
 {
@@ -37,7 +37,9 @@ HMODULE GetCurrentModule()
 	return hModule;
 }
 
-void HookThread() {
+void HookQueueThread() {
+	if (queueThreadRunning) return;
+
 	queueThreadRunning = true;
 	try {
 		NamedPipeClientStream^ npcs = gcnew NamedPipeClientStream(".", GlobalHook::Pipe, PipeDirection::InOut);
@@ -99,77 +101,28 @@ void HookThread() {
 }
 
 DWORD WINAPI HookProcThread(LPVOID lpParam) {
-	try {
-		if (!queueThreadRunning) {
-			Thread^ thread = gcnew Thread(gcnew ThreadStart(HookThread));
-			thread->Name = "HookThread";
-			thread->Start();
-		}
+	if (!queueThreadRunning) (gcnew Thread(gcnew ThreadStart(HookQueueThread)))->Start();
+	if (procThreadRunning) return 0;
 
-		HookCallbackInfoNative* hcin = (HookCallbackInfoNative*)lpParam;
-		HookCallbackInfo^ info = gcnew HookCallbackInfo();
-		info->nCode = hcin->nCode;
-		info->wParam = hcin->wParam;
-		info->lParam = hcin->lParam;
-		info->Type = (HookType)hcin->hookType;
+	//HookCallbackInfoNative* hcin = (HookCallbackInfoNative*)lpParam;
+	// GlobalHook::queue->Add(hcin->toManaged());
 
-		Object^ extra = nullptr;
-		if (info->Type == HookType::GetMessage) {
-			MSG* msg = (MSG*)info->lParam;
-
-			if (msg->message != WM_CREATE)
-				return CallNextHookEx(NULL, info->nCode, info->wParam, info->lParam);
-
-			extra = NativeInterop::MessageFromNative(*msg);
-		}
-
-		if (info->Type == HookType::CallWndProc) {
-			CWPSTRUCT *cwp = (CWPSTRUCT*)info->lParam;
-
-			if (cwp->message != WM_CREATE)
-				return CallNextHookEx(NULL, info->nCode, info->wParam, info->lParam);
-
-			extra = NativeInterop::CallWndProcFromNative(*cwp);
-		}
-
-		if (info->Type == HookType::CBT) {
-			switch (info->nCode)
-			{
-			case HCBT_ACTIVATE:
-				extra = NativeInterop::CBTActivateFromNative(*(CBTACTIVATESTRUCT*)info->lParam);
-				break;
-			case HCBT_CREATEWND:
-				extra = NativeInterop::CBTCreateWndFromNative(*(CBT_CREATEWND*)info->lParam);
-				break;
-			case HCBT_MOVESIZE:
-				extra = NativeInterop::RectFromNative(*(RECT*)info->lParam);
-				break;
-			default:
-				break;
-			}
-		}
-
-		info->Extra = extra;
-
-		GlobalHook::queue->Add(info);
-	}
-	catch (Exception^ ex) {
-		if (Debugger::IsAttached)
-			Debugger::Break();
-	}
+	return 0;
 }
 
 LRESULT HookProc(UINT32 hookType, int nCode, WPARAM wParam, LPARAM lParam) {
 	// can't use the CLR here or we end up with a problem when the user tries to start a new process
-	HookCallbackInfoNative* hcin = (HookCallbackInfoNative*)malloc(sizeof(struct HookCallbackInfoNative));
+	HookCallbackInfoNative* hcin = new HookCallbackInfoNative();
 	hcin->hookType = hookType;
 	hcin->nCode = nCode;
 	hcin->wParam = wParam;
 	hcin->lParam = lParam;
-	LPDWORD threadId;
 
 	// so gotta create thread the native way, and then use CLR in our fancy new thread
-	CreateThread(NULL, 0, HookProcThread, hcin, 0, threadId);
+	if(!procThreadRunning)
+		CreateThread(NULL, 0, HookProcThread, NULL, 0, NULL);
+
+	GlobalHook::queue->Add(hcin->toManaged());
 
 	return 0; 
 }
@@ -208,6 +161,9 @@ case type: \
 		HookCase(HookType::Shell)
 		HookCase(HookType::SysMsgFilter)
 	}
+
+	//HWND hwnd = FindWindow(NULL, TEXT("Telegram"));
+	//DWORD threadId = GetWindowThreadProcessId(hwnd, NULL);
 
 	HHOOK hook = SetWindowsHookEx(hookType, proc, GetCurrentModule(), 0);
 	GlobalHookImpl::Hooks.insert(std::make_pair(hookType, hook));

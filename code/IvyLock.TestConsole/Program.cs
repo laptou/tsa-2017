@@ -40,18 +40,13 @@ namespace IvyLock.TestConsole
 				Process runner = null;
 				CancellationTokenSource cts = new CancellationTokenSource();
 
-				if (Environment.Is64BitProcess && false)
+				if (Environment.Is64BitProcess)
 				{
 					ProcessStartInfo psi = new ProcessStartInfo("IvyLock.Win32Runner.exe", "CBT");
 					psi.UseShellExecute = false;
 					psi.RedirectStandardError = true;
 					psi.RedirectStandardOutput = true;
 					runner = Process.Start(psi);
-					
-					Task.Factory.StartNew(() => 
-					{
-						Console.WriteLine(runner.StandardError.ReadToEnd());
-					}, cts.Token);
 				}
 
 				HookCallback hookproc = info =>
@@ -142,6 +137,7 @@ namespace IvyLock.TestConsole
 				if (runner != null)
 					runner.Kill();
 
+				IvyLock.Native.x64.GlobalHook.ReleaseHook(HookType.CBT);
 				IvyLock.Native.x64.GlobalHook.Stop();
 
 				Console.ReadLine();

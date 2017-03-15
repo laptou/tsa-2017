@@ -6,7 +6,7 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" mc:Ignorable="d"
     x:Class="IvyLock.UI.App" xmlns:xctk="http://schemas.xceed.com/wpf/xaml/toolkit"
-    StartupUri="View/SettingsView.xaml">
+    StartupUri="View/SettingsView.xaml" ShutdownMode="OnExplicitShutdown">
     <Application.Resources>
         <SolidColorBrush x:Key="BackgroundDark" Color="#000000" />
         <SolidColorBrush x:Key="BackgroundLight" Color="#1A1A1A" />
@@ -158,15 +158,103 @@
             <Setter Property="FontFamily" Value="{DynamicResource Text}" />
             <Setter Property="BorderThickness" Value="0" />
         </Style>
-        <ControlTemplate x:Key="WindowTemplateKey" TargetType="{x:Type Window}">
-            <Border BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" Background="{TemplateBinding Background}">
+        
+        <view:WindowMinimizeCommand x:Key="MinimizeCommand"></view:WindowMinimizeCommand>
+        <view:WindowMaximizeCommand x:Key="MaximizeCommand"></view:WindowMaximizeCommand>
+        <view:WindowCloseCommand x:Key="CloseCommand"></view:WindowCloseCommand>
+
+        <Style TargetType="{x:Type Button}" x:Key="WindowButton">
+            <Setter Property="Height" Value="25"/>
+            <Setter Property="Width" Value="40"/>
+            <Setter Property="Background" Value="{DynamicResource BackgroundDark}"/>
+            <Setter Property="Foreground" Value="{DynamicResource Foreground}"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="{x:Type Button}">
+                        <Border Background="{TemplateBinding Background}">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter Property="Foreground" Value="{DynamicResource ForegroundQuarter}"/>
+                            </Trigger>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter Property="Background" Value="{DynamicResource Control}"/>
+                                <Setter Property="Foreground" Value="{DynamicResource ForegroundHalf}"/>
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter Property="Background" Value="{DynamicResource Highlight}"/>
+                                <Setter Property="Foreground" Value="{DynamicResource Foreground}"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style TargetType="{x:Type Image}" x:Key="WindowIcon">
+            <Setter Property="Height" Value="25"/>
+            <Setter Property="Width" Value="25"/>
+        </Style>
+
+        <ControlTemplate x:Key="WindowTemplate" TargetType="{x:Type Window}">
+            <Grid Background="{DynamicResource BackgroundDark}">
                 <Grid>
-                    <AdornerDecorator>
-                        <ContentPresenter/>
-                    </AdornerDecorator>
-                    <ResizeGrip x:Name="WindowResizeGrip" HorizontalAlignment="Right" IsTabStop="false" Visibility="Collapsed" VerticalAlignment="Bottom"/>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="30"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+                    <Grid Grid.Row="0" Margin="5,0,5,0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="auto"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="75"/>
+                        </Grid.ColumnDefinitions>
+                        <Label Grid.Column="0"                                           
+                                    view:ControlDoubleClickBehavior.ExecuteCommand="{DynamicResource CloseCommand}"                                               
+                                    view:ControlDoubleClickBehavior.ExecuteCommandParameter="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type Window}}}" Padding="0">
+                            <Image DockPanel.Dock="Left" Style="{DynamicResource WindowIcon}" Source="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type Window}},Path=Icon}"                                         
+                                    Width="16"                                           
+                                    view:ShowSystemMenuBehavior.TargetWindow="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type Window}}}"                                           
+                                    view:ShowSystemMenuBehavior.LeftButtonShowAt="{Binding ElementName=WindowContent}"/>
+                        </Label>
+                        <Label Grid.Column="1" DockPanel.Dock="Left" Content="{TemplateBinding Property=Title}" Padding="3,0,0,0"                                                                                  
+                                    HorizontalContentAlignment="Center"
+                                    VerticalContentAlignment="Center"
+                                    HorizontalAlignment="Stretch"
+                                    VerticalAlignment="Stretch"
+                                    Foreground="{DynamicResource Foreground}"                                           
+                                    FontSize="16"
+                                    view:WindowDragBehavior.LeftMouseButtonDrag="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type Window}}}"
+                                    view:ControlDoubleClickBehavior.ExecuteCommand="{DynamicResource MaximizeCommand}"
+                                    view:ControlDoubleClickBehavior.ExecuteCommandParameter="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type Window}}}"
+                                    view:ShowSystemMenuBehavior.TargetWindow="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type Window}}}"
+                                    view:ShowSystemMenuBehavior.RightButtonShow="true">
+                        </Label>
+                        <StackPanel Grid.Column="2" Orientation="Horizontal">
+                            <Button DockPanel.Dock="Right" Style="{DynamicResource WindowButton}" Command="{DynamicResource MinimizeCommand}" CommandParameter="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type Window}}}">_</Button>
+                            <Button DockPanel.Dock="Right" Style="{DynamicResource WindowButton}" Command="{DynamicResource MaximizeCommand}" CommandParameter="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type Window}}}">+</Button>
+                            <Button DockPanel.Dock="Right"  Style="{DynamicResource WindowButton}" Command="{DynamicResource CloseCommand}" CommandParameter="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type Window}}}">X</Button>
+                        </StackPanel>
+                    </Grid>
+                    <Border Grid.Row="1" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" Background="{TemplateBinding Background}">
+                        <Grid>
+                            <AdornerDecorator>
+                                <ContentPresenter x:Name="WindowContent"/>
+                            </AdornerDecorator>
+                            <ResizeGrip  x:Name="WindowResizeGrip" HorizontalAlignment="Right" IsTabStop="false" Visibility="Collapsed" VerticalAlignment="Bottom"/>
+                        </Grid>
+                    </Border>
                 </Grid>
-            </Border>
+                <Thumb x:Name="ThumbTop" Height="6" Margin="14,0" VerticalAlignment="Top" Cursor="SizeNS"  Opacity="0" view:WindowResizeBehavior.TopResize="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type Window}}}"/>
+                <Thumb x:Name="ThumbTopLeft" Height="6" Width="6" VerticalAlignment="Top" HorizontalAlignment="Left" Cursor="SizeNWSE"  Opacity="0" view:WindowResizeBehavior.TopLeftResize="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type Window}}}"/>
+                <Thumb x:Name="ThumbBottom" Height="6" Margin="14,0" VerticalAlignment="Bottom" Cursor="SizeNS" Opacity="0" view:WindowResizeBehavior.BottomResize="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type Window}}}"/>
+                <Thumb x:Name="ThumbTopRight" Height="6" Width="6" VerticalAlignment="Top" HorizontalAlignment="Right" Cursor="SizeNESW"  Opacity="0" view:WindowResizeBehavior.TopRightResize="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type Window}}}"/>
+                <Thumb x:Name="ThumbRight" HorizontalAlignment="Right" Margin="0,14" Width="6" Cursor="SizeWE"  Opacity="0" view:WindowResizeBehavior.RightResize="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type Window}}}"/>
+                <Thumb x:Name="ThumbBottomRight" Height="6" Width="6" VerticalAlignment="Bottom" HorizontalAlignment="Right" Cursor="SizeNWSE"  Opacity="0" view:WindowResizeBehavior.BottomRightResize="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type Window}}}"/>
+                <Thumb x:Name="ThumbLeft" HorizontalAlignment="Left" Margin="0,14" Width="6" Cursor="SizeWE"  Opacity="0" view:WindowResizeBehavior.LeftResize="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type Window}}}"/>
+                <Thumb x:Name="ThumbBottomLeft" Height="6" Width="6" VerticalAlignment="Bottom" HorizontalAlignment="Left" Cursor="SizeNESW"  Opacity="0" view:WindowResizeBehavior.BottomLeftResize="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type Window}}}"/>
+            </Grid>
             <ControlTemplate.Triggers>
                 <MultiTrigger>
                     <MultiTrigger.Conditions>
@@ -177,26 +265,24 @@
                 </MultiTrigger>
             </ControlTemplate.Triggers>
         </ControlTemplate>
+
+        <!-- the custom window style and the window template 
+        Here you can customize the look of the window without having to touch the control template 
+        or comment out the brushes and create a new style (see the red style below)-->
+
         <Style TargetType="{x:Type Window}">
-            <Setter Property="Foreground" Value="{DynamicResource Foreground}"/>
-            <Setter Property="Background" Value="{DynamicResource BackgroundDark}"/>
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="{x:Type Window}">
-                        <Border BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" Background="{TemplateBinding Background}">
-                            <AdornerDecorator>
-                                <ContentPresenter/>
-                            </AdornerDecorator>
-                        </Border>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
-            <Style.Triggers>
-                <Trigger Property="ResizeMode" Value="CanResizeWithGrip">
-                    <Setter Property="Template" Value="{StaticResource WindowTemplateKey}"/>
-                </Trigger>
-            </Style.Triggers>
+            <Setter Property="WindowStyle" Value="None"/>
+            <Setter Property="AllowsTransparency" Value="True"/>
+            <Setter Property="MinWidth" Value="200"/>
+            <Setter Property="MinHeight" Value="46"/>
+            <!--CaptionHeight + ResizeBorderThickness * 2-->
+            <Setter Property="Background" Value="Yellow"/>
+            <Setter Property="BorderBrush" Value="Green"/>
+            <Setter Property="BorderThickness" Value="7"/>
+            <Setter Property="Foreground" Value="DarkRed"/>
+            <Setter Property="Template" Value="{StaticResource WindowTemplate}"/>
         </Style>
+        
         <Style x:Key="FocusVisual">
             <Setter Property="Control.Template">
                 <Setter.Value>

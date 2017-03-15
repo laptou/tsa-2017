@@ -10,10 +10,8 @@ using System.Collections;
 
 namespace IvyLock.Service
 {
-	public interface ISettingsService : IEnumerable<SettingGroup>
+	public interface ISettingsService : IEnumerable<SettingGroup>, IDisposable
 	{
-		event Action<SettingGroup, string> GroupChanged;
-
 		SettingGroup this[string name] { get; }
 
 		SettingGroup Get(string name);
@@ -101,8 +99,6 @@ namespace IvyLock.Service
 			}
 		}
 
-		public event Action<SettingGroup, string> GroupChanged;
-
 		public SettingGroup Get(string name)
 		{
 			return _values.FirstOrDefault(sg => sg.Name == name);
@@ -135,6 +131,11 @@ namespace IvyLock.Service
 		IEnumerator IEnumerable.GetEnumerator()
 		{
 			return _values.GetEnumerator();
+		}
+
+		public void Dispose()
+		{
+			
 		}
 	}
 }
