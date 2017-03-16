@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Linq;
@@ -61,7 +62,8 @@ namespace IvyLock
 					}
 					else
 					{
-						throw new Win32Exception(Marshal.GetLastWin32Error());
+						// throw new Win32Exception(Marshal.GetLastWin32Error());
+						return null;
 					}
 				}
 				finally
@@ -71,7 +73,8 @@ namespace IvyLock
 			}
 			else
 			{
-				throw new Win32Exception(Marshal.GetLastWin32Error());
+				// throw new Win32Exception(Marshal.GetLastWin32Error());
+				return null;
 			}
 		}
 
@@ -83,7 +86,7 @@ namespace IvyLock
 			{
 				var pOpenThread = OpenThread(ThreadAccess.SUSPEND_RESUME, false, (uint)thread.Id);
 				if (pOpenThread == IntPtr.Zero)
-					break;
+					continue;
 				ResumeThread(pOpenThread);
 			}
 		}
@@ -122,5 +125,18 @@ namespace IvyLock
 		private static extern uint SuspendThread(IntPtr hThread);
 
 		#endregion Methods
+
+		public class PidComparer : IEqualityComparer<Process>
+		{
+			public bool Equals(Process x, Process y)
+			{
+				return x.Id == y.Id;
+			}
+
+			public int GetHashCode(Process obj)
+			{
+				return obj.Id;
+			}
+		}
 	}
 }

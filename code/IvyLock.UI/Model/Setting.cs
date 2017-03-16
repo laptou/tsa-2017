@@ -1,4 +1,5 @@
 ﻿using IvyLock.Service;
+using IvyLock.UI.ViewModel;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -7,6 +8,7 @@ using System.Linq;
 using System.Reflection;
 using System.Runtime.Serialization;
 using System.Security;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
@@ -21,19 +23,17 @@ namespace IvyLock.Model
 
 	public enum SettingType
 	{
-		Number, Enum, String, Password, Boolean
+		Number, Enum, String, Password, Boolean, Action
 	}
 
 	public class IvyLockSettings : SettingGroup
 	{
-
-
 		#region Fields
 
 		private SecureString _password;
+		private string _hash;
 
 		#endregion Fields
-
 
 		#region Constructors
 
@@ -50,28 +50,33 @@ namespace IvyLock.Model
 
 		#endregion Constructors
 
-
 		#region Properties
 
 		[Setting(Hide = true)]
-		public string Hash { get; set; }
+		public string Hash { get { return _hash; }
+			set {
+				Set(value, ref _hash); } }
 
 		[XmlIgnore]
 		[Setting(Category = SettingCategory.Security, Description = "Password used to unlock IvyLock settings.")]
 		public SecureString Password
 		{
-			get { return _password; }
+			get
+			{
+				return _password;
+			}
 			set
 			{
 				Set(value, ref _password);
 
 				if (value != null)
 					Hash = EncryptionService.Default.Hash(Password);
+
+				RaisePropertyChanged("Hash");
 			}
 		}
 
 		#endregion Properties
-
 	}
 
 	public class ProcessSettings : SettingGroup
@@ -79,13 +84,14 @@ namespace IvyLock.Model
 		#region Fields
 
 		private SecureString _password;
-
 		private string _path;
-
+		private string _hash;
 		private bool _usePassword;
 
-		#endregion Fields
+		private bool hasLockTimeOut = true;
+		private int lockTimeOut = 15;
 
+		#endregion Fields
 
 		#region Constructors
 
@@ -95,8 +101,8 @@ namespace IvyLock.Model
 
 		public ProcessSettings(Process process)
 		{
-			Name = FileVersionInfo.GetVersionInfo(process.GetPath()).FileDescription;
 			Path = process.GetPath();
+			Name = FileVersionInfo.GetVersionInfo(Path).FileDescription;
 		}
 
 		public ProcessSettings(SerializationInfo info, StreamingContext context) : base(info, context)
@@ -105,25 +111,49 @@ namespace IvyLock.Model
 
 		#endregion Constructors
 
-
 		#region Properties
 
 		[Setting(Hide = true)]
-		public string Hash { get; set; }
+		public string Hash { get { return _hash; } set { Set(value, ref _hash); } }
+
+		[Setting(
+			Name = "Timeout",
+			Category = SettingCategory.Security,
+			Description = "The amount of time (in minutes) before this app requires a password to start again.")]
+		public int LockTimeOut
+		{
+			get { return lockTimeOut; }
+			set { Set(value, ref lockTimeOut); }
+		}
 
 		[XmlIgnore]
 		[Setting(
-			Category = SettingCategory.Security, 
+			Category = SettingCategory.Security,
 			Description = "Unique password used to unlock this app.")]
 		public SecureString Password
 		{
-			get { return _password; }
+			get
+			{
+				return _password;
+			}
 			set
 			{
 				Set(value, ref _password);
 
-				if(value != null)
+				if (value != null)
 					Hash = EncryptionService.Default.Hash(Password);
+			}
+		}
+
+		[XmlIgnore]
+		[Setting(
+			Name = "Clear Unique Password",
+			Category = SettingCategory.Security)]
+		public AsyncDelegateCommand ClearPassword
+		{
+			get
+			{
+				return new AsyncDelegateCommand(() => Task.Run(() => Hash = null));
 			}
 		}
 
@@ -151,6 +181,16 @@ namespace IvyLock.Model
 		}
 
 		[Setting(
+			Name = "Use Timeout",
+			Category = SettingCategory.Security,
+			Description = "Whether this app should require a password to start after the first entry.")]
+		public bool UseLockTimeOut
+		{
+			get { return hasLockTimeOut; }
+			set { Set(value, ref hasLockTimeOut); }
+		}
+
+		[Setting(
 			Category = SettingCategory.Security,
 			Name = "Use Password",
 			Description = "Whether this app is locked by IvyLock.")]
@@ -161,13 +201,10 @@ namespace IvyLock.Model
 		}
 
 		#endregion Properties
-
 	}
 
 	public class Setting : Model
 	{
-
-
 		#region Fields
 
 		private SettingGroup _settings;
@@ -175,7 +212,6 @@ namespace IvyLock.Model
 		private object _value;
 
 		#endregion Fields
-
 
 		#region Constructors
 
@@ -185,7 +221,6 @@ namespace IvyLock.Model
 		}
 
 		#endregion Constructors
-
 
 		#region Properties
 
@@ -203,7 +238,6 @@ namespace IvyLock.Model
 
 		#endregion Properties
 
-
 		#region Methods
 
 		private void Update()
@@ -211,14 +245,11 @@ namespace IvyLock.Model
 		}
 
 		#endregion Methods
-
 	}
 
 	[AttributeUsage(AttributeTargets.Property, Inherited = false, AllowMultiple = false)]
 	public sealed class SettingAttribute : Attribute
 	{
-
-
 		#region Constructors
 
 		public SettingAttribute()
@@ -226,7 +257,6 @@ namespace IvyLock.Model
 		}
 
 		#endregion Constructors
-
 
 		#region Properties
 
@@ -239,14 +269,11 @@ namespace IvyLock.Model
 		public Func<object, bool> Predicate { get; set; }
 
 		#endregion Properties
-
 	}
 
 	[XmlInclude(typeof(IvyLockSettings)), XmlInclude(typeof(ProcessSettings))]
 	public abstract class SettingGroup : Model, ISerializable
 	{
-
-
 		#region Constructors
 
 		public SettingGroup()
@@ -267,7 +294,6 @@ namespace IvyLock.Model
 		}
 
 		#endregion Constructors
-
 
 		#region Properties
 
@@ -290,7 +316,6 @@ namespace IvyLock.Model
 		public bool Valid { get; protected set; } = true;
 
 		#endregion Properties
-
 
 		#region Methods
 
@@ -320,6 +345,9 @@ namespace IvyLock.Model
 					s.Type = SettingType.Boolean;
 				if (pi.PropertyType == typeof(int))
 					s.Type = SettingType.Number;
+				if (pi.PropertyType == typeof(DelegateCommand) ||
+					pi.PropertyType == typeof(AsyncDelegateCommand))
+					s.Type = SettingType.Action;
 
 				SettingAttribute attr = pi.GetCustomAttribute<SettingAttribute>();
 				if (attr != null)
@@ -348,6 +376,5 @@ namespace IvyLock.Model
 		}
 
 		#endregion Methods
-
 	}
 }

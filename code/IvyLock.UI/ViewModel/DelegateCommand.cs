@@ -57,6 +57,8 @@ namespace IvyLock.UI.ViewModel
 			this.task = task;
 		}
 
+		public AsyncDelegateCommand(Action task) : this(() => System.Threading.Tasks.Task.Run(task)) { }
+
 		public Func<Task> Task
 		{
 			get { return task; }

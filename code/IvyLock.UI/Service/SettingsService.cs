@@ -7,6 +7,8 @@ using System.Linq;
 using System.Security;
 using System.Xml.Serialization;
 using System.Collections;
+using System.Windows;
+using IvyLock.UI;
 
 namespace IvyLock.Service
 {
@@ -23,12 +25,22 @@ namespace IvyLock.Service
 	{ 
 		private List<SettingGroup> _values;
 		private XmlSerializer xs;
+		private Stream stream;
 		private string path;
+		private volatile static bool initialised = false;
 
-		public static ISettingsService Default { get; internal set; } = new XmlSettingsService();
+		public static ISettingsService Default { get; private set; }
+
+		static XmlSettingsService ()
+		{
+			if (!initialised && Default == null)
+				Default = new XmlSettingsService();
+		}
 
 		public XmlSettingsService()
 		{
+			initialised = true;
+
 			path = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
 			path = Path.Combine(path, "IvyLock");
 
@@ -40,24 +52,40 @@ namespace IvyLock.Service
 			_values = new List<SettingGroup>();
 			xs = new XmlSerializer(typeof(SettingGroup[]));
 
+			try
+			{
+				stream = File.Open(path, FileMode.OpenOrCreate, FileAccess.ReadWrite);
+			}
+			catch (IOException ioex)
+			{
+				if(ioex.HResult == unchecked((int)0x80070020)) // file is in use
+				{
+					MessageBox.Show("IvyLock settings file is in use.",
+						"IvyLock", MessageBoxButton.OK);
+					Application.Current.Shutdown();
+					return;
+				}
+			}
+
 			Deserialize(false);
 		}
 
 		private void Deserialize(bool notify)
 		{
-			using (Stream s = File.Open(path, FileMode.OpenOrCreate, FileAccess.Read))
+			if (stream == null) return;
+							
+			try
 			{
-				try
+				stream.Position = 0;
+
+				_values = new List<SettingGroup>(xs.Deserialize(stream) as SettingGroup[]);
+				foreach (SettingGroup sg in _values)
 				{
-					_values = new List<SettingGroup>(xs.Deserialize(s) as SettingGroup[]);
-					foreach (SettingGroup sg in _values)
-					{
-						sg.PropertyChanged += SettingGroupChanged;
-					}
+					sg.PropertyChanged += SettingGroupChanged;
 				}
-				catch
-				{
-				}
+			}
+			catch
+			{
 			}
 		}
 
@@ -68,16 +96,17 @@ namespace IvyLock.Service
 
 		private void Serialize()
 		{
-			
-			using (Stream s = File.Open(path, FileMode.Create, FileAccess.Write))
+			if (stream == null) return;
+
+			try
 			{
-				try
-				{
-					xs.Serialize(s, _values.ToArray());
-				}
-				catch
-				{
-				}
+
+				stream.Position = 0;
+				stream?.SetLength(0);
+				xs.Serialize(stream, _values.ToArray());
+			}
+			catch
+			{
 			}
 		}
 
@@ -135,7 +164,39 @@ namespace IvyLock.Service
 
 		public void Dispose()
 		{
-			
+			stream?.Dispose();
+		}
+	}
+
+	public class DesignerSettingsService : List<SettingGroup>, ISettingsService
+	{
+		public static DesignerSettingsService Default { get; private set; } = new DesignerSettingsService();
+
+		public SettingGroup this[string name]
+		{
+			get
+			{
+				return Enumerable.FirstOrDefault(this, sg => sg.Name.Equals(name));
+			}
+		}
+
+		public DesignerSettingsService()
+		{
+			Add(new IvyLockSettings());
+		}
+
+		public SettingGroup Get(string name)
+		{
+			return this[name];
+		}
+
+		public bool Set(SettingGroup value)
+		{
+			return true;
+		}
+
+		public void Dispose()
+		{
 		}
 	}
 }

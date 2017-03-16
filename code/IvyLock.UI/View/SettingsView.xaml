@@ -8,23 +8,23 @@
         mc:Ignorable="d"
         Title="Settings" Height="512" MinWidth="600" Background="{DynamicResource BackgroundDark}" Icon="/IvyLock.UI;component/Content/Logo 2.ico" SizeToContent="Width" Style="{DynamicResource IvyWindow}">
     <Window.DataContext>
-        <ViewModel:SettingsViewModel/>
+        <ViewModel:SettingsViewModel />
     </Window.DataContext>
     <Window.Resources>
-        <CollectionViewSource x:Key="Source" 
-                              Source="{Binding SettingGroup.Settings, BindsDirectlyToSource=True, Mode=OneWay}" 
+        <CollectionViewSource x:Key="Source"
+                              Source="{Binding SettingGroup.Settings, BindsDirectlyToSource=True, Mode=OneWay}"
                               IsLiveGroupingRequested="True">
             <CollectionViewSource.GroupDescriptions>
-                <PropertyGroupDescription PropertyName="Category"/>
+                <PropertyGroupDescription PropertyName="Category" />
             </CollectionViewSource.GroupDescriptions>
         </CollectionViewSource>
     </Window.Resources>
     <Grid>
         <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="Auto" MinWidth="200" MaxWidth="300"/>
-            <ColumnDefinition MinWidth="300" Width="*"/>
+            <ColumnDefinition Width="Auto" MinWidth="200" MaxWidth="300" />
+            <ColumnDefinition MinWidth="300" Width="*" />
         </Grid.ColumnDefinitions>
-        
+
         <ListBox
             Background="{DynamicResource BackgroundLight}" BorderBrush="{x:Null}"
             ItemsSource="{Binding Settings}" SelectedValue="{Binding SettingGroup, Mode=TwoWay}"
@@ -38,11 +38,11 @@
                                 <Border x:Name="border" Padding="4" Margin="0" Background="Transparent">
                                     <Grid>
                                         <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="Auto"/>
-                                            <ColumnDefinition/>
+                                            <ColumnDefinition Width="Auto" />
+                                            <ColumnDefinition />
                                         </Grid.ColumnDefinitions>
                                         <Image x:Name="image" Margin="2" Source="{Binding Icon}" Height="24" SnapsToDevicePixels="False" />
-                                        <TextBlock x:Name="text" Grid.Column="1" Text="{Binding Name}" 
+                                        <TextBlock x:Name="text" Grid.Column="1" Text="{Binding Name}"
                                             Foreground="{DynamicResource Foreground}" VerticalAlignment="Center" Margin="5,0" />
                                     </Grid>
                                 </Border>
@@ -68,7 +68,7 @@
                 </Style>
             </ListBox.ItemContainerStyle>
         </ListBox>
-        <ListView 
+        <ListView
             Grid.Column="1" Background="{DynamicResource BackgroundDark}" BorderBrush="{x:Null}"
             ItemsSource="{Binding Source={StaticResource Source}}" HorizontalContentAlignment="Stretch"
             ScrollViewer.HorizontalScrollBarVisibility="Disabled"
@@ -79,7 +79,7 @@
                         <DataTemplate>
                             <Border Padding="4" Background="{DynamicResource BackgroundLight}">
                                 <TextBlock FontSize="14" Text="{Binding Name}" Margin="9,0" FontWeight="Bold"
-                                       Foreground="{DynamicResource Foreground}" FontFamily="{DynamicResource Header}"/>
+                                       Foreground="{DynamicResource Foreground}" FontFamily="{DynamicResource Header}" />
                             </Border>
                         </DataTemplate>
                     </GroupStyle.HeaderTemplate>
@@ -93,20 +93,20 @@
                                 <Border x:Name="border" Padding="4" Background="Transparent" Height="32">
                                     <Grid>
                                         <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="Auto"/>
-                                            <ColumnDefinition MinWidth="200"/>
+                                            <ColumnDefinition Width="Auto" />
+                                            <ColumnDefinition MinWidth="200" />
                                         </Grid.ColumnDefinitions>
                                         <Grid.RowDefinitions>
                                             <RowDefinition />
-                                            <RowDefinition Height="Auto"/>
+                                            <RowDefinition Height="Auto" />
                                         </Grid.RowDefinitions>
-                                        <TextBlock Text="{Binding Name}" 
-                                            Foreground="{DynamicResource Foreground}" 
+                                        <TextBlock Text="{Binding Name}"
+                                            Foreground="{DynamicResource Foreground}"
                                             VerticalAlignment="Center" Margin="5,0" />
                                         <TextBlock x:Name="desc" Text="{Binding Description}" FontSize="10" Grid.Row="1"
-                                            Foreground="{DynamicResource ForegroundSecondary}" 
-                                            VerticalAlignment="Center" Margin="5,0" TextWrapping="Wrap"/>
-                                        <ContentPresenter x:Name="content" Grid.Column="1" Grid.RowSpan="2"/>
+                                            Foreground="{DynamicResource ForegroundSecondary}"
+                                            VerticalAlignment="Center" Margin="5,0" TextWrapping="Wrap" />
+                                        <ContentPresenter x:Name="content" Grid.Column="1" Grid.RowSpan="2" HorizontalAlignment="Right" />
                                     </Grid>
                                 </Border>
                                 <ControlTemplate.Triggers>
@@ -116,60 +116,135 @@
                                     <DataTrigger Binding="{Binding Description}" Value="{x:Null}">
                                         <Setter TargetName="desc" Property="Visibility" Value="Collapsed" />
                                     </DataTrigger>
-                                    <DataTrigger Binding="{Binding Type}" Value="Password">
-                                        <Setter TargetName="content" Property="Content">
-                                            <Setter.Value>
-                                                <Grid>
-                                                    <Grid.ColumnDefinitions>
-                                                        <ColumnDefinition Width="*" />
-                                                        <ColumnDefinition Width="Auto" />
-                                                    </Grid.ColumnDefinitions>
-                                                    <PasswordBox 
-                                                        x:Name="pwdBox" 
-                                                        local:PasswordBoxHelper.Placeholder="type to change passcode"
-                                                        local:PasswordBoxHelper.EncryptedPassword="{Binding Value, Mode=OneWayToSource}"
-                                                        local:PasswordBoxHelper.Watch="True" Template="{DynamicResource PasswordBoxControlTemplate}">
-                                                    </PasswordBox>
-                                                </Grid>
-                                            </Setter.Value>
-                                        </Setter>
-                                    </DataTrigger>
-                                    <DataTrigger Binding="{Binding Type}" Value="Number">
-                                        <Setter TargetName="content" Property="Content">
-                                            <Setter.Value>
-                                                <xctk:IntegerUpDown
-                                                    Grid.Column="1"
-                                                    VerticalAlignment="Center"/>
-                                            </Setter.Value>
-                                        </Setter>
-                                    </DataTrigger>
-                                    <DataTrigger Binding="{Binding Type}" Value="String">
-                                        <Setter TargetName="content" Property="Content">
-                                            <Setter.Value>
-                                                <xctk:WatermarkTextBox
-                                                    Watermark="hit enter to change"
-                                                    Text="{Binding Value}"
-                                                    Grid.Column="1"
-                                                    VerticalAlignment="Center"/>
-                                            </Setter.Value>
-                                        </Setter>
-                                    </DataTrigger>
-                                    <DataTrigger Binding="{Binding Type}" Value="Boolean">
-                                        <Setter TargetName="content" Property="Content">
-                                            <Setter.Value>
-                                                <CheckBox
-                                                    IsChecked="{Binding Value}"
-                                                    Grid.Column="1" HorizontalAlignment="Right"
-                                                    VerticalAlignment="Center"/>
-                                            </Setter.Value>
-                                        </Setter>
-                                    </DataTrigger>
                                 </ControlTemplate.Triggers>
                             </ControlTemplate>
                         </Setter.Value>
                     </Setter>
                 </Style>
             </ListView.ItemContainerStyle>
+            <ListView.Resources>
+                <DataTemplate x:Key="Password">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <PasswordBox
+                                x:Name="pwdBox"
+                                local:PasswordBoxHelper.Placeholder="type to change passcode"
+                                local:PasswordBoxHelper.EncryptedPassword="{Binding Value, Mode=OneWayToSource}"
+                                local:PasswordBoxHelper.Watch="True" Template="{DynamicResource PasswordBoxControlTemplate}">
+                        </PasswordBox>
+                    </Grid>
+                </DataTemplate>
+                <DataTemplate x:Key="Action">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <Button Command="{Binding Value}" Width="100" x:Name="btn">
+                            <Button.Style>
+                                <Style TargetType="Button" BasedOn="{StaticResource {x:Type Button}}">
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding Value.Execution.Status}" Value="Running">
+                                            <Setter Property="Content">
+                                                <Setter.Value>
+                                                    <ProgressBar IsIndeterminate="True" />
+                                                </Setter.Value>
+                                            </Setter>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Button.Style>
+                        </Button>
+                    </Grid>
+                </DataTemplate>
+                <DataTemplate x:Key="Number">
+                    <xctk:IntegerUpDown
+                            Grid.Column="1"
+                            VerticalAlignment="Center" />
+                </DataTemplate>
+                <DataTemplate x:Key="String">
+                    <xctk:WatermarkTextBox
+                            Watermark="hit enter to change"
+                            Text="{Binding Value}"
+                            Grid.Column="1"
+                            VerticalAlignment="Center" />
+                </DataTemplate>
+                <DataTemplate x:Key="Boolean">
+                    <CheckBox
+                        IsChecked="{Binding Value}"
+                        VerticalAlignment="Center" />
+                </DataTemplate>
+            </ListView.Resources>
+            <ListView.ItemTemplateSelector>
+                <local:SettingTemplateSelector />
+            </ListView.ItemTemplateSelector>
         </ListView>
+
+        <Grid x:Name="setupOverlay" Background="{DynamicResource BackgroundDark}" Grid.ColumnSpan="2">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="3*" />
+                <RowDefinition Height="2*" />
+                <RowDefinition Height="1*" />
+            </Grid.RowDefinitions>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+            <Viewbox Margin="0" Grid.Column="1"
+                   SnapsToDevicePixels="True" Grid.RowSpan="1" HorizontalAlignment="Center">
+                <Image Source="/IvyLock.UI;component/Content/Logo 2 Inverted.png" />
+            </Viewbox>
+
+            <PasswordBox
+                x:Name="pwdBox"
+                local:PasswordBoxHelper.EncryptedPassword="{Binding Password, Mode=OneWayToSource}"
+                local:PasswordBoxHelper.Watch="True"
+                Grid.Row="1" Grid.ColumnSpan="3" VerticalAlignment="Center" Height="32">
+                <PasswordBox.Style>
+                    <Style TargetType="PasswordBox" BasedOn="{StaticResource {x:Type PasswordBox}}">
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding CurrentScreen}" Value="SetupPassword">
+                                <Setter Property="local:PasswordBoxHelper.Placeholder" Value="choose your password" />
+                            </DataTrigger>
+                            <DataTrigger Binding="{Binding CurrentScreen}" Value="EnterPassword">
+                                <Setter Property="local:PasswordBoxHelper.Placeholder" Value="enter your password" />
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </PasswordBox.Style>
+            </PasswordBox>
+
+            <Button Grid.Row="2" HorizontalAlignment="Center" VerticalAlignment="Center" Padding="10" Grid.Column="1"
+                    Command="{Binding AdvanceScreenCommand}">
+                set password
+                <Button.Style>
+                    <Style TargetType="Button" BasedOn="{StaticResource {x:Type Button}}">
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding CurrentScreen}" Value="EnterPassword">
+                                <Setter Property="Visibility" Value="Collapsed" />
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </Button.Style>
+            </Button>
+
+            <Grid.Style>
+                <Style TargetType="Grid">
+                    <Setter Property="Visibility" Value="Collapsed" />
+                    <Style.Triggers>
+                        <DataTrigger Binding="{Binding CurrentScreen}" Value="SetupPassword">
+                            <Setter Property="Visibility" Value="Visible" />
+                        </DataTrigger>
+                        <DataTrigger Binding="{Binding CurrentScreen}" Value="EnterPassword">
+                            <Setter Property="Visibility" Value="Visible" />
+                        </DataTrigger>
+                    </Style.Triggers>
+                </Style>
+            </Grid.Style>
+        </Grid>
     </Grid>
 </Window>

@@ -45,15 +45,58 @@
             <Setter Property="Foreground" Value="{DynamicResource Foreground}" />
             <Setter Property="FontFamily" Value="{DynamicResource Text}" />
             <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="Padding" Value="5" />
+
+            <Style.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="BorderBrush" Value="{DynamicResource Foreground}" />
+                </Trigger>
+                <Trigger Property="IsPressed" Value="True">
+                    <Setter Property="Background" Value="{DynamicResource Control}" />
+                    <Setter Property="BorderBrush" Value="{DynamicResource Control}" />
+                </Trigger>
+                <Trigger Property="IsEnabled" Value="False">
+                    <Setter Property="Opacity" Value="0.75" />
+                    <Setter Property="BorderBrush" Value="{DynamicResource Control}" />
+                    <Setter Property="Background" Value="Transparent" />
+                </Trigger>
+            </Style.Triggers>
         </Style>
+
+        <ControlTemplate x:Key="PasswordBoxControlTemplate" TargetType="{x:Type PasswordBox}">
+            <Border x:Name="border" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" Background="{TemplateBinding Background}" SnapsToDevicePixels="True">
+                <Grid>
+                    <TextBlock x:Name="watermark" Opacity="0.5" Visibility="Collapsed"
+                               Text="{TemplateBinding view:PasswordBoxHelper.Placeholder}" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                    <ScrollViewer x:Name="PART_ContentHost" Focusable="False" HorizontalScrollBarVisibility="Hidden" VerticalScrollBarVisibility="Hidden"/>
+                </Grid>
+            </Border>
+            <ControlTemplate.Triggers>
+                <Trigger Property="IsEnabled" Value="False">
+                    <Setter Property="Opacity" TargetName="border" Value="0.56"/>
+                </Trigger>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="BorderBrush" TargetName="border" Value="#FF7EB4EA"/>
+                </Trigger>
+                <MultiTrigger>
+                    <MultiTrigger.Conditions>
+                        <Condition Property="IsKeyboardFocused" Value="False" />
+                        <Condition Property="view:PasswordBoxHelper.EncryptedPassword" Value="{x:Null}" />
+                    </MultiTrigger.Conditions>
+                    <Setter Property="Visibility" TargetName="watermark" Value="Visible"/>
+                </MultiTrigger>
+            </ControlTemplate.Triggers>
+        </ControlTemplate>
         
         <Style TargetType="{x:Type PasswordBox}">
             <Setter Property="MinWidth" Value="192" />
+            <Setter Property="MaxWidth" Value="600" />
             <Setter Property="Padding" Value="5" />
             <Setter Property="VerticalContentAlignment" Value="Center" />
             <Setter Property="HorizontalContentAlignment" Value="Center" />
             <Setter Property="Background" Value="Transparent" />
             <Setter Property="Foreground" Value="{DynamicResource Foreground}" />
+            <Setter Property="Template" Value="{StaticResource PasswordBoxControlTemplate}" />
             <Setter Property="BorderThickness" Value="0" />
         </Style>
         <Style TargetType="{x:Type xctk:WatermarkPasswordBox}">
@@ -208,17 +251,17 @@
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="auto"/>
                             <ColumnDefinition Width="*"/>
-                            <ColumnDefinition Width="75"/>
+                            <ColumnDefinition Width="auto"/>
                         </Grid.ColumnDefinitions>
                         <Label Grid.Column="0"                                           
                                     view:ControlDoubleClickBehavior.ExecuteCommand="{DynamicResource CloseCommand}"                                               
                                     view:ControlDoubleClickBehavior.ExecuteCommandParameter="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type Window}}}" Padding="0">
                             <Image DockPanel.Dock="Left" Style="{DynamicResource WindowIcon}" Source="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type Window}},Path=Icon}"                                         
-                                    Width="16"                                           
+                                    Width="25"                                           
                                     view:ShowSystemMenuBehavior.TargetWindow="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type Window}}}"                                           
                                     view:ShowSystemMenuBehavior.LeftButtonShowAt="{Binding ElementName=WindowContent}"/>
                         </Label>
-                        <Label Grid.Column="1" DockPanel.Dock="Left" Content="{TemplateBinding Property=Title}" Padding="3,0,0,0"                                                                                  
+                        <Label Grid.Column="1" DockPanel.Dock="Left" Padding="3,0,0,0"                                                                                  
                                     HorizontalContentAlignment="Center"
                                     VerticalContentAlignment="Center"
                                     HorizontalAlignment="Stretch"
@@ -232,9 +275,15 @@
                                     view:ShowSystemMenuBehavior.RightButtonShow="true">
                         </Label>
                         <StackPanel Grid.Column="2" Orientation="Horizontal">
-                            <Button DockPanel.Dock="Right" Style="{DynamicResource WindowButton}" Command="{DynamicResource MinimizeCommand}" CommandParameter="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type Window}}}">_</Button>
-                            <Button DockPanel.Dock="Right" Style="{DynamicResource WindowButton}" Command="{DynamicResource MaximizeCommand}" CommandParameter="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type Window}}}">+</Button>
-                            <Button DockPanel.Dock="Right"  Style="{DynamicResource WindowButton}" Command="{DynamicResource CloseCommand}" CommandParameter="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type Window}}}">X</Button>
+                            <Button DockPanel.Dock="Right" Style="{DynamicResource WindowButton}" Command="{DynamicResource MinimizeCommand}" CommandParameter="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type Window}}}">
+                                <Image Source="Content/min.png" Width="12"/>
+                            </Button>
+                            <Button DockPanel.Dock="Right" Style="{DynamicResource WindowButton}" Command="{DynamicResource MaximizeCommand}" CommandParameter="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type Window}}}">
+                                <Image Source="Content/res.png" Width="12"/>
+                            </Button>
+                            <Button DockPanel.Dock="Right" Style="{DynamicResource WindowButton}" Command="{DynamicResource CloseCommand}" CommandParameter="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type Window}}}">
+                                <Image Source="Content/close.png" Width="12"/>
+                            </Button>
                         </StackPanel>
                     </Grid>
                     <Border Grid.Row="1" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" Background="{TemplateBinding Background}">
@@ -266,20 +315,12 @@
             </ControlTemplate.Triggers>
         </ControlTemplate>
 
-        <!-- the custom window style and the window template 
-        Here you can customize the look of the window without having to touch the control template 
-        or comment out the brushes and create a new style (see the red style below)-->
-
-        <Style TargetType="{x:Type Window}">
+        <Style x:Key="IvyWindow" TargetType="{x:Type Window}">
             <Setter Property="WindowStyle" Value="None"/>
             <Setter Property="AllowsTransparency" Value="True"/>
             <Setter Property="MinWidth" Value="200"/>
             <Setter Property="MinHeight" Value="46"/>
             <!--CaptionHeight + ResizeBorderThickness * 2-->
-            <Setter Property="Background" Value="Yellow"/>
-            <Setter Property="BorderBrush" Value="Green"/>
-            <Setter Property="BorderThickness" Value="7"/>
-            <Setter Property="Foreground" Value="DarkRed"/>
             <Setter Property="Template" Value="{StaticResource WindowTemplate}"/>
         </Style>
         
@@ -525,30 +566,7 @@
         <Style TargetType="{x:Type ScrollViewer}">
             <Setter Property="Template" Value="{StaticResource ScrollViewerControlTemplate}" />
         </Style>
-        <ControlTemplate x:Key="PasswordBoxControlTemplate" TargetType="{x:Type PasswordBox}">
-            <Border x:Name="border" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" Background="{TemplateBinding Background}" SnapsToDevicePixels="True">
-                <Grid>
-                    <TextBlock x:Name="watermark" Opacity="0.5" Visibility="Collapsed"
-                               Text="{TemplateBinding view:PasswordBoxHelper.Placeholder}" HorizontalAlignment="Center" VerticalAlignment="Center" />
-                    <ScrollViewer x:Name="PART_ContentHost" Focusable="False" HorizontalScrollBarVisibility="Hidden" VerticalScrollBarVisibility="Hidden"/>
-                </Grid>
-            </Border>
-            <ControlTemplate.Triggers>
-                <Trigger Property="IsEnabled" Value="False">
-                    <Setter Property="Opacity" TargetName="border" Value="0.56"/>
-                </Trigger>
-                <Trigger Property="IsMouseOver" Value="True">
-                    <Setter Property="BorderBrush" TargetName="border" Value="#FF7EB4EA"/>
-                </Trigger>
-                <MultiTrigger>
-                    <MultiTrigger.Conditions>
-                        <Condition Property="IsKeyboardFocused" Value="False" />
-                        <Condition Property="view:PasswordBoxHelper.EncryptedPassword" Value="{x:Null}" />
-                    </MultiTrigger.Conditions>
-                    <Setter Property="Visibility" TargetName="watermark" Value="Visible"/>
-                </MultiTrigger>
-            </ControlTemplate.Triggers>
-        </ControlTemplate>
+        
 
     </Application.Resources>
 </Application>

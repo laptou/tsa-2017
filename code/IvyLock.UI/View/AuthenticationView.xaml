@@ -6,7 +6,7 @@
         xmlns:local="clr-namespace:IvyLock.UI.View" 
         xmlns:ViewModel="clr-namespace:IvyLock.UI.ViewModel" x:Class="IvyLock.UI.View.AuthenticationView" 
         mc:Ignorable="d"
-        Title="IvyLock" Height="512" Width="768" FontFamily="Roboto" Topmost="True" Style="{DynamicResource IvyWindow}">
+        Title="IvyLock" Height="512" Width="768" FontFamily="Roboto" Style="{DynamicResource IvyWindow}">
     <Window.DataContext>
         <ViewModel:AuthenticationViewModel CloseRequested="AuthenticationViewModel_CloseRequested"/>
     </Window.DataContext>
