@@ -31,14 +31,20 @@ namespace IvyLock.UI
 		{
 			if (!DesignerProperties.GetIsInDesignMode(new DependencyObject()))
 			{
-				if (mutex.WaitOne(TimeSpan.Zero, true))
-					mutex.ReleaseMutex();
-				else
+				try
 				{
-					Shutdown();
-					return;
+					if (mutex.WaitOne(TimeSpan.Zero, true))
+						mutex.ReleaseMutex();
+					else
+					{
+						Shutdown();
+						return;
+					}
 				}
-
+				catch (AbandonedMutexException)
+				{
+					mutex.ReleaseMutex();
+				}
 				base.OnStartup(e);
 
 				// don't initialise statically! XmlSettingsService depends

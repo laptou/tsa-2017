@@ -24,11 +24,15 @@
             <ColumnDefinition Width="Auto" MinWidth="200" MaxWidth="300" />
             <ColumnDefinition MinWidth="300" Width="*" />
         </Grid.ColumnDefinitions>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
 
         <ListBox
             Background="{DynamicResource BackgroundLight}" BorderBrush="{x:Null}"
             ItemsSource="{Binding Settings}" SelectedValue="{Binding SettingGroup, Mode=TwoWay}"
-            ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+            ScrollViewer.HorizontalScrollBarVisibility="Disabled" Grid.RowSpan="2"
             HorizontalContentAlignment="Stretch" Padding="0" Margin="0">
             <ListBox.ItemContainerStyle>
                 <Style TargetType="{x:Type ListBoxItem}">
@@ -106,7 +110,7 @@
                                         <TextBlock x:Name="desc" Text="{Binding Description}" FontSize="10" Grid.Row="1"
                                             Foreground="{DynamicResource ForegroundSecondary}"
                                             VerticalAlignment="Center" Margin="5,0" TextWrapping="Wrap" />
-                                        <ContentPresenter x:Name="content" Grid.Column="1" Grid.RowSpan="2" HorizontalAlignment="Right" />
+                                        <ContentPresenter x:Name="content" Margin="10,0,0,0" Grid.Column="1" Grid.RowSpan="2" HorizontalAlignment="Right" />
                                     </Grid>
                                 </Border>
                                 <ControlTemplate.Triggers>
@@ -161,7 +165,10 @@
                     </Grid>
                 </DataTemplate>
                 <DataTemplate x:Key="Number">
-                    <xctk:IntegerUpDown
+                    <local:NumericUpDown
+                            Value="{Binding Value, Mode=TwoWay}"
+                            MinValue="{Binding MinValue}"
+                            MaxValue="{Binding MaxValue}"
                             Grid.Column="1"
                             VerticalAlignment="Center" />
                 </DataTemplate>
@@ -182,6 +189,9 @@
                 <local:SettingTemplateSelector />
             </ListView.ItemTemplateSelector>
         </ListView>
+        <Border x:Name="toast" Background="#FF17DA2F">
+            <TextBlock HorizontalAlignment="Center" VerticalAlignment="Center">saved</TextBlock>
+        </Border>
 
         <Grid x:Name="setupOverlay" Background="{DynamicResource BackgroundDark}" Grid.ColumnSpan="2">
             <Grid.RowDefinitions>

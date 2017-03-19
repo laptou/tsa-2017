@@ -127,6 +127,7 @@ namespace IvyLock.UI.ViewModel
 				}
 				catch (Win32Exception) { return false; }
 				catch (FileNotFoundException) { return false; }
+				catch (InvalidOperationException) { return false; }
 			};
 
 			iss = XmlSettingsService.Default;
