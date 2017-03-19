@@ -24,11 +24,15 @@
             <ColumnDefinition Width="Auto" MinWidth="200" MaxWidth="300" />
             <ColumnDefinition MinWidth="300" Width="*" />
         </Grid.ColumnDefinitions>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
 
         <ListBox
             Background="{DynamicResource BackgroundLight}" BorderBrush="{x:Null}"
             ItemsSource="{Binding Settings}" SelectedValue="{Binding SettingGroup, Mode=TwoWay}"
-            ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+            ScrollViewer.HorizontalScrollBarVisibility="Disabled" Grid.RowSpan="2"
             HorizontalContentAlignment="Stretch" Padding="0" Margin="0">
             <ListBox.ItemContainerStyle>
                 <Style TargetType="{x:Type ListBoxItem}">
@@ -106,7 +110,7 @@
                                         <TextBlock x:Name="desc" Text="{Binding Description}" FontSize="10" Grid.Row="1"
                                             Foreground="{DynamicResource ForegroundSecondary}"
                                             VerticalAlignment="Center" Margin="5,0" TextWrapping="Wrap" />
-                                        <ContentPresenter x:Name="content" Grid.Column="1" Grid.RowSpan="2" HorizontalAlignment="Right" />
+                                        <ContentPresenter x:Name="content" Margin="10,0,0,0" Grid.Column="1" Grid.RowSpan="2" HorizontalAlignment="Right" />
                                     </Grid>
                                 </Border>
                                 <ControlTemplate.Triggers>
@@ -161,7 +165,10 @@
                     </Grid>
                 </DataTemplate>
                 <DataTemplate x:Key="Number">
-                    <xctk:IntegerUpDown
+                    <local:NumericUpDown
+                            Value="{Binding Value, Mode=TwoWay}"
+                            MinValue="{Binding MinValue}"
+                            MaxValue="{Binding MaxValue}"
                             Grid.Column="1"
                             VerticalAlignment="Center" />
                 </DataTemplate>
@@ -182,8 +189,11 @@
                 <local:SettingTemplateSelector />
             </ListView.ItemTemplateSelector>
         </ListView>
+        <Border x:Name="toast" Background="{DynamicResource BackgroundLight}" Opacity="0.5" Grid.Row="2" Grid.Column="2" Padding="5">
+            <TextBlock HorizontalAlignment="Center" VerticalAlignment="Center">all settings are autosaved</TextBlock>
+        </Border>
 
-        <Grid x:Name="setupOverlay" Background="{DynamicResource BackgroundDark}" Grid.ColumnSpan="2">
+        <Grid x:Name="setupOverlay" Background="{DynamicResource BackgroundDark}" Grid.ColumnSpan="2" Grid.RowSpan="2">
             <Grid.RowDefinitions>
                 <RowDefinition Height="3*" />
                 <RowDefinition Height="2*" />
@@ -199,24 +209,44 @@
                 <Image Source="/IvyLock.UI;component/Content/Logo 2 Inverted.png" />
             </Viewbox>
 
-            <PasswordBox
-                x:Name="pwdBox"
-                local:PasswordBoxHelper.EncryptedPassword="{Binding Password, Mode=OneWayToSource}"
-                local:PasswordBoxHelper.Watch="True"
-                Grid.Row="1" Grid.ColumnSpan="3" VerticalAlignment="Center" Height="32">
-                <PasswordBox.Style>
-                    <Style TargetType="PasswordBox" BasedOn="{StaticResource {x:Type PasswordBox}}">
+            <Border Grid.Row="1" Grid.ColumnSpan="3" VerticalAlignment="Center">
+                <PasswordBox
+                    x:Name="pwdBox"
+                    local:PasswordBoxHelper.EncryptedPassword="{Binding Password, Mode=TwoWay}"
+                    local:PasswordBoxHelper.Watch="True"
+                    Height="32" Margin="20,0" Background="{DynamicResource BackgroundHalf}">
+                    <PasswordBox.Style>
+                        <Style TargetType="PasswordBox" BasedOn="{StaticResource {x:Type PasswordBox}}">
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding CurrentScreen}" Value="SetupPassword">
+                                    <Setter Property="local:PasswordBoxHelper.Placeholder" Value="choose your password" />
+                                </DataTrigger>
+                                <DataTrigger Binding="{Binding CurrentScreen}" Value="EnterPassword">
+                                    <Setter Property="local:PasswordBoxHelper.Placeholder" Value="enter your password" />
+                                </DataTrigger>
+                                <DataTrigger Binding="{Binding Locked}" Value="False">
+                                    <Setter Property="IsEnabled" Value="False" />
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </PasswordBox.Style>
+                </PasswordBox>
+                <Border.Style>
+                    <Style TargetType="Border">
                         <Style.Triggers>
-                            <DataTrigger Binding="{Binding CurrentScreen}" Value="SetupPassword">
-                                <Setter Property="local:PasswordBoxHelper.Placeholder" Value="choose your password" />
-                            </DataTrigger>
-                            <DataTrigger Binding="{Binding CurrentScreen}" Value="EnterPassword">
-                                <Setter Property="local:PasswordBoxHelper.Placeholder" Value="enter your password" />
-                            </DataTrigger>
+                            <MultiDataTrigger>
+                                <MultiDataTrigger.Conditions>
+                                    <Condition Binding="{Binding Locked}" Value="False" />
+                                    <Condition Binding="{Binding CurrentScreen}" Value="Main" />
+                                </MultiDataTrigger.Conditions>
+                                <Setter Property="Background" Value="#89FF89" />
+                            </MultiDataTrigger>
                         </Style.Triggers>
                     </Style>
-                </PasswordBox.Style>
-            </PasswordBox>
+                </Border.Style>
+            </Border>
+            
+            
 
             <Button Grid.Row="2" HorizontalAlignment="Center" VerticalAlignment="Center" Padding="10" Grid.Column="1"
                     Command="{Binding AdvanceScreenCommand}">
@@ -227,6 +257,9 @@
                             <DataTrigger Binding="{Binding CurrentScreen}" Value="EnterPassword">
                                 <Setter Property="Visibility" Value="Collapsed" />
                             </DataTrigger>
+                            <DataTrigger Binding="{Binding CurrentScreen}" Value="Main">
+                                <Setter Property="Visibility" Value="Collapsed" />
+                            </DataTrigger>
                         </Style.Triggers>
                     </Style>
                 </Button.Style>
@@ -234,13 +267,59 @@
 
             <Grid.Style>
                 <Style TargetType="Grid">
-                    <Setter Property="Visibility" Value="Collapsed" />
                     <Style.Triggers>
-                        <DataTrigger Binding="{Binding CurrentScreen}" Value="SetupPassword">
+                        <DataTrigger Binding="{Binding CurrentScreen, Mode=OneWay}" Value="SetupPassword">
                             <Setter Property="Visibility" Value="Visible" />
+                            <DataTrigger.EnterActions>
+                                <BeginStoryboard>
+                                    <Storyboard>
+                                        <DoubleAnimation Storyboard.TargetProperty="Opacity"
+                                                         To="1" Duration="0:0:0.25"/>
+                                    </Storyboard>
+                                </BeginStoryboard>
+                            </DataTrigger.EnterActions>
+                            <DataTrigger.ExitActions>
+                                <BeginStoryboard>
+                                    <Storyboard>
+                                        <DoubleAnimation Storyboard.TargetProperty="Opacity"
+                                                         To="0" BeginTime="0:0:0.25" Duration="0:0:0.25"/>
+                                        <ObjectAnimationUsingKeyFrames Storyboard.TargetProperty="Visibility">
+                                            <DiscreteObjectKeyFrame KeyTime="0:0:0"
+                                                                    Value="{x:Static Visibility.Visible}" />
+                                            <DiscreteObjectKeyFrame KeyTime="0:0:0.50"
+                                                                    Value="{x:Static Visibility.Collapsed}" />
+                                        </ObjectAnimationUsingKeyFrames>
+                                    </Storyboard>
+                                </BeginStoryboard>
+                            </DataTrigger.ExitActions>
                         </DataTrigger>
-                        <DataTrigger Binding="{Binding CurrentScreen}" Value="EnterPassword">
-                            <Setter Property="Visibility" Value="Visible" />
+                        <DataTrigger Binding="{Binding CurrentScreen, Mode=OneWay}" Value="EnterPassword">
+                            <DataTrigger.EnterActions>
+                                <BeginStoryboard>
+                                    <Storyboard>
+                                        <DoubleAnimation Storyboard.TargetProperty="Opacity"
+                                                         To="1" Duration="0:0:0.25"/>
+                                        <ObjectAnimationUsingKeyFrames Storyboard.TargetProperty="Visibility">
+                                            <DiscreteObjectKeyFrame KeyTime="0:0:0"
+                                                                    Value="{x:Static Visibility.Visible}" />
+                                        </ObjectAnimationUsingKeyFrames>
+                                    </Storyboard>
+                                </BeginStoryboard>
+                            </DataTrigger.EnterActions>
+                            <DataTrigger.ExitActions>
+                                <BeginStoryboard>
+                                    <Storyboard>
+                                        <DoubleAnimation Storyboard.TargetProperty="Opacity"
+                                                         To="0" BeginTime="0:0:0.25" Duration="0:0:0.25"/>
+                                        <ObjectAnimationUsingKeyFrames Storyboard.TargetProperty="Visibility">
+                                            <DiscreteObjectKeyFrame KeyTime="0:0:0"
+                                                                    Value="{x:Static Visibility.Visible}" />
+                                            <DiscreteObjectKeyFrame KeyTime="0:0:0.50"
+                                                                    Value="{x:Static Visibility.Collapsed}" />
+                                        </ObjectAnimationUsingKeyFrames>
+                                    </Storyboard>
+                                </BeginStoryboard>
+                            </DataTrigger.ExitActions>
                         </DataTrigger>
                     </Style.Triggers>
                 </Style>

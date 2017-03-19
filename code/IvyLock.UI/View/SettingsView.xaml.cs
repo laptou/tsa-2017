@@ -4,6 +4,7 @@ using System;
 using System.Windows;
 using Xceed.Wpf.Toolkit;
 using System.ComponentModel;
+using IvyLock.UI.ViewModel;
 
 namespace IvyLock.UI.View
 {
@@ -19,7 +20,14 @@ namespace IvyLock.UI.View
 
 		protected override void OnClosing(CancelEventArgs e)
 		{
+			SettingsViewModel svm = ((SettingsViewModel)DataContext);
+			svm.CurrentScreen = SettingsViewModel.Screen.EnterPassword;
+			svm.Locked = true;
+			pwdBox.Clear();
+
+			// window can be hidden but not closed
 			Hide();
+
 			e.Cancel = true;
 			base.OnClosing(e);
 		}

@@ -27,7 +27,9 @@
         </Style>
         <Style TargetType="{x:Type RepeatButton}">
             <Setter Property="Foreground" Value="{DynamicResource Foreground}" />
-            <Setter Property="FontFamily" Value="{DynamicResource Text}" />
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderBrush" Value="{DynamicResource Control}" />
+            <Setter Property="BorderThickness" Value="1" />
         </Style>
         <Style TargetType="{x:Type TextBlock}">
             <Setter Property="FontFamily" Value="{DynamicResource Text}" />

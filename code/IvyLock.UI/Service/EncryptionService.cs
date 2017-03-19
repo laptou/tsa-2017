@@ -4,6 +4,7 @@ using System.Runtime.InteropServices;
 using System.Runtime.Serialization.Formatters.Binary;
 using System.Security;
 using System.Security.Cryptography;
+using System.Text;
 
 namespace IvyLock.Service
 {
@@ -11,17 +12,19 @@ namespace IvyLock.Service
 	{
 		public static byte[] GetBytes(this SecureString ss)
 		{
-			IntPtr ptr = Marshal.SecureStringToBSTR(ss);
-			byte[] ssBytes = new byte[ss.Length * 2];
-
+			IntPtr unmanagedString = IntPtr.Zero;
 			try
 			{
-				Marshal.Copy(ssBytes, 0, ptr, ssBytes.Length);
-				return ssBytes;
+				unmanagedString = Marshal.SecureStringToGlobalAllocUnicode(ss);
+
+				return Encoding.UTF8.GetBytes(Marshal.PtrToStringUni(unmanagedString));
 			}
 			finally
 			{
-				Marshal.ZeroFreeBSTR(ptr);
+				if (unmanagedString != IntPtr.Zero)
+				{
+					Marshal.ZeroFreeGlobalAllocUnicode(unmanagedString);
+				}
 			}
 		}
 	}

@@ -119,7 +119,8 @@ namespace IvyLock.Model
 		[Setting(
 			Name = "Timeout",
 			Category = SettingCategory.Security,
-			Description = "The amount of time (in minutes) before this app requires a password to start again.")]
+			Description = "The amount of time (in minutes) before this app requires a password to start again.",
+			MinValue = 1, MaxValue = 300)]
 		public int LockTimeOut
 		{
 			get { return lockTimeOut; }
@@ -228,6 +229,8 @@ namespace IvyLock.Model
 		public string Description { get; set; }
 		public string Key { get; set; }
 		public string Name { get; set; }
+		public int MinValue { get; set; }
+		public int MaxValue { get; set; }
 		public SettingType Type { get; set; }
 
 		public object Value
@@ -266,6 +269,8 @@ namespace IvyLock.Model
 		public bool Hide { get; set; }
 		public bool Ignore { get; set; }
 		public string Name { get; set; }
+		public int MinValue { get; set; } = int.MinValue;
+		public int MaxValue { get; set; } = int.MaxValue;
 		public Func<object, bool> Predicate { get; set; }
 
 		#endregion Properties
@@ -359,8 +364,14 @@ namespace IvyLock.Model
 					s.Category = attr.Category;
 					s.Description = attr.Description;
 
-					if (pi.PropertyType != typeof(SecureString))
+					if (s.Type != SettingType.Password)
 						s.Value = pi.GetValue(this);
+
+					if (s.Type == SettingType.Number)
+					{
+						s.MinValue = attr.MinValue;
+						s.MaxValue = attr.MaxValue;
+					}
 				}
 				s.PropertyChanged += OnSettingChanged;
 

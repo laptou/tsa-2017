@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Security;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 
@@ -68,9 +69,11 @@ namespace IvyLock.UI.View
 
 		private static void PasswordChanged(object sender, RoutedEventArgs e)
 		{
-			SecureString ss = (sender as PasswordBox).SecurePassword;
+			PasswordBox pb = (sender as PasswordBox);
+			SecureString ss = pb.SecurePassword;
 
 			SetEncryptedPassword(sender as DependencyObject, ss.Length > 0 ? ss : null);
 		}
+
 	}
 }

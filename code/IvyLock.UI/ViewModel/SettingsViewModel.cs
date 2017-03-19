@@ -9,6 +9,7 @@ using System.Linq;
 using System.Reflection;
 using System.Security;
 using System.Threading.Tasks;
+using System.Windows.Data;
 
 namespace IvyLock.UI.ViewModel
 {
@@ -17,7 +18,7 @@ namespace IvyLock.UI.ViewModel
 		#region Fields
 
 		private Screen _currentScreen = Screen.Main;
-		private bool _locked;
+		private bool _locked = true;
 		private SettingGroup _settingGroup;
 		private ObservableCollection<SettingGroup> _settings = new ObservableCollection<SettingGroup>();
 		private IProcessService ips;
@@ -39,6 +40,7 @@ namespace IvyLock.UI.ViewModel
 				await LoadProcesses();
 				await LoadSettings();
 			});
+			BindingOperations.EnableCollectionSynchronization(Settings, this);
 		}
 
 		#endregion Constructors
@@ -54,12 +56,17 @@ namespace IvyLock.UI.ViewModel
 
 		#region Properties
 
-		public Screen CurrentScreen { get { return _currentScreen; } private set { Set(value, ref _currentScreen); } }
+		public Screen CurrentScreen { get { return _currentScreen; }  set { Set(value, ref _currentScreen); } }
 
 		public IvyLockSettings IvyLockSettings { get { return Settings.OfType<IvyLockSettings>().FirstOrDefault(); } }
 
 		public SecureString Password
 		{
+			get
+			{
+				return IvyLockSettings?.Password;
+			}
+
 			set
 			{
 				if (IvyLockSettings != null)
@@ -67,12 +74,18 @@ namespace IvyLock.UI.ViewModel
 					if (CurrentScreen == Screen.SetupPassword)
 						IvyLockSettings.Password = value;
 					else if (CurrentScreen == Screen.EnterPassword)
-						Task.Run(() => {
-							if (IvyLockSettings.Hash.Equals(ies.Hash(value)))
+					{
+						if(value != null)
+							Task.Run(() =>
 							{
-								CurrentScreen = Screen.Main;
-							}
-						});
+								string hash = ies.Hash(value);
+								if (IvyLockSettings.Hash.Equals(hash))
+								{
+									CurrentScreen = Screen.Main;
+								}
+							});
+						
+					}
 				}
 			}
 		}
@@ -127,6 +140,7 @@ namespace IvyLock.UI.ViewModel
 				}
 				catch (Win32Exception) { return false; }
 				catch (FileNotFoundException) { return false; }
+				catch (InvalidOperationException) { return false; }
 			};
 
 			iss = XmlSettingsService.Default;

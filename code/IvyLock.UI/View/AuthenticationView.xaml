@@ -6,7 +6,7 @@
         xmlns:local="clr-namespace:IvyLock.UI.View" 
         xmlns:ViewModel="clr-namespace:IvyLock.UI.ViewModel" x:Class="IvyLock.UI.View.AuthenticationView" 
         mc:Ignorable="d"
-        Title="IvyLock" Height="512" Width="768" FontFamily="Roboto" Style="{DynamicResource IvyWindow}">
+        Title="{Binding ProcessName}" Height="512" Width="768" FontFamily="Roboto" Style="{DynamicResource IvyWindow}">
     <Window.DataContext>
         <ViewModel:AuthenticationViewModel CloseRequested="AuthenticationViewModel_CloseRequested"/>
     </Window.DataContext>
@@ -25,7 +25,8 @@
         <PasswordBox local:PasswordBoxHelper.Placeholder="type password to run"
                     local:PasswordBoxHelper.EncryptedPassword="{Binding Password, Mode=OneWayToSource}"
                     local:PasswordBoxHelper.Watch="True" Template="{DynamicResource PasswordBoxControlTemplate}"
-                    Grid.Row="2" Grid.ColumnSpan="3"/>
+                    Grid.Row="2" Grid.ColumnSpan="3" Margin="20,0" Background="{DynamicResource BackgroundHalf}"
+                     Height="32"/>
         <StackPanel Orientation="Horizontal" Grid.ColumnSpan="3"  Grid.Row="1" HorizontalAlignment="Center">
             <Image Source="{Binding ProcessIcon}" MinHeight="16" MaxHeight="32"/>
             <TextBlock Margin="5,0,0,0" Text="{Binding ProcessName.Result}" VerticalAlignment="Center" />
