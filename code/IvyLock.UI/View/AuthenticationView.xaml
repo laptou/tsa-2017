@@ -8,7 +8,9 @@
         mc:Ignorable="d"
         Title="{Binding ProcessName}" Height="512" Width="768" FontFamily="Roboto" Style="{DynamicResource IvyWindow}">
     <Window.DataContext>
-        <ViewModel:AuthenticationViewModel CloseRequested="AuthenticationViewModel_CloseRequested"/>
+        <ViewModel:AuthenticationViewModel 
+            CloseRequested="AuthenticationViewModel_CloseRequested"
+            ShowRequested="AuthenticationViewModel_ShowRequested"/>
     </Window.DataContext>
     <Grid Background="{DynamicResource BackgroundDark}">
         <Grid.RowDefinitions>
@@ -21,7 +23,7 @@
             <ColumnDefinition />
             <ColumnDefinition />
         </Grid.ColumnDefinitions>
-        <Image Source="/IvyLock.UI;component/Content/Logo 2 Inverted.png" Margin="0" Grid.Column="1" SnapsToDevicePixels="True" Grid.RowSpan="2" />
+        <Image Source="/IvyLock;component/Content/Logo 2 Inverted.png" Margin="0" Grid.Column="1" SnapsToDevicePixels="True" Grid.RowSpan="2" />
         <PasswordBox local:PasswordBoxHelper.Placeholder="type password to run"
                     local:PasswordBoxHelper.EncryptedPassword="{Binding Password, Mode=OneWayToSource}"
                     local:PasswordBoxHelper.Watch="True" Template="{DynamicResource PasswordBoxControlTemplate}"

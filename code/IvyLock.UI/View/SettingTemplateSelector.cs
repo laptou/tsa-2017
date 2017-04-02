@@ -14,17 +14,15 @@ namespace IvyLock.UI.View
 		public override DataTemplate
 			SelectTemplate(object item, DependencyObject container)
 		{
-			FrameworkElement element = container as FrameworkElement;
+            if (container is FrameworkElement element && item != null && item is Setting)
+            {
+                Setting setting = item as Setting;
 
-			if (element != null && item != null && item is Setting)
-			{
-				Setting setting = item as Setting;
+                return element.FindResource(setting.Type.ToString())
+                            as DataTemplate;
+            }
 
-				return element.FindResource(setting.Type.ToString())
-							as DataTemplate;
-			}
-
-			return null;
+            return null;
 		}
 	}
 }

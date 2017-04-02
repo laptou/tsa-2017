@@ -20,7 +20,7 @@ namespace IvyLock
 		DuplicateHandle = 0x00000040,
 		CreateProcess = 0x000000080,
 		SetQuota = 0x00000100,
-		SetInformation = 0x00000200,
+		SetInformation = 0x00000200, 
 		QueryInformation = 0x00000400,
 		QueryLimitedInformation = 0x00001000,
 		Synchronize = 0x00100000
@@ -40,7 +40,7 @@ namespace IvyLock
 		DIRECT_IMPERSONATION = (0x0200)
 	}
 
-	public static class ProcessExtensions
+	internal static class ProcessExtensions
 	{
 		#region Methods
 
@@ -119,10 +119,10 @@ namespace IvyLock
 					   StringBuilder lpExeName, out int size);
 
 		[DllImport("kernel32.dll")]
-		private static extern int ResumeThread(IntPtr hThread);
+		internal static extern int ResumeThread(IntPtr hThread);
 
 		[DllImport("kernel32.dll")]
-		private static extern uint SuspendThread(IntPtr hThread);
+		internal static extern uint SuspendThread(IntPtr hThread);
 
 		#endregion Methods
 

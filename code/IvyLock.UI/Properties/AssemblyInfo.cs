@@ -5,12 +5,12 @@ using System.Windows;
 // General Information about an assembly is controlled through the
 // following set of attributes. Change these attribute values to modify
 // the information associated with an assembly.
-[assembly: AssemblyTitle("IvyLock.UI")]
-[assembly: AssemblyDescription("")]
+[assembly: AssemblyTitle("IvyLock")]
+[assembly: AssemblyDescription("IvyLock")]
 [assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("")]
-[assembly: AssemblyProduct("IvyLock.UI")]
-[assembly: AssemblyCopyright("Copyright ©  2017")]
+[assembly: AssemblyCompany("Ibiyemi Abiodun")]
+[assembly: AssemblyProduct("IvyLock")]
+[assembly: AssemblyCopyright("Copyright © Ibiyemi Abiodun 2017")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 
@@ -29,7 +29,7 @@ using System.Windows;
 //[assembly: NeutralResourcesLanguage("en-US", UltimateResourceFallbackLocation.Satellite)]
 
 [assembly: ThemeInfo(
-	ResourceDictionaryLocation.None, //where theme specific resource dictionaries are located
+	ResourceDictionaryLocation.SourceAssembly, //where theme specific resource dictionaries are located
 									 //(used if a resource is not found in the page,
 									 // or application resource dictionaries)
 	ResourceDictionaryLocation.SourceAssembly //where the generic resource dictionary is located

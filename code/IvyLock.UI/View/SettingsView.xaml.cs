@@ -16,14 +16,18 @@ namespace IvyLock.UI.View
 		public SettingsView()
 		{
 			InitializeComponent();
+            (DataContext as SettingsViewModel).View = this;
 		}
 
 		protected override void OnClosing(CancelEventArgs e)
 		{
-			SettingsViewModel svm = ((SettingsViewModel)DataContext);
-			svm.CurrentScreen = SettingsViewModel.Screen.EnterPassword;
-			svm.Locked = true;
-			pwdBox.Clear();
+			if (IsLoaded)
+			{
+				SettingsViewModel svm = ((SettingsViewModel)DataContext);
+				svm.CurrentScreen = SettingsViewModel.Screen.EnterPassword;
+				svm.Locked = true;
+				pwdBox.Clear();
+			}
 
 			// window can be hidden but not closed
 			Hide();

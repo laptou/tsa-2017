@@ -8,29 +8,59 @@ using System.Windows;
 
 namespace IvyLock.UI.ViewModel
 {
-	public abstract class ViewModel : INotifyPropertyChanged,
+	public abstract class ViewModel : DependencyObject, INotifyPropertyChanged,
 		INotifyPropertyChanging
 	{
-		public event PropertyChangingEventHandler PropertyChanging;
+		#region Events
+
+		public event Action CloseRequested;
+
+		public event Action HideRequested;
 
 		public event PropertyChangedEventHandler PropertyChanged;
 
-		private PropertyInfo GetPropertyInfo<TProperty>(
-			Expression<Func<TProperty>> propertyLambda)
+		public event PropertyChangingEventHandler PropertyChanging;
+
+		public event Action ShowRequested;
+
+		#endregion Events
+
+		#region Methods
+
+		public void CloseView()
 		{
-			MemberExpression member = propertyLambda.Body as MemberExpression;
-			if (member == null)
-				throw new ArgumentException(string.Format(
-					"Expression '{0}' refers to a method, not a property.",
-					propertyLambda.ToString()));
+			CloseRequested?.Invoke();
+		}
 
-			PropertyInfo propInfo = member.Member as PropertyInfo;
-			if (propInfo == null)
-				throw new ArgumentException(string.Format(
-					"Expression '{0}' refers to a field, not a property.",
-					propertyLambda.ToString()));
+		public void HideView()
+		{
+			HideRequested?.Invoke();
+		}
 
-			return propInfo;
+		public void RaisePropertyChanged(string propertyName)
+		{
+			Application.Current.Dispatcher.Invoke(() =>
+			{
+				PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+			});
+		}
+
+		public void RaisePropertyChanged<T>(Expression<Func<T>> propertyLambda)
+		{
+			RaisePropertyChanged(GetPropertyInfo(propertyLambda).Name);
+		}
+
+		public void RaisePropertyChanging(string propertyName)
+		{
+			Application.Current.Dispatcher.Invoke(() =>
+			{
+				PropertyChanging?.Invoke(this, new PropertyChangingEventArgs(propertyName));
+			});
+		}
+
+		public void RaisePropertyChanging<T>(Expression<Func<T>> propertyLambda)
+		{
+			RaisePropertyChanging(GetPropertyInfo(propertyLambda).Name);
 		}
 
 		public void Set<T>(T value, ref T variable, [CallerMemberName] string propertyName = "")
@@ -53,50 +83,9 @@ namespace IvyLock.UI.ViewModel
 			RaisePropertyChanged(propertyName);
 		}
 
-		protected void DesignTime(Action action)
+		public void ShowView()
 		{
-			if (DesignerProperties.GetIsInDesignMode(new DependencyObject()))
-			{
-				// in design mode
-				action();
-			}
-		}
-
-		protected void RunTime(Action action)
-		{
-			if (!DesignerProperties.GetIsInDesignMode(new DependencyObject()))
-			{
-				// not in design mode
-				action();
-			}
-		}
-
-		protected void UI(Action action)
-		{
-			Application.Current.Dispatcher.Invoke(action);
-		}
-
-		protected async Task UIAsync(Action action)
-		{
-			await Application.Current.Dispatcher.InvokeAsync(action);
-		}
-
-		protected async Task DesignTimeAsync(Func<Task> task)
-		{
-			if (DesignerProperties.GetIsInDesignMode(new DependencyObject()))
-			{
-				// in design mode
-				await task();
-			}
-		}
-
-		protected async Task RunTimeAsync(Func<Task> task)
-		{
-			if (!DesignerProperties.GetIsInDesignMode(new DependencyObject()))
-			{
-				// not in design mode
-				await task();
-			}
+			ShowRequested?.Invoke();
 		}
 
 		protected async Task<T> DesignOrRunTimeAsync<T>(Func<Task<T>> designTime, Func<Task<T>> runTime)
@@ -112,60 +101,70 @@ namespace IvyLock.UI.ViewModel
 			}
 		}
 
-		public void RaisePropertyChanging(string propertyName)
+		protected void DesignTime(Action action)
 		{
-			Application.Current.Dispatcher.Invoke(() =>
+			if (DesignerProperties.GetIsInDesignMode(new DependencyObject()))
 			{
-				PropertyChanging?.Invoke(this, new PropertyChangingEventArgs(propertyName));
-			});
+				// in design mode
+				action();
+			}
 		}
 
-		public void RaisePropertyChanging<T>(Expression<Func<T>> propertyLambda)
+		protected async Task DesignTimeAsync(Func<Task> task)
 		{
-			string propertyName = GetPropertyInfo(propertyLambda).Name;
-
-			Application.Current.Dispatcher.Invoke(() =>
+			if (DesignerProperties.GetIsInDesignMode(new DependencyObject()))
 			{
-				PropertyChanging?.Invoke(this, new PropertyChangingEventArgs(propertyName));
-			});
+				// in design mode
+				await task();
+			}
 		}
 
-		public void RaisePropertyChanged(string propertyName)
+		protected void RunTime(Action action)
 		{
-			Application.Current.Dispatcher.Invoke(() =>
+			if (!DesignerProperties.GetIsInDesignMode(new DependencyObject()))
 			{
-				PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
-			});
+				// not in design mode
+				action();
+			}
 		}
 
-		public void RaisePropertyChanged<T>(Expression<Func<T>> propertyLambda)
+		protected async Task RunTimeAsync(Func<Task> task)
 		{
-			string propertyName = GetPropertyInfo(propertyLambda).Name;
-			Application.Current.Dispatcher.Invoke(() =>
+			if (!DesignerProperties.GetIsInDesignMode(new DependencyObject()))
 			{
-				PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
-			});
+				// not in design mode
+				await task();
+			}
 		}
 
-		public void CloseView()
+		protected void UI(Action action)
 		{
-			CloseRequested?.Invoke();
+			Application.Current.Dispatcher.Invoke(action);
 		}
 
-		public void HideView()
+		protected async Task UIAsync(Action action)
 		{
-			HideRequested?.Invoke();
+			await Application.Current.Dispatcher.InvokeAsync(action);
 		}
 
-		public void ShowView()
+		private PropertyInfo GetPropertyInfo<TProperty>(
+																																					Expression<Func<TProperty>> propertyLambda)
 		{
-			ShowRequested?.Invoke();
+			MemberExpression member = propertyLambda.Body as MemberExpression;
+			if (member == null)
+				throw new ArgumentException(string.Format(
+					"Expression '{0}' refers to a method, not a property.",
+					propertyLambda.ToString()));
+
+			PropertyInfo propInfo = member.Member as PropertyInfo;
+			if (propInfo == null)
+				throw new ArgumentException(string.Format(
+					"Expression '{0}' refers to a field, not a property.",
+					propertyLambda.ToString()));
+
+			return propInfo;
 		}
 
-		public event Action CloseRequested;
-
-		public event Action HideRequested;
-
-		public event Action ShowRequested;
+		#endregion Methods
 	}
 }

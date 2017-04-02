@@ -37,5 +37,10 @@ namespace IvyLock.UI.View
 
 			base.OnClosed(e);
 		}
+
+		private void AuthenticationViewModel_ShowRequested()
+		{
+			Show();
+		}
 	}
 }

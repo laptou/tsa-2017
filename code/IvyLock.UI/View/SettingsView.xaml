@@ -4,9 +4,11 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:IvyLock.UI.View" xmlns:xctk="http://schemas.xceed.com/wpf/xaml/toolkit"
-        xmlns:ViewModel="clr-namespace:IvyLock.UI.ViewModel" xmlns:i="http://schemas.microsoft.com/expression/2010/interactivity" xmlns:ei="http://schemas.microsoft.com/expression/2010/interactions" x:Class="IvyLock.UI.View.SettingsView"
+        xmlns:ViewModel="clr-namespace:IvyLock.UI.ViewModel"
+        x:Class="IvyLock.UI.View.SettingsView"
         mc:Ignorable="d"
-        Title="Settings" Height="512" MinWidth="600" Background="{DynamicResource BackgroundDark}" Icon="/IvyLock.UI;component/Content/Logo 2.ico" SizeToContent="Width" Style="{DynamicResource IvyWindow}">
+        Title="Settings" Height="512" MinWidth="600" Background="{DynamicResource BackgroundDark}" 
+        Icon="{DynamicResource Icon}" SizeToContent="Width" Style="{DynamicResource IvyWindow}">
     <Window.DataContext>
         <ViewModel:SettingsViewModel />
     </Window.DataContext>
@@ -81,8 +83,8 @@
                 <GroupStyle>
                     <GroupStyle.HeaderTemplate>
                         <DataTemplate>
-                            <Border Padding="4" Background="{DynamicResource BackgroundLight}">
-                                <TextBlock FontSize="14" Text="{Binding Name}" Margin="9,0" FontWeight="Bold"
+                            <Border Padding="4,10,4,4">
+                                <TextBlock FontSize="20" Text="{Binding Name}" Margin="9,0" FontWeight="Bold"
                                        Foreground="{DynamicResource Foreground}" FontFamily="{DynamicResource Header}" />
                             </Border>
                         </DataTemplate>
@@ -141,6 +143,16 @@
                         </PasswordBox>
                     </Grid>
                 </DataTemplate>
+                <DataTemplate x:Key="Enum">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <ComboBox ItemsSource="{Binding Options}" SelectedValue="{Binding Value}"
+                                  IsTextSearchEnabled="False" Style="{DynamicResource {x:Type ComboBox}}"/>
+                    </Grid>
+                </DataTemplate>
                 <DataTemplate x:Key="Action">
                     <Grid>
                         <Grid.ColumnDefinitions>
@@ -193,7 +205,7 @@
             <TextBlock HorizontalAlignment="Center" VerticalAlignment="Center">all settings are autosaved</TextBlock>
         </Border>
 
-        <Grid x:Name="setupOverlay" Background="{DynamicResource BackgroundDark}" Grid.ColumnSpan="2" Grid.RowSpan="2">
+        <Grid x:Name="overlay" Background="{DynamicResource BackgroundDark}" Grid.ColumnSpan="2" Grid.RowSpan="2">
             <Grid.RowDefinitions>
                 <RowDefinition Height="3*" />
                 <RowDefinition Height="2*" />
@@ -206,10 +218,10 @@
             </Grid.ColumnDefinitions>
             <Viewbox Margin="0" Grid.Column="1"
                    SnapsToDevicePixels="True" Grid.RowSpan="1" HorizontalAlignment="Center">
-                <Image Source="/IvyLock.UI;component/Content/Logo 2 Inverted.png" />
+                <Image Source="{DynamicResource Logo}" />
             </Viewbox>
 
-            <Border Grid.Row="1" Grid.ColumnSpan="3" VerticalAlignment="Center">
+            <Border Grid.Row="1" Grid.ColumnSpan="3" VerticalAlignment="Center" Padding="5" Background="Transparent">
                 <PasswordBox
                     x:Name="pwdBox"
                     local:PasswordBoxHelper.EncryptedPassword="{Binding Password, Mode=TwoWay}"
@@ -239,15 +251,30 @@
                                     <Condition Binding="{Binding Locked}" Value="False" />
                                     <Condition Binding="{Binding CurrentScreen}" Value="Main" />
                                 </MultiDataTrigger.Conditions>
-                                <Setter Property="Background" Value="#89FF89" />
+                                <MultiDataTrigger.EnterActions>
+                                    <BeginStoryboard>
+                                        <Storyboard>
+                                            <ColorAnimation Storyboard.TargetProperty="(Grid.Background).(SolidColorBrush.Color)"
+                                                            To="#9F89FF89"
+                                                            Duration="0:0:0.15"/>
+                                        </Storyboard>
+                                    </BeginStoryboard>
+                                </MultiDataTrigger.EnterActions>
+                                <MultiDataTrigger.ExitActions>
+                                    <BeginStoryboard>
+                                        <Storyboard>
+                                            <ColorAnimation Storyboard.TargetProperty="(Grid.Background).(SolidColorBrush.Color)"
+                                                            To="Transparent"
+                                                            Duration="0:0:0.15"/>
+                                        </Storyboard>
+                                    </BeginStoryboard>
+                                </MultiDataTrigger.ExitActions>
                             </MultiDataTrigger>
                         </Style.Triggers>
                     </Style>
                 </Border.Style>
             </Border>
-            
-            
-
+           
             <Button Grid.Row="2" HorizontalAlignment="Center" VerticalAlignment="Center" Padding="10" Grid.Column="1"
                     Command="{Binding AdvanceScreenCommand}">
                 set password

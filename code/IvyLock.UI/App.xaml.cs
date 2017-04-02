@@ -8,6 +8,7 @@ using System.ComponentModel;
 using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
@@ -20,12 +21,28 @@ namespace IvyLock.UI
 	/// </summary>
 	public partial class App : System.Windows.Application
 	{
-		private Dictionary<string, AuthenticationView> views = new Dictionary<string, AuthenticationView>();
+
+		#region Fields
+
+		private static Mutex mutex = new Mutex(true, "{37EFBF56-B711-42E3-B3D0-0DCDA7BC09BD}");
 		private IProcessService ips;
 		private ISettingsService iss;
 		private NotifyIcon ni;
+		private Dictionary<string, AuthenticationViewModel> views = new Dictionary<string, AuthenticationViewModel>();
 
-		private static Mutex mutex = new Mutex(true, "{37EFBF56-B711-42E3-B3D0-0DCDA7BC09BA}");
+		#endregion Fields
+
+
+		#region Methods
+
+		protected override void OnExit(ExitEventArgs e)
+		{
+			ips?.Dispose();
+			iss?.Dispose();
+			ni?.Dispose();
+            
+			base.OnExit(e);
+		}
 
 		protected override void OnStartup(StartupEventArgs e)
 		{
@@ -45,17 +62,52 @@ namespace IvyLock.UI
 				{
 					mutex.ReleaseMutex();
 				}
-				base.OnStartup(e);
 
-				// don't initialise statically! XmlSettingsService depends
-				// on Application.Current
+                AppDomain.CurrentDomain.ProcessExit += (s, e2) =>
+                {
+                    mutex.Dispose();
+                };
+
+                base.OnStartup(e);
+
+				// don't initialise statically! XmlSettingsService
+				// depends on Application.Current
 				ips = ManagedProcessService.Default;
 				iss = XmlSettingsService.Default;
-				ips.ProcessChanged += ProcessChanged;
+
+                IvyLockSettings ils = iss.OfType<IvyLockSettings>().First();
+                switch (ils.Theme)
+                {
+                    case Theme.Light:
+                        Resources.MergedDictionaries.Clear();
+                        Resources.MergedDictionaries.Add(new ResourceDictionary()
+                        {
+                            Source = new Uri("pack://application:,,,/IvyLock;component/Content/Theme.Light.xaml")
+                        });
+                        break;
+                }
+
+                ips.ProcessChanged += ProcessChanged;
 
 				ni = new NotifyIcon();
 				ni.Click += (s, e1) => MainWindow.Show();
 				ni.Icon = System.Drawing.Icon.ExtractAssociatedIcon(Assembly.GetEntryAssembly().Location);
+				ni.ContextMenu = new ContextMenu();
+				ni.ContextMenu.MenuItems.Add("Exit", (s, e2) => {
+					SettingsViewModel svm = MainWindow.DataContext as SettingsViewModel;
+
+					svm.PropertyChanged += (s2, e3) =>
+					{
+						if (e3.PropertyName == "Locked" && !svm.Locked)
+							Shutdown();
+					};
+
+					svm.Locked = true;
+					svm.CurrentScreen = SettingsViewModel.Screen.EnterPassword;
+
+                    MainWindow.Show();
+                    MainWindow.Activate();
+                });
 				ni.Visible = true;
 			}
 			else
@@ -84,12 +136,12 @@ namespace IvyLock.UI
 						{
 							if (views.ContainsKey(path))
 							{
-								views[path].Show();
+								views[path].ShowView();
 								return;
 							}
 
-							AuthenticationView av = views.ContainsKey(path) ? views[path] : new AuthenticationView();
-							AuthenticationViewModel avm = av.DataContext as AuthenticationViewModel;
+							AuthenticationViewModel avm = views.ContainsKey(path) ? views[path] :
+								(AuthenticationViewModel)new AuthenticationView().DataContext;
 							avm.ProcessPath = path;
 							avm.Processes.Add(Process.GetProcessById(pid));
 
@@ -102,10 +154,10 @@ namespace IvyLock.UI
 							}
 
 							if (!views.ContainsKey(path))
-								av.Closed += (s, e) => views.Remove(path);
+								avm.CloseRequested += () => views.Remove(path);
 
-							views[path] = av;
-							av.Show();
+							views[path] = avm;
+							avm.ShowView();
 						});
 						break;
 
@@ -124,8 +176,9 @@ namespace IvyLock.UI
 							 catch (Win32Exception) { return false; }
 						 }))
 						{
-							Dispatcher?.Invoke(() => views[path]?.Close());
-							((AuthenticationViewModel)views[path].DataContext).Dispose();
+							views[path].CloseView();
+							views[path].Dispose();
+
 							if (views.ContainsKey(path))
 								views.Remove(path);
 						}
@@ -137,12 +190,6 @@ namespace IvyLock.UI
 			});
 		}
 
-		protected override void OnExit(ExitEventArgs e)
-		{
-			ips.Dispose();
-			iss.Dispose();
-			ni.Dispose();
-			base.OnExit(e);
-		}
+		#endregion Methods
 	}
 }

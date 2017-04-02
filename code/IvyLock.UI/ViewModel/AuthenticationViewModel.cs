@@ -12,7 +12,7 @@ using System.Windows.Media;
 
 namespace IvyLock.UI.ViewModel
 {
-	public class AuthenticationViewModel : ViewModel, IDisposable
+	public sealed class AuthenticationViewModel : ViewModel, IDisposable
 	{
 		#region Fields
 
