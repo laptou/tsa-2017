@@ -6,203 +6,280 @@ using System.Collections.ObjectModel;
 using System.Linq;
 using System.Collections.Specialized;
 using System.Diagnostics;
+using System.IO;
+
+using System.Linq;
+
 using System.Security;
 using System.Threading.Tasks;
 using System.Windows.Media;
+using System.Windows.Media.Imaging;
+using System.Xml.Linq;
 
-namespace IvyLock.UI.ViewModel
+namespace IvyLock.ViewModel
 {
-	public sealed class AuthenticationViewModel : ViewModel, IDisposable
-	{
-		#region Fields
+    public sealed class AuthenticationViewModel : ViewModel, IDisposable
+    {
+        #region Fields
 
-		private SecureString _pass;
-		private IEncryptionService ies = EncryptionService.Default;
-		private IProcessService ips = ManagedProcessService.Default;
-		private ISettingsService iss = XmlSettingsService.Default;
-		private string path;
-		private Dictionary<int, bool> suspended = new Dictionary<int, bool>();
-		private static Dictionary<string, DateTime> unlockTimes = new Dictionary<string, DateTime>();
+        private SecureString _pass;
+        private IEncryptionService ies = EncryptionService.Default;
+        private IProcessService ips = ManagedProcessService.Default;
+        private ISettingsService iss = XmlSettingsService.Default;
+        private string path;
+        private Dictionary<int, bool> suspended = new Dictionary<int, bool>();
+        private Dictionary<IntPtr, ShowWindow> windowStates = new Dictionary<IntPtr, ShowWindow>();
+        private static Dictionary<string, DateTime> unlockTimes = new Dictionary<string, DateTime>();
 
-		#endregion Fields
+        #endregion Fields
 
-		#region Constructors
+        #region Constructors
 
-		public AuthenticationViewModel()
-		{
-			ips.ProcessChanged += ProcessChanged;
-			Processes.CollectionChanged += ProcessCollectionChanged;
-		}
+        public AuthenticationViewModel()
+        {
+            ips.ProcessChanged += ProcessChanged;
+            Processes.CollectionChanged += ProcessCollectionChanged;
+        }
 
-		private void ProcessCollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
-		{
-			if(e.Action == NotifyCollectionChangedAction.Add)
-				foreach (Process process in e.NewItems)
-				{
-					suspended[process.Id] = Locked;
+        private void ProcessCollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
+        {
+            if (e.Action == NotifyCollectionChangedAction.Add)
+                foreach (Process process in e.NewItems)
+                {
+                    suspended[process.Id] = Locked;
 
-					if (Locked)
-						process.Suspend();
-				}
+                    if (Locked)
+                        process.Suspend();
+                }
 
-			if (e.Action == NotifyCollectionChangedAction.Remove)
-				foreach (Process process in e.OldItems)
-					suspended.Remove(process.Id);
-		}
+            if (e.Action == NotifyCollectionChangedAction.Remove)
+                foreach (Process process in e.OldItems)
+                    suspended.Remove(process.Id);
+        }
 
-		#endregion Constructors
+        #endregion Constructors
 
-		#region Properties
+        #region Properties
 
-		public bool Locked { get; private set; }
+        public bool Locked { get; private set; }
 
-		public SecureString Password
-		{
-			get { return _pass; }
-			set { _pass = value; ValidatePassword(); }
-		}
+        public SecureString Password
+        {
+            get { return _pass; }
+#pragma warning disable CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
+            set { _pass = value; ValidatePassword(); }
+#pragma warning restore CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
+        }
 
-		public ObservableCollection<Process> Processes { get; set; } = new ObservableCollection<Process>();
+        public ObservableCollection<Process> Processes { get; set; } = new ObservableCollection<Process>();
 
-		public ImageSource ProcessIcon
-		{
-			get
-			{
-				return ProcessPath == null ? null : System.Drawing.Icon.ExtractAssociatedIcon(ProcessPath).ToImageSource();
-			}
-		}
+        public NotifyTaskCompletion<ImageSource> ProcessIcon
+        {
+            get
+            {
+                return ProcessPath == null ? null :
+                    new NotifyTaskCompletion<ImageSource>(
+                        Task.Factory.StartNew(() =>
+                        {
+                            if (ProcessPath.StartsWith(
+                                Path.Combine(
+                                    Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "WindowsApps"
+                                    )))
+                                return GetModernAppIcon(ProcessPath);
 
-		public NotifyTaskCompletion<string> ProcessName
-		{
-			get
-			{
-				return ProcessPath == null ?
-					null :
-					new NotifyTaskCompletion<string>(
-						Task.Factory.StartNew(
-							() => FileVersionInfo.GetVersionInfo(ProcessPath).FileDescription
-						));
-			}
-		}
+                            return System.Drawing.Icon.ExtractAssociatedIcon(ProcessPath).ToImageSource();
+                        }));
+            }
+        }
 
-		public string ProcessPath
-		{
-			get
-			{
-				return path;
-			}
-			set
-			{
-				Set(value, ref path);
-				RaisePropertyChanged("ProcessIcon");
-				RaisePropertyChanged("ProcessName");
-			}
-		}
+        public static ImageSource GetModernAppIcon(string path)
+        {
+            // get folder where actual app resides
+            var dir = Path.GetDirectoryName(path);
+            var manifestPath = Path.Combine(dir, "AppxManifest.xml");
+            if (File.Exists(manifestPath))
+            {
+                // this is manifest file
+                string pathToLogo;
+                using (var fs = File.OpenRead(manifestPath))
+                {
+                    var manifest = XDocument.Load(fs);
+                    const string ns = "http://schemas.microsoft.com/appx/manifest/foundation/windows10";
+                    // rude parsing - take more care here
+                    pathToLogo = manifest.Root.Element(XName.Get("Properties", ns)).Element(XName.Get("Logo", ns)).Value;
+                }
+                // now here it is tricky again - there are several
+                // files that match logo, for example black, white,
+                // contrast white. Here we choose first, but you might
+                // do differently
+                string finalLogo = null;
+                // serach for all files that match file name in Logo
+                // element but with any suffix (like "Logo.black.png,
+                // Logo.white.png etc)
+                foreach (var logoFile in Directory.GetFiles(Path.Combine(dir, Path.GetDirectoryName(pathToLogo)),
+                    Path.GetFileNameWithoutExtension(pathToLogo) + "*" + Path.GetExtension(pathToLogo)))
+                {
+                    finalLogo = logoFile;
+                    break;
+                }
 
-		#endregion Properties
+                if (File.Exists(finalLogo))
+                {
+                    using (var fs = File.OpenRead(finalLogo))
+                    {
+                        var img = new BitmapImage();
+                        img.BeginInit();
+                        img.StreamSource = fs;
+                        img.CacheOption = BitmapCacheOption.OnLoad;
+                        img.EndInit();
+                        return img;
+                    }
+                }
+            }
+            return null;
+        }
 
-		#region Methods
+        public NotifyTaskCompletion<string> ProcessName
+        {
+            get
+            {
+                return ProcessPath == null ?
+                    null :
+                    new NotifyTaskCompletion<string>(
+                        Task.Factory.StartNew(
+                            () => FileVersionInfo.GetVersionInfo(ProcessPath).FileDescription
+                        ));
+            }
+        }
 
-		public async Task Lock()
-		{
-			await Task.Run(() =>
-			{
-				lock (Processes)
-				{
-					ProcessSettings ps = iss.OfType<ProcessSettings>().FirstOrDefault(s => s.Path.Equals(ProcessPath));
+        public string ProcessPath
+        {
+            get
+            {
+                return path;
+            }
+            set
+            {
+                Set(value, ref path);
+                RaisePropertyChanged("ProcessIcon");
+                RaisePropertyChanged("ProcessName");
+            }
+        }
 
-					if (unlockTimes.ContainsKey(ProcessPath) &&
-						(!ps.UseLockTimeOut ||
-							(DateTime.Now - unlockTimes[ProcessPath]).TotalMinutes < ps.LockTimeOut))
-						return;
+        #endregion Properties
 
-					if (Locked)
-						return;
+        #region Methods
 
-					Locked = true;
-					List<Process> list = Processes.Where(p => !suspended[p.Id]).Distinct(new ProcessExtensions.PidComparer()).ToList();
-					list.ForEach(p =>
-					{
-						p.Suspend();
-						suspended[p.Id] = true;
-					});
-				}
-			});
-		}
+        public async Task Lock()
+        {
+            await Task.Run(() =>
+            {
+                lock (Processes)
+                {
+                    ProcessSettings ps = iss.OfType<ProcessSettings>().FirstOrDefault(s => s.Path.Equals(ProcessPath));
 
-		public async Task Unlock()
-		{
-			await Task.Run(() =>
-			{
-				lock (Processes)
-				{
-					if (!Locked) return;
+                    if (unlockTimes.ContainsKey(ProcessPath) &&
+                        (!ps.UseLockTimeOut ||
+                            (DateTime.Now - unlockTimes[ProcessPath]).TotalMinutes < ps.LockTimeOut))
+                        return;
 
-					Locked = false;
+                    if (Locked)
+                        return;
 
-					List<Process> list = Processes.Where(p => suspended[p.Id]).Distinct(new ProcessExtensions.PidComparer()).ToList();
+                    Locked = true;
+                    List<Process> list = Processes.Where(p => !suspended[p.Id]).Distinct(new ProcessExtensions.PidComparer()).ToList();
+                    list.ForEach(p =>
+                    {
+                        p.EnumerateProcessWindowHandles().ForEach(hWnd =>
+                        {
+                            windowStates[hWnd] = NativeWindow.GetWindowState(hWnd);
+                            NativeWindow.ShowWindow(hWnd, ShowWindow.Hide);
+                        });
 
-					list.ForEach(p =>
-						{
-							p.Resume();
-							suspended[p.Id] = false;
-						});
+                        p.Suspend();
+                        suspended[p.Id] = true;
+                    });
+                }
+            });
+        }
 
-					unlockTimes[ProcessPath] = DateTime.Now;
-				}
-			});
-		}
+        public async Task Unlock()
+        {
+            await Task.Run(() =>
+            {
+                lock (Processes)
+                {
+                    if (!Locked) return;
 
-		public async Task ValidatePassword()
-		{
-			if (Password == null) return;
+                    Locked = false;
 
-			await Task.Run(async () =>
-			{
-				string hash = ies.Hash(Password);
-				IvyLockSettings ivs = iss.OfType<IvyLockSettings>().FirstOrDefault();
-				ProcessSettings ps = iss.OfType<ProcessSettings>().FirstOrDefault(s => s.Path.Equals(ProcessPath));
-				if (ps.UsePassword)
-				{
-					if (string.IsNullOrWhiteSpace(ps.Hash) ? ivs.Hash.Equals(hash) : ps.Hash.Equals(hash))
-					{
-						await Unlock();
-						UI(CloseView);
-					}
-				}
-			});
-		}
+                    List<Process> list = Processes.Where(p => suspended[p.Id]).Distinct(new ProcessExtensions.PidComparer()).ToList();
 
-		private void ProcessChanged(int pid, string path, ProcessOperation po)
-		{
-			try
-			{
-				if (po == ProcessOperation.Started)
-				{
-					if (path?.Equals(ProcessPath) == true)
-					{
-						Process p = Process.GetProcessById(pid);
-						Processes.Add(p);
-					}
-				}
+                    list.ForEach(p =>
+                        {
+                            if (p.HasExited) return;
 
-				if (po == ProcessOperation.Deleted)
-				{
-					if (path?.Equals(ProcessPath) == true)
-					{
-						Processes.Remove(Processes.FirstOrDefault(p => p.Id == pid));
-					}
-				}
-			}
-			catch
-			{ }
-		}
+                            p.EnumerateProcessWindowHandles().ForEach(hWnd =>
+                                NativeWindow.ShowWindowAsync(hWnd, windowStates.ContainsKey(hWnd) ? windowStates[hWnd] : ShowWindow.Show));
+                            p.Resume();
+                            suspended[p.Id] = false;
+                        });
 
-		public void Dispose()
-		{
-			ips.ProcessChanged -= ProcessChanged;
-		}
+                    unlockTimes[ProcessPath] = DateTime.Now;
+                }
+            });
+        }
 
-		#endregion Methods
-	}
+        public async Task ValidatePassword()
+        {
+            if (Password == null) return;
+
+            await Task.Run(async () =>
+            {
+                string hash = ies.Hash(Password);
+                IvyLockSettings ivs = iss.OfType<IvyLockSettings>().FirstOrDefault();
+                ProcessSettings ps = iss.OfType<ProcessSettings>().FirstOrDefault(s => s.Path.Equals(ProcessPath));
+                if (ps.UsePassword)
+                {
+                    if (string.IsNullOrWhiteSpace(ps.Hash) ? ivs.Hash.Equals(hash) : ps.Hash.Equals(hash))
+                    {
+                        await Unlock();
+                        UI(CloseView);
+                    }
+                }
+            });
+        }
+
+        private void ProcessChanged(int pid, string path, ProcessOperation po)
+        {
+            try
+            {
+                if (po == ProcessOperation.Started)
+                {
+                    if (path?.Equals(ProcessPath) == true)
+                    {
+                        Process p = Process.GetProcessById(pid);
+                        Processes.Add(p);
+                    }
+                }
+
+                if (po == ProcessOperation.Deleted)
+                {
+                    if (path?.Equals(ProcessPath) == true)
+                    {
+                        Processes.Remove(Processes.FirstOrDefault(p => p.Id == pid));
+                    }
+                }
+            }
+            catch
+            { }
+        }
+
+        public void Dispose()
+        {
+            ips.ProcessChanged -= ProcessChanged;
+        }
+
+        #endregion Methods
+    }
 }

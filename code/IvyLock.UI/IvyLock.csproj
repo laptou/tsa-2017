@@ -40,6 +40,7 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <Prefer32Bit>false</Prefer32Bit>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <PlatformTarget>AnyCPU</PlatformTarget>
@@ -51,7 +52,7 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <PropertyGroup>
-    <StartupObject>IvyLock.UI.App</StartupObject>
+    <StartupObject>IvyLock.App</StartupObject>
   </PropertyGroup>
   <PropertyGroup>
     <ApplicationIcon>Content\logo.ico</ApplicationIcon>
@@ -64,6 +65,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="Microsoft.Expression.Interactions, Version=4.5.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL" />
+    <Reference Include="PresentationFramework.Aero2" />
     <Reference Include="System" />
     <Reference Include="System.Data" />
     <Reference Include="System.Drawing" />
@@ -120,6 +122,7 @@
     <Compile Include="Model\Model.cs" />
     <Compile Include="Model\Setting.cs" />
     <Compile Include="ProcessExtensions.cs" />
+    <Compile Include="Service\BiometricService.cs" />
     <Compile Include="Service\EncryptionService.cs" />
     <Compile Include="Service\ProcessService.cs" />
     <Compile Include="Service\SettingsService.cs" />
@@ -131,15 +134,18 @@
     <Compile Include="View\AuthenticationView.xaml.cs">
       <DependentUpon>AuthenticationView.xaml</DependentUpon>
     </Compile>
-    <Compile Include="View\IvyWindow.cs" />
-    <Compile Include="View\NumericUpDown.xaml.cs">
+    <Compile Include="View\Control\IvyWindow.cs" />
+    <Compile Include="View\Control\NumericUpDown.xaml.cs">
       <DependentUpon>NumericUpDown.xaml</DependentUpon>
     </Compile>
-    <Compile Include="View\PasswordBoxHelper.cs" />
+    <Compile Include="View\Control\PasswordBoxHelper.cs" />
+    <Compile Include="View\Control\TaskButton.xaml.cs">
+      <DependentUpon>TaskButton.xaml</DependentUpon>
+    </Compile>
     <Compile Include="View\SettingsView.xaml.cs">
       <DependentUpon>SettingsView.xaml</DependentUpon>
     </Compile>
-    <Compile Include="View\SettingTemplateSelector.cs" />
+    <Compile Include="View\Control\SettingTemplateSelector.cs" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Properties\AssemblyInfo.cs">
@@ -184,7 +190,11 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="View\NumericUpDown.xaml">
+    <Page Include="View\Control\NumericUpDown.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="View\Control\TaskButton.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
@@ -228,6 +238,12 @@
   <ItemGroup>
     <Resource Include="Content\logo.ico" />
     <Resource Include="Content\logo.light.ico" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\IvyLock.Native\IvyLock.Native.vcxproj">
+      <Project>{80ce7043-ee0d-4970-bdf7-c3dc030cceb8}</Project>
+      <Name>IvyLock.Native</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

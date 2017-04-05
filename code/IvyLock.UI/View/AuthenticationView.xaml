@@ -3,19 +3,19 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:local="clr-namespace:IvyLock.UI.View" 
-        xmlns:ViewModel="clr-namespace:IvyLock.UI.ViewModel" x:Class="IvyLock.UI.View.AuthenticationView" 
+        xmlns:control="clr-namespace:IvyLock.View.Control"
+        xmlns:ViewModel="clr-namespace:IvyLock.ViewModel" x:Class="IvyLock.View.AuthenticationView"
         mc:Ignorable="d"
         Title="{Binding ProcessName}" Height="512" Width="768" FontFamily="Roboto" Style="{DynamicResource IvyWindow}">
     <Window.DataContext>
-        <ViewModel:AuthenticationViewModel 
+        <ViewModel:AuthenticationViewModel
             CloseRequested="AuthenticationViewModel_CloseRequested"
-            ShowRequested="AuthenticationViewModel_ShowRequested"/>
+            ShowRequested="AuthenticationViewModel_ShowRequested" />
     </Window.DataContext>
     <Grid Background="{DynamicResource BackgroundDark}">
         <Grid.RowDefinitions>
             <RowDefinition Height="3*" />
-            <RowDefinition Height="*"/>
+            <RowDefinition Height="*" />
             <RowDefinition Height="2*" />
         </Grid.RowDefinitions>
         <Grid.ColumnDefinitions>
@@ -23,14 +23,14 @@
             <ColumnDefinition />
             <ColumnDefinition />
         </Grid.ColumnDefinitions>
-        <Image Source="/IvyLock;component/Content/Logo 2 Inverted.png" Margin="0" Grid.Column="1" SnapsToDevicePixels="True" Grid.RowSpan="2" />
-        <PasswordBox local:PasswordBoxHelper.Placeholder="type password to run"
-                    local:PasswordBoxHelper.EncryptedPassword="{Binding Password, Mode=OneWayToSource}"
-                    local:PasswordBoxHelper.Watch="True" Template="{DynamicResource PasswordBoxControlTemplate}"
+        <Image Source="{DynamicResource Logo}" Margin="0" Grid.Column="1" SnapsToDevicePixels="True" Grid.RowSpan="2" />
+        <PasswordBox control:PasswordBoxHelper.Placeholder="type password to run"
+                    control:PasswordBoxHelper.EncryptedPassword="{Binding Password, Mode=OneWayToSource}"
+                    control:PasswordBoxHelper.Watch="True" Template="{DynamicResource PasswordBoxControlTemplate}"
                     Grid.Row="2" Grid.ColumnSpan="3" Margin="20,0" Background="{DynamicResource BackgroundHalf}"
-                     Height="32"/>
+                     Height="32" />
         <StackPanel Orientation="Horizontal" Grid.ColumnSpan="3"  Grid.Row="1" HorizontalAlignment="Center">
-            <Image Source="{Binding ProcessIcon}" MinHeight="16" MaxHeight="32"/>
+            <Image Source="{Binding ProcessIcon.Result}" MinHeight="16" MaxHeight="32" />
             <TextBlock Margin="5,0,0,0" Text="{Binding ProcessName.Result}" VerticalAlignment="Center" />
         </StackPanel>
     </Grid>

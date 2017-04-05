@@ -11,10 +11,10 @@
     <SolidColorBrush x:Key="ForegroundHalf" Color="#7FD9D9D9" />
     <SolidColorBrush x:Key="Control" Color="#292929" />
     <SolidColorBrush x:Key="Highlight" Color="#383838" />
-    
-    <BitmapImage x:Key="Logo" UriSource="logo.light.png"/>
-    <BitmapImage x:Key="Icon" UriSource="logo.light.ico"/>
-    <BitmapImage x:Key="MinimizeIcon" UriSource="min.light.png"/>
-    <BitmapImage x:Key="RestoreIcon" UriSource="res.light.png"/>
-    <BitmapImage x:Key="CloseIcon" UriSource="close.light.png"/>
+
+    <BitmapImage x:Key="Logo" UriSource="logo.light.png" />
+    <BitmapImage x:Key="Icon" UriSource="logo.light.ico" />
+    <BitmapImage x:Key="MinimizeIcon" UriSource="min.light.png" />
+    <BitmapImage x:Key="RestoreIcon" UriSource="res.light.png" />
+    <BitmapImage x:Key="CloseIcon" UriSource="close.light.png" />
 </ResourceDictionary>

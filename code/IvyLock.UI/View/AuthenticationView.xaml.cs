@@ -1,46 +1,45 @@
-﻿using IvyLock.UI.ViewModel;
+﻿using IvyLock.ViewModel;
 using System;
-using System.ComponentModel;
 using System.Diagnostics;
 using System.Threading.Tasks;
 using System.Windows;
 
-namespace IvyLock.UI.View
+namespace IvyLock.View
 {
-	/// <summary>
-	/// Interaction logic for AuthenticationView.xaml
-	/// </summary>
-	public partial class AuthenticationView : Window
-	{
-		AuthenticationViewModel avm;
+    /// <summary>
+    /// Interaction logic for AuthenticationView.xaml
+    /// </summary>
+    public partial class AuthenticationView : Window
+    {
+        private AuthenticationViewModel avm;
 
-		public AuthenticationView()
-		{
-			InitializeComponent();
-			avm = DataContext as AuthenticationViewModel;
-		}
+        public AuthenticationView()
+        {
+            InitializeComponent();
+            avm = DataContext as AuthenticationViewModel;
+        }
 
-		private void AuthenticationViewModel_CloseRequested()
-		{
-			if(IsLoaded)
-				Close();
-		}
+        private void AuthenticationViewModel_CloseRequested()
+        {
+            if (IsLoaded)
+                Close();
+        }
 
-		protected override void OnClosed(EventArgs e)
-		{
-			Task.Run(() =>
-			{
-				if (avm.Locked)
-					foreach (Process process in avm.Processes)
-						try { process.Kill(); } catch { }
-			});
+        protected override void OnClosed(EventArgs e)
+        {
+            Task.Run(() =>
+            {
+                if (avm.Locked)
+                    foreach (Process process in avm.Processes)
+                        try { process.Kill(); } catch { }
+            });
 
-			base.OnClosed(e);
-		}
+            base.OnClosed(e);
+        }
 
-		private void AuthenticationViewModel_ShowRequested()
-		{
-			Show();
-		}
-	}
+        private void AuthenticationViewModel_ShowRequested()
+        {
+            Show();
+        }
+    }
 }

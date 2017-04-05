@@ -2,121 +2,115 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Management;
-using System.Runtime.InteropServices;
 
 namespace IvyLock.Service
 {
-	public delegate void ProcessChangedHandler(int pid, string path, ProcessOperation po);
+    public delegate void ProcessChangedHandler(int pid, string path, ProcessOperation po);
 
-	public enum ProcessOperation
-	{
-		Started, Modified, Deleted
-	}
+    public enum ProcessOperation
+    {
+        Started, Modified, Deleted
+    }
 
-	public interface IProcessService : IDisposable
-	{
+    public interface IProcessService : IDisposable
+    {
+        #region Events
 
-		#region Events
+        event ProcessChangedHandler ProcessChanged;
 
-		event ProcessChangedHandler ProcessChanged;
+        #endregion Events
 
-		#endregion Events
+        #region Methods
 
+        Process GetProcessById(int pid);
 
-		#region Methods
+        IList<Process> GetProcesses();
 
-		Process GetProcessById(int pid);
+        IList<Process> GetProcessesByName(string execName);
 
-		IList<Process> GetProcesses();
-		IList<Process> GetProcessesByName(string execName);
+        #endregion Methods
+    }
 
-		#endregion Methods
-	}
+    public class ManagedProcessService : IProcessService
+    {
+        #region Fields
 
-	public class ManagedProcessService : IProcessService
-	{
+        private ManagementEventWatcher mew;
+        private List<string> processesToMonitor = new List<string>();
 
-		#region Fields
+        #endregion Fields
 
-		private ManagementEventWatcher mew;
-		private List<string> processesToMonitor = new List<string>();
+        #region Constructors
 
-		#endregion Fields
+        public ManagedProcessService()
+        {
+            mew = new ManagementEventWatcher();
+            mew.Query = new WqlEventQuery("__InstanceOperationEvent",
+                new TimeSpan(0, 0, 1),
+                "TargetInstance isa \"Win32_Process\"");
+            mew.Start();
+            mew.EventArrived += EventArrived;
+        }
 
+        ~ManagedProcessService()
+        {
+            mew.Dispose();
+        }
 
-		#region Constructors
+        #endregion Constructors
 
-		public ManagedProcessService()
-		{
-			mew = new ManagementEventWatcher();
-			mew.Query = new WqlEventQuery("__InstanceOperationEvent",
-				new TimeSpan(0, 0, 1),
-				"TargetInstance isa \"Win32_Process\"");
-			mew.Start();
-			mew.EventArrived += EventArrived;
-		}
+        #region Events
 
-		~ManagedProcessService()
-		{
-			mew.Dispose();
-		}
+        public event ProcessChangedHandler ProcessChanged;
 
-		#endregion Constructors
+        #endregion Events
 
+        #region Properties
 
-		#region Events
+        public static ManagedProcessService Default { get; set; } = new ManagedProcessService();
 
-		public event ProcessChangedHandler ProcessChanged;
+        #endregion Properties
 
-		#endregion Events
+        #region Methods
 
+        public Process GetProcessById(int pid)
+        {
+            return Process.GetProcessById(pid);
+        }
 
-		#region Properties
+        public IList<Process> GetProcesses()
+        {
+            return Process.GetProcesses();
+        }
 
-		public static ManagedProcessService Default { get; set; } = new ManagedProcessService();
+        public IList<Process> GetProcessesByName(string execName)
+        {
+            return Process.GetProcessesByName(execName);
+        }
 
-		#endregion Properties
+        private void EventArrived(object sender, EventArrivedEventArgs e)
+        {
+            ManagementBaseObject mbo = e.NewEvent["TargetInstance"] as ManagementBaseObject;
 
+            ProcessOperation po = ProcessOperation.Started;
+            switch (e.NewEvent.ClassPath.ClassName)
+            {
+                case "__InstanceModificationEvent":
+                    po = ProcessOperation.Modified;
+                    break;
 
-		#region Methods
+                case "__InstanceDeletionEvent":
+                    po = ProcessOperation.Deleted;
+                    break;
+            }
+            ProcessChanged?.Invoke((int)(uint)mbo["ProcessId"], (string)mbo["ExecutablePath"], po);
+        }
 
-		public Process GetProcessById(int pid)
-		{
-			return Process.GetProcessById(pid);
-		}
+        public void Dispose()
+        {
+            mew.Dispose();
+        }
 
-		public IList<Process> GetProcesses()
-		{
-			return Process.GetProcesses();
-		}
-
-		public IList<Process> GetProcessesByName(string execName)
-		{
-			return Process.GetProcessesByName(execName);
-		}		
-
-		private void EventArrived(object sender, EventArrivedEventArgs e)
-		{
-			ManagementBaseObject mbo = e.NewEvent["TargetInstance"] as ManagementBaseObject;
-
-			ProcessOperation po = ProcessOperation.Started;
-			switch(e.NewEvent.ClassPath.ClassName)
-			{
-				case "__InstanceModificationEvent":
-					po = ProcessOperation.Modified;
-					break;
-				case "__InstanceDeletionEvent":
-					po = ProcessOperation.Deleted;
-					break;
-			}
-			ProcessChanged?.Invoke((int)(uint)mbo["ProcessId"], (string)mbo["ExecutablePath"], po);
-		}
-
-		public void Dispose()
-		{
-			mew.Dispose();
-		}
-
-		#endregion Methods
-	}
+        #endregion Methods
+    }
 }

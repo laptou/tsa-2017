@@ -1,6 +1,6 @@
 ﻿using IvyLock.Model;
 using IvyLock.Service;
-using IvyLock.UI.View;
+using IvyLock.View;
 using System;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
@@ -13,14 +13,11 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Data;
 
-namespace IvyLock.UI.ViewModel
+namespace IvyLock.ViewModel
 {
     public sealed class SettingsViewModel : ViewModel
     {
         #region Fields
-
-        public static readonly DependencyProperty ViewProperty =
-            DependencyProperty.Register("View", typeof(SettingsView), typeof(SettingsViewModel), new PropertyMetadata(null));
 
         private Screen _currentScreen = Screen.Main;
         private bool _locked = true;
@@ -87,8 +84,12 @@ namespace IvyLock.UI.ViewModel
 
         public bool Locked
         {
-            get { return _locked; }
-            set {
+            get
+            {
+                return _locked;
+            }
+            set
+            {
                 Set(value, ref _locked);
                 if (!value)
                     UI(View.pwdBox.Clear);
@@ -239,6 +240,7 @@ namespace IvyLock.UI.ViewModel
                                 case Theme.Light:
                                     uri = new Uri("pack://application:,,,/IvyLock;component/Content/Theme.Light.xaml");
                                     break;
+
                                 default:
                                 case Theme.Dark:
                                     uri = new Uri("pack://application:,,,/IvyLock;component/Content/Theme.Dark.xaml");
