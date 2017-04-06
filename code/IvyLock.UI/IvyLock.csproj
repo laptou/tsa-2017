@@ -39,8 +39,8 @@
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
-    <Prefer32Bit>false</Prefer32Bit>
-    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <Prefer32Bit>true</Prefer32Bit>
+    <AllowUnsafeBlocks>false</AllowUnsafeBlocks>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <PlatformTarget>AnyCPU</PlatformTarget>
@@ -61,7 +61,7 @@
     <SignAssembly>true</SignAssembly>
   </PropertyGroup>
   <PropertyGroup>
-    <AssemblyOriginatorKeyFile>ivylock.pfx</AssemblyOriginatorKeyFile>
+    <AssemblyOriginatorKeyFile>ivylock.snk</AssemblyOriginatorKeyFile>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="Microsoft.Expression.Interactions, Version=4.5.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL" />
@@ -122,7 +122,6 @@
     <Compile Include="Model\Model.cs" />
     <Compile Include="Model\Setting.cs" />
     <Compile Include="ProcessExtensions.cs" />
-    <Compile Include="Service\BiometricService.cs" />
     <Compile Include="Service\EncryptionService.cs" />
     <Compile Include="Service\ProcessService.cs" />
     <Compile Include="Service\SettingsService.cs" />
@@ -134,6 +133,7 @@
     <Compile Include="View\AuthenticationView.xaml.cs">
       <DependentUpon>AuthenticationView.xaml</DependentUpon>
     </Compile>
+    <Compile Include="View\BooleanToVisibilityConverter.cs" />
     <Compile Include="View\Control\IvyWindow.cs" />
     <Compile Include="View\Control\NumericUpDown.xaml.cs">
       <DependentUpon>NumericUpDown.xaml</DependentUpon>
@@ -165,7 +165,7 @@
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
     </EmbeddedResource>
-    <None Include="ivylock.pfx" />
+    <Resource Include="Content\material-icons.ttf" />
     <None Include="ivylock.snk" />
     <None Include="packages.config" />
     <None Include="Properties\Settings.settings">
@@ -240,7 +240,7 @@
     <Resource Include="Content\logo.light.ico" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\IvyLock.Native\IvyLock.Native.vcxproj">
+    <ProjectReference Include="..\IvyLock.Native\IvyLock.Native.vcxproj">
       <Project>{80ce7043-ee0d-4970-bdf7-c3dc030cceb8}</Project>
       <Name>IvyLock.Native</Name>
     </ProjectReference>

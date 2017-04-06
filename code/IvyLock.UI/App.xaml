@@ -13,6 +13,7 @@
             </ResourceDictionary.MergedDictionaries>
             <FontFamily x:Key="Header">Roboto Condensed</FontFamily>
             <FontFamily x:Key="Text">Roboto</FontFamily>
+            <FontFamily x:Key="Icon">./Content/#Material Icons</FontFamily>
             <Style TargetType="{x:Type Control}">
                 <Setter Property="Foreground" Value="{DynamicResource Foreground}" />
                 <Setter Property="FontFamily" Value="{DynamicResource Text}" />
@@ -58,7 +59,9 @@
             </Style>
 
             <ControlTemplate x:Key="PasswordBoxControlTemplate" TargetType="{x:Type PasswordBox}">
-                <Border x:Name="border" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" Background="{TemplateBinding Background}" SnapsToDevicePixels="True">
+                <Border x:Name="border" BorderBrush="{TemplateBinding BorderBrush}" 
+                        BorderThickness="{TemplateBinding BorderThickness}" Background="{TemplateBinding Background}" 
+                        SnapsToDevicePixels="True" MaxWidth="{TemplateBinding MaxWidth}" MaxHeight="{TemplateBinding MaxHeight}">
                     <Grid>
                         <TextBlock x:Name="watermark" Opacity="0.5" Visibility="Collapsed"
                                Text="{TemplateBinding control:PasswordBoxHelper.Placeholder}" HorizontalAlignment="Center" VerticalAlignment="Center" />

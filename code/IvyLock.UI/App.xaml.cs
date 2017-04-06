@@ -22,11 +22,13 @@ namespace IvyLock
     {
         #region Fields
 
-        private static Mutex mutex = new Mutex(true, "{37EFBF56-B711-42E3-B3D0-0DCDA7BC09BD}");
+        private static Mutex mutex = new Mutex(true, "{37EFBF56-B711-42E3-B3D0-0DCDA7BC09CA}");
         private IProcessService ips;
         private ISettingsService iss;
         private NotifyIcon ni;
         private Dictionary<string, AuthenticationViewModel> views = new Dictionary<string, AuthenticationViewModel>();
+
+        public static bool IsDesigner { get { return LicenseManager.UsageMode == LicenseUsageMode.Designtime; } }
 
         #endregion Fields
 
@@ -43,7 +45,9 @@ namespace IvyLock
 
         protected override void OnStartup(StartupEventArgs e)
         {
-            if (!DesignerProperties.GetIsInDesignMode(new DependencyObject()))
+            base.OnStartup(e);
+
+            if (!IsDesigner)
             {
                 try
                 {
@@ -64,8 +68,6 @@ namespace IvyLock
                 {
                     mutex.Dispose();
                 };
-
-                base.OnStartup(e);
 
                 // don't initialise statically! XmlSettingsService
                 // depends on Application.Current
@@ -108,10 +110,6 @@ namespace IvyLock
                 });
                 ni.Visible = true;
             }
-            else
-            {
-                base.OnStartup(e);
-            }
         }
 
         private void ProcessChanged(int pid, string path, ProcessOperation po)
@@ -141,7 +139,6 @@ namespace IvyLock
                             AuthenticationViewModel avm = views.ContainsKey(path) ? views[path] :
                                 (AuthenticationViewModel)new AuthenticationView().DataContext;
                             avm.ProcessPath = path;
-                            avm.Processes.Add(Process.GetProcessById(pid));
 
                             await avm.Lock();
 

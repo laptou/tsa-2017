@@ -4,9 +4,12 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:control="clr-namespace:IvyLock.View.Control"
-        xmlns:ViewModel="clr-namespace:IvyLock.ViewModel" x:Class="IvyLock.View.AuthenticationView"
+        xmlns:ViewModel="clr-namespace:IvyLock.ViewModel" xmlns:i="http://schemas.microsoft.com/expression/2010/interactivity" xmlns:ei="http://schemas.microsoft.com/expression/2010/interactions" xmlns:xctk="http://schemas.xceed.com/wpf/xaml/toolkit" xmlns:local="clr-namespace:IvyLock.View" x:Class="IvyLock.View.AuthenticationView"
         mc:Ignorable="d"
         Title="{Binding ProcessName}" Height="512" Width="768" FontFamily="Roboto" Style="{DynamicResource IvyWindow}">
+    <Window.Resources>
+        <local:BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
+    </Window.Resources>
     <Window.DataContext>
         <ViewModel:AuthenticationViewModel
             CloseRequested="AuthenticationViewModel_CloseRequested"
@@ -24,14 +27,59 @@
             <ColumnDefinition />
         </Grid.ColumnDefinitions>
         <Image Source="{DynamicResource Logo}" Margin="0" Grid.Column="1" SnapsToDevicePixels="True" Grid.RowSpan="2" />
-        <PasswordBox control:PasswordBoxHelper.Placeholder="type password to run"
-                    control:PasswordBoxHelper.EncryptedPassword="{Binding Password, Mode=OneWayToSource}"
-                    control:PasswordBoxHelper.Watch="True" Template="{DynamicResource PasswordBoxControlTemplate}"
-                    Grid.Row="2" Grid.ColumnSpan="3" Margin="20,0" Background="{DynamicResource BackgroundHalf}"
-                     Height="32" />
+
         <StackPanel Orientation="Horizontal" Grid.ColumnSpan="3"  Grid.Row="1" HorizontalAlignment="Center">
             <Image Source="{Binding ProcessIcon.Result}" MinHeight="16" MaxHeight="32" />
             <TextBlock Margin="5,0,0,0" Text="{Binding ProcessName.Result}" VerticalAlignment="Center" />
         </StackPanel>
+
+        <Border Grid.Row="2" Grid.ColumnSpan="3" Margin="0" Padding="8" 
+                VerticalAlignment="Center"
+                x:Name="passwordBorder">
+            <Border.Style>
+                <Style TargetType="{x:Type Border}">
+                    <Setter Property="Background" Value="Transparent" />
+                    <Style.Triggers>
+                        <DataTrigger Binding="{Binding PasswordVerified}" 
+                                     Value="{x:Static ViewModel:PasswordVerificationStatus.Rejected}">
+                            <DataTrigger.EnterActions>
+                                <BeginStoryboard>
+                                    <Storyboard FillBehavior="HoldEnd">
+                                        <ColorAnimation Storyboard.TargetProperty="(Border.Background).(SolidColorBrush.Color)"
+                                                        From="#9FFF0000" To="Transparent" Duration="0:0:0.15" BeginTime="0:0:0"/>
+                                    </Storyboard>
+                                </BeginStoryboard>
+                            </DataTrigger.EnterActions>
+                        </DataTrigger>
+                    </Style.Triggers>
+                </Style>
+            </Border.Style>
+            <Grid HorizontalAlignment="Center">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+                <PasswordBox 
+                    control:PasswordBoxHelper.Placeholder="type password and press enter to run"
+                    control:PasswordBoxHelper.EncryptedPassword="{Binding Password, Mode=OneWayToSource}"
+                    control:PasswordBoxHelper.Watch="True" Template="{DynamicResource PasswordBoxControlTemplate}"
+                    Background="{DynamicResource BackgroundHalf}"
+                    Height="32" MinWidth="450" KeyDown="PasswordBox_KeyDown" />
+                
+                <TextBlock FontFamily="{DynamicResource Icon}" FontSize="24" Grid.Column="1" Margin="4"
+                           Visibility="{Binding BiometricsEnabled, Converter={StaticResource BooleanToVisibilityConverter}}">
+                    <Run Text="&#xE90D;"/>
+                </TextBlock>
+
+                <TextBlock Grid.Row="1" Grid.ColumnSpan="2" Text="{Binding ErrorMessage}" Opacity="0.605" 
+                           VerticalAlignment="Center" HorizontalAlignment="Center" Margin="8">
+                </TextBlock>
+            </Grid>
+        </Border>
     </Grid>
 </Window>

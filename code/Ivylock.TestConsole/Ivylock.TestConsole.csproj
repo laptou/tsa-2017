@@ -51,7 +51,7 @@
     <None Include="App.config" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\code\IvyLock.UI\IvyLock.csproj">
+    <ProjectReference Include="..\IvyLock.UI\IvyLock.csproj">
       <Project>{18bc0d80-62b6-41da-a626-590878a66986}</Project>
       <Name>IvyLock</Name>
     </ProjectReference>

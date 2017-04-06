@@ -30,7 +30,7 @@ namespace IvyLock.Service
 
         static XmlSettingsService()
         {
-            if (!initialised && Default == null)
+            if (!initialised && Default == null && !App.IsDesigner)
                 Default = new XmlSettingsService();
         }
 
@@ -78,6 +78,7 @@ namespace IvyLock.Service
                 _values = new List<SettingGroup>(xs.Deserialize(stream) as SettingGroup[]);
                 foreach (SettingGroup sg in _values)
                 {
+                    sg.Initialize();
                     sg.PropertyChanged += SettingGroupChanged;
                 }
             }

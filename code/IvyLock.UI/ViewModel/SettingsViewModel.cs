@@ -176,6 +176,7 @@ namespace IvyLock.ViewModel
                             if (f(p))
                             {
                                 ProcessSettings ps = new ProcessSettings(p);
+                                ps.Initialize();
                                 iss.Set(ps);
                                 Settings.Add(ps);
                             }

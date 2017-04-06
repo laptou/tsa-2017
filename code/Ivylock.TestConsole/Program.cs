@@ -15,15 +15,20 @@ namespace Ivylock.TestConsole
             var session = WBF.OpenSession(BiometricType.Fingerprint, BiometricPoolType.System, BiometricSessionFlags.Default,
                null, BiometricDatabaseType.None);
             var identity = WBF.GetCurrentIdentity();
-            var match = WBF.Verify(session, identity, BiometricSubtype.Any,
-                out uint schema, out BiometricRejectDetail rejectDetail, out BiometricError error);
-            if (error == BiometricError.None)
-                Console.WriteLine("Match: {0}", match);
-            else
+            while (!Console.KeyAvailable)
             {
-                Console.WriteLine("Biometric Error: {0}", error);
-                Console.WriteLine("Reject detail: {0}", rejectDetail);
+                var match = WBF.Verify(session, identity, BiometricSubtype.Any,
+                    out uint schema, out BiometricRejectDetail rejectDetail, out BiometricError error);
+
+                if (error == BiometricError.None)
+                    Console.WriteLine("Match: {0}", match);
+                else
+                {
+                    Console.WriteLine("Biometric Error: {0}", error);
+                    Console.WriteLine("Reject detail: {0}", rejectDetail);
+                }
             }
+
             WBF.CloseSession(session);
             //}
             //catch (Exception ex)

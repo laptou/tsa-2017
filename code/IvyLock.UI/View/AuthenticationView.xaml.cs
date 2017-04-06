@@ -3,6 +3,8 @@ using System;
 using System.Diagnostics;
 using System.Threading.Tasks;
 using System.Windows;
+using System.Windows.Input;
+using System.Windows.Media.Animation;
 
 namespace IvyLock.View
 {
@@ -40,6 +42,20 @@ namespace IvyLock.View
         private void AuthenticationViewModel_ShowRequested()
         {
             Show();
+            Activate();
+        }
+
+        private void PasswordBox_KeyDown(object sender, KeyEventArgs e)
+        {
+            if(e.Key == Key.Enter)
+            {
+                avm.ValidatePassword();
+            }
+        }
+
+        private void CompletedEventHandler(object sender, EventArgs e)
+        {
+            Close();
         }
     }
 }

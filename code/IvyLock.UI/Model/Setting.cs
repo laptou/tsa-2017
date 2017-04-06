@@ -34,7 +34,6 @@ namespace IvyLock.Model
 
     public class IvyLockSettings : SettingGroup
     {
-
         #region Fields
 
         private string _hash;
@@ -112,12 +111,10 @@ namespace IvyLock.Model
         }
 
         #endregion Properties
-
     }
 
     public class ProcessSettings : SettingGroup
     {
-
         #region Fields
 
         private string _hash;
@@ -127,6 +124,7 @@ namespace IvyLock.Model
 
         private bool hasLockTimeOut = true;
         private int lockTimeOut = 15;
+        private bool _allowBiometrics = true;
 
         #endregion Fields
 
@@ -238,13 +236,21 @@ namespace IvyLock.Model
             set { Set(value, ref _usePassword); }
         }
 
-        #endregion Properties
+        [Setting(
+            Category = SettingCategory.Security,
+            Name = "Allow Biometric Authentication",
+            Description = "Whether this app can be unlocked using a fingerprint.")]
+        public bool AllowBiometricAuthentication
+        {
+            get { return _allowBiometrics; }
+            set { Set(value, ref _allowBiometrics); }
+        }
 
+        #endregion Properties
     }
 
     public class Setting : Model
     {
-
         #region Fields
 
         private SettingGroup _settings;
@@ -288,13 +294,11 @@ namespace IvyLock.Model
         }
 
         #endregion Methods
-
     }
 
     [AttributeUsage(AttributeTargets.Property, Inherited = false, AllowMultiple = false)]
     public sealed class SettingAttribute : Attribute
     {
-
         #region Constructors
 
         public SettingAttribute()
@@ -316,7 +320,6 @@ namespace IvyLock.Model
         public Func<object, bool> Predicate { get; set; }
 
         #endregion Properties
-
     }
 
     [XmlInclude(typeof(IvyLockSettings)), XmlInclude(typeof(ProcessSettings))]
@@ -332,10 +335,6 @@ namespace IvyLock.Model
 
         public SettingGroup()
         {
-            foreach (Setting setting in GetSettings())
-            {
-                settings.Add(setting.Key, setting);
-            }
         }
 
         public SettingGroup(SerializationInfo info, StreamingContext context)
@@ -366,7 +365,10 @@ namespace IvyLock.Model
         [Setting(Ignore = true)]
         public IEnumerable<Setting> Settings
         {
-            get { return settings.Values; }
+            get
+            {
+                return settings.Values;
+            }
         }
 
         [XmlIgnore]
@@ -441,9 +443,19 @@ namespace IvyLock.Model
             }
         }
 
+        public void Initialize()
+        {
+            foreach (Setting setting in GetSettings())
+            {
+                settings.Add(setting.Key, setting);
+            }
+
+            RaisePropertyChanged("Settings");
+        }
+
         private void OnPropertyChanged(object sender, PropertyChangedEventArgs e)
         {
-            if(settings.ContainsKey(e.PropertyName))
+            if (settings.ContainsKey(e.PropertyName))
                 settings[e.PropertyName].Value = GetType().GetProperty(e.PropertyName)?.GetValue(this);
         }
 
@@ -455,6 +467,5 @@ namespace IvyLock.Model
         }
 
         #endregion Methods
-
     }
 }
