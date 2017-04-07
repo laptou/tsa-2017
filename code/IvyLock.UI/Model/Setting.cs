@@ -211,8 +211,6 @@ namespace IvyLock.Model
                 }
 
                 Name = FileVersionInfo.GetVersionInfo(value).FileDescription;
-                Application.Current.Dispatcher.Invoke(() =>
-                    Icon = Icon = System.Drawing.Icon.ExtractAssociatedIcon(value).ToImageSource());
             }
         }
 
@@ -353,10 +351,6 @@ namespace IvyLock.Model
         #endregion Constructors
 
         #region Properties
-
-        [XmlIgnore]
-        [Setting(Ignore = true)]
-        public ImageSource Icon { get; protected set; }
 
         [Setting(Hide = true)]
         public string Name { get; set; }

@@ -34,7 +34,26 @@ namespace IvyLock {
 
 		public enum class BiometricType : uint
 		{
-			Fingerprint = WINBIO_TYPE_FINGERPRINT
+			Fingerprint = WINBIO_TYPE_FINGERPRINT,
+			Multiple = WINBIO_TYPE_MULTIPLE,
+			FacialFeatures = WINBIO_TYPE_FACIAL_FEATURES,
+			Voice = WINBIO_TYPE_VOICE,
+			Iris = WINBIO_TYPE_IRIS,
+			Retina = WINBIO_TYPE_RETINA,
+			HandGeometry = WINBIO_TYPE_HAND_GEOMETRY,
+			SignatureDynamics = WINBIO_TYPE_SIGNATURE_DYNAMICS,
+			KeystrokeDynamics = WINBIO_TYPE_KEYSTROKE_DYNAMICS,
+			LipMovement = WINBIO_TYPE_LIP_MOVEMENT,
+			ThermalFaceImage = WINBIO_TYPE_THERMAL_FACE_IMAGE,
+			THERMAL_HAND_IMAGE = WINBIO_TYPE_THERMAL_HAND_IMAGE,
+			Gait = WINBIO_TYPE_GAIT,
+			Scent = WINBIO_TYPE_SCENT,
+			DNA = WINBIO_TYPE_DNA,
+			EarShape = WINBIO_TYPE_EAR_SHAPE,
+			FingerGeometry = WINBIO_TYPE_FINGER_GEOMETRY,
+			PalmPrint = WINBIO_TYPE_PALM_PRINT,
+			VeinPattern = WINBIO_TYPE_VEIN_PATTERN,
+			FootPrint = WINBIO_TYPE_FOOT_PRINT
 		};
 
 		public enum class BiometricRejectDetail : uint
@@ -315,7 +334,6 @@ namespace IvyLock {
 
 			static UInt32 OpenSession(BiometricType type, BiometricPoolType poolType, BiometricSessionFlags flags,
 				array<int>^ units, BiometricDatabaseType dbType) {
-
 				pin_ptr<int> unit = units == nullptr ? nullptr : &units[0];
 				int unitCount = units == nullptr ? 0 : units->Length;
 
@@ -323,7 +341,7 @@ namespace IvyLock {
 
 				HRESULT hr =
 					WinBioOpenSession(
-						(WINBIO_BIOMETRIC_TYPE)type,
+					(WINBIO_BIOMETRIC_TYPE)type,
 						(WINBIO_POOL_TYPE)poolType,
 						(WINBIO_SESSION_FLAGS)flags,
 						(WINBIO_UNIT_ID *)unit,
@@ -353,9 +371,9 @@ namespace IvyLock {
 				WINBIO_IDENTITY nativeIdentity2 = { 0 };
 				GetCurrentUserIdentity(&nativeIdentity2);
 
-				HRESULT hr = 
+				HRESULT hr =
 					WinBioVerify(
-						(WINBIO_SESSION_HANDLE)sessionHandle,
+					(WINBIO_SESSION_HANDLE)sessionHandle,
 						&nativeIdentity,
 						(WINBIO_BIOMETRIC_SUBTYPE)subFactor,
 						&uid,
@@ -365,7 +383,7 @@ namespace IvyLock {
 				unitId = uid;
 				rejectDetail = (BiometricRejectDetail)rd;
 
-				if(Enum::IsDefined(BiometricError::typeid, hr))
+				if (Enum::IsDefined(BiometricError::typeid, hr))
 					error = (BiometricError)hr;
 				else if (FAILED(hr))
 					throw gcnew Win32Exception(hr);

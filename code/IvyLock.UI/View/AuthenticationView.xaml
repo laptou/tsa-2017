@@ -6,9 +6,10 @@
         xmlns:control="clr-namespace:IvyLock.View.Control"
         xmlns:ViewModel="clr-namespace:IvyLock.ViewModel" xmlns:i="http://schemas.microsoft.com/expression/2010/interactivity" xmlns:ei="http://schemas.microsoft.com/expression/2010/interactions" xmlns:xctk="http://schemas.xceed.com/wpf/xaml/toolkit" xmlns:local="clr-namespace:IvyLock.View" x:Class="IvyLock.View.AuthenticationView"
         mc:Ignorable="d"
-        Title="{Binding ProcessName}" Height="512" Width="768" FontFamily="Roboto" Style="{DynamicResource IvyWindow}">
+        Title="{Binding ProcessName.Result}" Height="512" Width="768" FontFamily="Roboto" Style="{DynamicResource IvyWindow}">
     <Window.Resources>
-        <local:BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
+        <local:PathToIconConverter x:Key="PathToIconConverter" />
+        <local:BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />
     </Window.Resources>
     <Window.DataContext>
         <ViewModel:AuthenticationViewModel
@@ -29,54 +30,116 @@
         <Image Source="{DynamicResource Logo}" Margin="0" Grid.Column="1" SnapsToDevicePixels="True" Grid.RowSpan="2" />
 
         <StackPanel Orientation="Horizontal" Grid.ColumnSpan="3"  Grid.Row="1" HorizontalAlignment="Center">
-            <Image Source="{Binding ProcessIcon.Result}" MinHeight="16" MaxHeight="32" />
+            <Image Source="{Binding ProcessPath, Converter={StaticResource PathToIconConverter}}" MinHeight="16" MaxHeight="32" />
             <TextBlock Margin="5,0,0,0" Text="{Binding ProcessName.Result}" VerticalAlignment="Center" />
         </StackPanel>
 
-        <Border Grid.Row="2" Grid.ColumnSpan="3" Margin="0" Padding="8" 
+        <Border Grid.Row="2" Grid.ColumnSpan="3" Margin="0" Padding="8"
                 VerticalAlignment="Center"
-                x:Name="passwordBorder">
+                x:Name="pwdBorder">
             <Border.Style>
                 <Style TargetType="{x:Type Border}">
                     <Setter Property="Background" Value="Transparent" />
-                    <Style.Triggers>
-                        <DataTrigger Binding="{Binding PasswordVerified}" 
-                                     Value="{x:Static ViewModel:PasswordVerificationStatus.Rejected}">
-                            <DataTrigger.EnterActions>
-                                <BeginStoryboard>
-                                    <Storyboard FillBehavior="HoldEnd">
-                                        <ColorAnimation Storyboard.TargetProperty="(Border.Background).(SolidColorBrush.Color)"
-                                                        From="#9FFF0000" To="Transparent" Duration="0:0:0.15" BeginTime="0:0:0"/>
-                                    </Storyboard>
-                                </BeginStoryboard>
-                            </DataTrigger.EnterActions>
-                        </DataTrigger>
-                    </Style.Triggers>
                 </Style>
             </Border.Style>
+            <i:Interaction.Triggers>
+                <i:EventTrigger EventName="PasswordVerified" SourceObject="{Binding Mode=OneWay}"
+                                    SourceName="pwdBorder">
+                    <ei:ControlStoryboardAction>
+                        <ei:ControlStoryboardAction.Storyboard>
+                            <Storyboard
+                                Storyboard.TargetName="pwdBorder">
+                                <StaticResourceExtension ResourceKey="SuccessAnimation" />
+                            </Storyboard>
+                        </ei:ControlStoryboardAction.Storyboard>
+                    </ei:ControlStoryboardAction>
+                </i:EventTrigger>
+                <i:EventTrigger EventName="PasswordDelayed" SourceObject="{Binding Mode=OneWay}"
+                    SourceName="pwdBorder">
+                    <ei:ControlStoryboardAction>
+                        <ei:ControlStoryboardAction.Storyboard>
+                            <Storyboard
+                                Storyboard.TargetName="pwdBorder"
+                                Storyboard.TargetProperty="(Border.Background).(SolidColorBrush.Color)">
+                                <StaticResourceExtension ResourceKey="DelayAnimation" />
+                            </Storyboard>
+                        </ei:ControlStoryboardAction.Storyboard>
+                    </ei:ControlStoryboardAction>
+                </i:EventTrigger>
+                <i:EventTrigger EventName="PasswordRejected" SourceObject="{Binding Mode=OneWay}"
+                                    SourceName="pwdBorder">
+                    <ei:ControlStoryboardAction>
+                        <ei:ControlStoryboardAction.Storyboard>
+                            <Storyboard
+                                Storyboard.TargetName="pwdBorder"
+                                Storyboard.TargetProperty="(Border.Background).(SolidColorBrush.Color)">
+                                <StaticResourceExtension ResourceKey="RejectionAnimation" />
+                            </Storyboard>
+                        </ei:ControlStoryboardAction.Storyboard>
+                    </ei:ControlStoryboardAction>
+                </i:EventTrigger>
+            </i:Interaction.Triggers>
             <Grid HorizontalAlignment="Center">
                 <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
                 </Grid.ColumnDefinitions>
                 <Grid.RowDefinitions>
-                    <RowDefinition Height="*"/>
-                    <RowDefinition Height="*"/>
-                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="*" />
+                    <RowDefinition Height="*" />
                 </Grid.RowDefinitions>
-                <PasswordBox 
+                <PasswordBox
                     control:PasswordBoxHelper.Placeholder="type password and press enter to run"
                     control:PasswordBoxHelper.EncryptedPassword="{Binding Password, Mode=OneWayToSource}"
                     control:PasswordBoxHelper.Watch="True" Template="{DynamicResource PasswordBoxControlTemplate}"
                     Background="{DynamicResource BackgroundHalf}"
                     Height="32" MinWidth="450" KeyDown="PasswordBox_KeyDown" />
-                
-                <TextBlock FontFamily="{DynamicResource Icon}" FontSize="24" Grid.Column="1" Margin="4"
-                           Visibility="{Binding BiometricsEnabled, Converter={StaticResource BooleanToVisibilityConverter}}">
-                    <Run Text="&#xE90D;"/>
+
+                <TextBlock FontFamily="{DynamicResource IconFont}" FontSize="24" Grid.Column="1" Margin="4"
+                           Visibility="{Binding BiometricsEnabled, Converter={StaticResource BooleanToVisibilityConverter}}"
+                           x:Name="biometricSymbol">
+                    <Run Text="&#xE90D;" />
+                    <i:Interaction.Triggers>
+                        <i:EventTrigger EventName="BiometricVerified" SourceObject="{Binding Mode=OneWay}">
+                            <ei:ControlStoryboardAction>
+                                <ei:ControlStoryboardAction.Storyboard>
+                                    <Storyboard
+                                        Storyboard.TargetName="biometricSymbol">
+                                        <StaticResourceExtension ResourceKey="SuccessAnimationText" />
+                                    </Storyboard>
+                                </ei:ControlStoryboardAction.Storyboard>
+                            </ei:ControlStoryboardAction>
+                        </i:EventTrigger>
+                        <i:EventTrigger EventName="BiometricDelayed" SourceObject="{Binding Mode=OneWay}">
+                            <ei:ControlStoryboardAction>
+                                <ei:ControlStoryboardAction.Storyboard>
+                                    <Storyboard
+                                        Storyboard.TargetName="biometricSymbol">
+                                        <StaticResourceExtension ResourceKey="DelayAnimationText" />
+                                    </Storyboard>
+                                </ei:ControlStoryboardAction.Storyboard>
+                            </ei:ControlStoryboardAction>
+                        </i:EventTrigger>
+                        <i:EventTrigger EventName="BiometricRejected" SourceObject="{Binding Mode=OneWay}">
+                            <ei:ControlStoryboardAction>
+                                <ei:ControlStoryboardAction.Storyboard>
+                                    <Storyboard
+                                        Storyboard.TargetName="biometricSymbol"
+                                        >
+                                        <StaticResourceExtension ResourceKey="RejectionAnimationText" />
+                                    </Storyboard>
+                                </ei:ControlStoryboardAction.Storyboard>
+                            </ei:ControlStoryboardAction>
+                        </i:EventTrigger>
+                    </i:Interaction.Triggers>
+                    <TextBlock.Style>
+                        <Style TargetType="TextBlock">
+                            <Setter Property="Foreground" Value="{DynamicResource Foreground}" />
+                        </Style>
+                    </TextBlock.Style>
                 </TextBlock>
 
-                <TextBlock Grid.Row="1" Grid.ColumnSpan="2" Text="{Binding ErrorMessage}" Opacity="0.605" 
+                <TextBlock Grid.Row="1" Grid.ColumnSpan="2" Text="{Binding PasswordErrorMessage}" Opacity="0.56"
                            VerticalAlignment="Center" HorizontalAlignment="Center" Margin="8">
                 </TextBlock>
             </Grid>

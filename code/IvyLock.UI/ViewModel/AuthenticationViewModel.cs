@@ -1,5 +1,4 @@
 ﻿using IvyLock.Model;
-using IvyLock.Native;
 using IvyLock.Service;
 using System;
 using System.Collections.Generic;
@@ -12,7 +11,6 @@ using System.IO;
 using System.Linq;
 
 using System.Security;
-using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
@@ -25,16 +23,12 @@ namespace IvyLock.ViewModel
         None, Verified, Rejected, Delayed
     }
 
-    public sealed class AuthenticationViewModel : ViewModel, IDisposable
+    public sealed class AuthenticationViewModel : PasswordValidationViewModel, IDisposable
     {
         #region Fields
 
         private static Dictionary<string, DateTime> unlockTimes = new Dictionary<string, DateTime>();
-        private bool _biometricEnabled;
         private SecureString _pass;
-        private PasswordVerificationStatus _verified;
-        private CancellationTokenSource biometricCts = new CancellationTokenSource();
-        private string errorMessage;
         private IEncryptionService ies = EncryptionService.Default;
         private IProcessService ips = ManagedProcessService.Default;
         private ISettingsService iss = XmlSettingsService.Default;
@@ -53,29 +47,24 @@ namespace IvyLock.ViewModel
                 ies = EncryptionService.Default;
                 ips = ManagedProcessService.Default;
                 iss = XmlSettingsService.Default;
+
                 ips.ProcessChanged += ProcessChanged;
                 Processes.CollectionChanged += ProcessCollectionChanged;
 
-                Task.Run(() =>
-                    WaitForFingerprint(), biometricCts.Token);
+                EventHandler verified = (s, e) =>
+                {
+                    Unlock();
+                    UI(CloseView);
+                };
+
+                PasswordVerified += verified;
+                BiometricVerified += verified;
             });
         }
 
         #endregion Constructors
 
         #region Properties
-
-        public bool BiometricsEnabled
-        {
-            get { return _biometricEnabled; }
-            set { Set(value, ref _biometricEnabled); }
-        }
-
-        public string ErrorMessage
-        {
-            get { return errorMessage; }
-            set { Set(value, ref errorMessage); }
-        }
 
         public bool Locked { get; private set; }
 
@@ -85,12 +74,6 @@ namespace IvyLock.ViewModel
 #pragma warning disable CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
             set { _pass = value; }
 #pragma warning restore CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
-        }
-
-        public PasswordVerificationStatus PasswordVerified
-        {
-            get { return _verified; }
-            set { Set(value, ref _verified); }
         }
 
         public ObservableCollection<Process> Processes { get; set; } = new ObservableCollection<Process>();
@@ -136,8 +119,10 @@ namespace IvyLock.ViewModel
             set
             {
                 Set(value, ref path);
-                RaisePropertyChanged("ProcessIcon");
                 RaisePropertyChanged("ProcessName");
+
+                ProcessSettings ps = iss?.OfType<ProcessSettings>().FirstOrDefault(s => s.Path.Equals(ProcessPath));
+                BiometricsEnabled = ps?.AllowBiometricAuthentication == true;
             }
         }
 
@@ -197,6 +182,19 @@ namespace IvyLock.ViewModel
             ips.ProcessChanged -= ProcessChanged;
         }
 
+        public override string GetPasswordHash()
+        {
+            IvyLockSettings ivs = iss.OfType<IvyLockSettings>().FirstOrDefault();
+            ProcessSettings ps = iss.OfType<ProcessSettings>().FirstOrDefault(s => s.Path.Equals(ProcessPath));
+
+            return ps.Hash ?? ivs.Hash;
+        }
+
+        public override string GetUserPasswordHash()
+        {
+            return ies.Hash(Password);
+        }
+
         public async Task Lock()
         {
             await Task.Run(() =>
@@ -214,7 +212,9 @@ namespace IvyLock.ViewModel
                         return;
 
                     Locked = true;
-                    List<Process> list = Processes.Where(p => !suspended[p.Id]).Distinct(new ProcessExtensions.PidComparer()).ToList();
+                    List<Process> list = Processes
+                        .Where(p => !suspended.ContainsKey(p.Id) || !suspended[p.Id])
+                        .Distinct(new ProcessExtensions.PidComparer()).ToList();
                     list.ForEach(p =>
                     {
                         p.EnumerateProcessWindowHandles().ForEach(hWnd =>
@@ -257,34 +257,6 @@ namespace IvyLock.ViewModel
             });
         }
 
-        public async Task ValidatePassword()
-        {
-            if (Password == null) return;
-
-            await Task.Run(async () =>
-            {
-                string hash = ies.Hash(Password);
-                IvyLockSettings ivs = iss.OfType<IvyLockSettings>().FirstOrDefault();
-                ProcessSettings ps = iss.OfType<ProcessSettings>().FirstOrDefault(s => s.Path.Equals(ProcessPath));
-                if (ps.UsePassword)
-                {
-                    if (string.IsNullOrWhiteSpace(ps.Hash) ? ivs.Hash.Equals(hash) : ps.Hash.Equals(hash))
-                    {
-                        PasswordVerified = PasswordVerificationStatus.Verified;
-                        biometricCts.Cancel();
-                        await Unlock();
-                        UI(CloseView);
-                    }
-                    else
-                    {
-                        PasswordVerified = PasswordVerificationStatus.None;
-                        PasswordVerified = PasswordVerificationStatus.Rejected;
-                        ErrorMessage = "The password is incorrect.";
-                    }
-                }
-            });
-        }
-
         private void ProcessChanged(int pid, string path, ProcessOperation po)
         {
             try
@@ -295,6 +267,20 @@ namespace IvyLock.ViewModel
                     {
                         Process p = Process.GetProcessById(pid);
                         Processes.Add(p);
+
+                        if (Locked)
+                        {
+                            p.EnumerateProcessWindowHandles().ForEach(hWnd =>
+                            {
+                                windowStates[hWnd] = NativeWindow.GetWindowState(hWnd);
+                                NativeWindow.ShowWindow(hWnd, ShowWindow.Hide);
+                            });
+
+                            p.Suspend();
+                            suspended[p.Id] = true;
+
+                            UI(ShowView);
+                        }
                     }
                 }
 
@@ -303,6 +289,7 @@ namespace IvyLock.ViewModel
                     if (path?.Equals(ProcessPath) == true)
                     {
                         Processes.Remove(Processes.FirstOrDefault(p => p.Id == pid));
+                        suspended.Remove(pid);
                     }
                 }
             }
@@ -312,6 +299,8 @@ namespace IvyLock.ViewModel
 
         private void ProcessCollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
         {
+            return;
+
             if (e.Action == NotifyCollectionChangedAction.Add)
                 foreach (Process process in e.NewItems)
                 {
@@ -324,64 +313,6 @@ namespace IvyLock.ViewModel
             if (e.Action == NotifyCollectionChangedAction.Remove)
                 foreach (Process process in e.OldItems)
                     suspended.Remove(process.Id);
-        }
-
-        private void WaitForFingerprint()
-        {
-            ProcessSettings ps = iss.OfType<ProcessSettings>().FirstOrDefault(s => s.Path.Equals(ProcessPath));
-
-            BiometricsEnabled = 
-                ps.AllowBiometricAuthentication &&
-                WBF.GetBiometricUnits(BiometricType.Fingerprint).Length > 0;
-
-            if (!BiometricsEnabled) return;
-
-            var session =
-                WBF.OpenSession(BiometricType.Fingerprint, BiometricPoolType.System, BiometricSessionFlags.Default,
-                    null, BiometricDatabaseType.None);
-
-            var match = false;
-
-            try
-            {
-                while (!WBF.Verify(session, WBF.GetCurrentIdentity(), BiometricSubtype.Any,
-                    out uint unitId, out BiometricRejectDetail rejectDetail, out BiometricError error))
-                {
-                    PasswordVerified = PasswordVerificationStatus.Rejected;
-                    PasswordVerified = PasswordVerificationStatus.None;
-
-                    switch (error)
-                    {
-                        case BiometricError.None:
-                            ErrorMessage = "What?!";
-                            break;
-                        case BiometricError.BadCapture:
-                            ErrorMessage = "The fingerprint was not captured properly (" + rejectDetail + ").";
-                            break;
-                        case BiometricError.EnrollmentInProgress:
-                            ErrorMessage = "The sensor is currently enrolling a new fingerprint.";
-                            break;
-                        case BiometricError.NoMatch:
-                            ErrorMessage = "The fingerprint did not match.";
-                            break;
-                        default:
-                            break;
-                    }
-                }
-                match = true;
-            }
-            catch
-            {
-            }
-
-            if (match)
-            {
-                PasswordVerified = PasswordVerificationStatus.Verified;
-                Unlock();
-                UI(CloseView);
-            }
-
-            WBF.CloseSession(session);
         }
 
         #endregion Methods

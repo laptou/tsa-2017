@@ -9,20 +9,28 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Security;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
+using System.Windows.Controls;
 using System.Windows.Data;
 
 namespace IvyLock.ViewModel
 {
-    public sealed class SettingsViewModel : ViewModel
+    public enum Screen
+    {
+        EnterPassword, SetupPassword, Main
+    }
+
+    public sealed class SettingsViewModel : PasswordValidationViewModel
     {
         #region Fields
 
-        private Screen _currentScreen = Screen.Main;
-        private bool _locked = true;
+        private Screen _currentScreen = Screen.SetupPassword;
+        private PasswordVerificationStatus _pvStatus;
         private SettingGroup _settingGroup;
         private ObservableCollection<SettingGroup> _settings = new ObservableCollection<SettingGroup>();
+        private CancellationTokenSource biometricCts;
         private IEncryptionService ies;
         private IProcessService ips;
         private ISettingsService iss;
@@ -39,6 +47,21 @@ namespace IvyLock.ViewModel
                 iss = XmlSettingsService.Default;
                 ips = ManagedProcessService.Default;
                 ies = EncryptionService.Default;
+
+                PasswordVerified += (s, e) =>
+                {
+                    Task.Run(() =>
+                    {
+                        Password = null;
+                        RaisePropertyChanged("Password");
+
+                        if (CurrentScreen == Screen.SetupPassword)
+                            IvyLockSettings.Hash = GetUserPasswordHash();
+
+                        CurrentScreen = Screen.Main;
+                    });
+                };
+
                 await LoadProcesses();
                 await LoadSettings();
             });
@@ -46,15 +69,6 @@ namespace IvyLock.ViewModel
         }
 
         #endregion Constructors
-
-        #region Enums
-
-        public enum Screen
-        {
-            EnterPassword, SetupPassword, Main
-        }
-
-        #endregion Enums
 
         #region Properties
 
@@ -82,49 +96,10 @@ namespace IvyLock.ViewModel
 
         public IvyLockSettings IvyLockSettings { get { return Settings.OfType<IvyLockSettings>().FirstOrDefault(); } }
 
-        public bool Locked
-        {
-            get
-            {
-                return _locked;
-            }
-            set
-            {
-                Set(value, ref _locked);
-                if (!value)
-                    UI(View.pwdBox.Clear);
-            }
-        }
-
         public SecureString Password
         {
-            get
-            {
-                return null;
-            }
-
-            set
-            {
-                if (IvyLockSettings != null)
-                {
-                    if (CurrentScreen == Screen.SetupPassword)
-                        IvyLockSettings.Password = value;
-                    else if (CurrentScreen == Screen.EnterPassword)
-                    {
-                        if (value != null)
-                            Task.Run(() =>
-                            {
-                                string hash = ies.Hash(value);
-                                if (IvyLockSettings.Hash.Equals(hash))
-                                {
-                                    CurrentScreen = Screen.Main;
-                                    Locked = false;
-                                    RaisePropertyChanged("Password");
-                                }
-                            });
-                    }
-                }
-            }
+            get;
+            set;
         }
 
         public SettingGroup SettingGroup { get { return _settingGroup; } set { Set(value, ref _settingGroup); } }
@@ -135,6 +110,18 @@ namespace IvyLock.ViewModel
         {
             get;
             set;
+        }
+
+        public override string GetPasswordHash()
+        {
+            if (CurrentScreen == Screen.SetupPassword)
+                return GetUserPasswordHash();
+            else return IvyLockSettings?.Hash;
+        }
+
+        public override string GetUserPasswordHash()
+        {
+            return ies.Hash(Password);
         }
 
         #endregion Properties

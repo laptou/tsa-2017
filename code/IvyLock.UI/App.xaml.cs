@@ -26,7 +26,7 @@ namespace IvyLock
         private IProcessService ips;
         private ISettingsService iss;
         private NotifyIcon ni;
-        private Dictionary<string, AuthenticationViewModel> views = new Dictionary<string, AuthenticationViewModel>();
+        private Dictionary<string, AuthenticationView> views = new Dictionary<string, AuthenticationView>();
 
         public static bool IsDesigner { get { return LicenseManager.UsageMode == LicenseUsageMode.Designtime; } }
 
@@ -98,12 +98,11 @@ namespace IvyLock
 
                     svm.PropertyChanged += (s2, e3) =>
                     {
-                        if (e3.PropertyName == "Locked" && !svm.Locked)
+                        if (e3.PropertyName == "CurrentScreen" && svm.CurrentScreen == ViewModel.Screen.Main)
                             Shutdown();
                     };
-
-                    svm.Locked = true;
-                    svm.CurrentScreen = SettingsViewModel.Screen.EnterPassword;
+                    
+                    svm.CurrentScreen = ViewModel.Screen.EnterPassword;
 
                     MainWindow.Show();
                     MainWindow.Activate();
@@ -130,15 +129,11 @@ namespace IvyLock
 
                         Dispatcher?.Invoke(async () =>
                         {
-                            if (views.ContainsKey(path))
-                            {
-                                views[path].ShowView();
-                                return;
-                            }
+                            AuthenticationView av = views.ContainsKey(path) ? views[path] : new AuthenticationView();
+                            AuthenticationViewModel avm = av.DataContext as AuthenticationViewModel;
 
-                            AuthenticationViewModel avm = views.ContainsKey(path) ? views[path] :
-                                (AuthenticationViewModel)new AuthenticationView().DataContext;
                             avm.ProcessPath = path;
+                            avm.Processes.Add(Process.GetProcessById(pid));
 
                             await avm.Lock();
 
@@ -149,10 +144,11 @@ namespace IvyLock
                             }
 
                             if (!views.ContainsKey(path))
-                                avm.CloseRequested += () => views.Remove(path);
+                                av.Closed += (s, e) => views.Remove(path);
 
-                            views[path] = avm;
-                            avm.ShowView();
+                            views[path] = av;
+                            views[path].Show();
+                            views[path].Activate();
                         });
                         break;
 
@@ -171,11 +167,8 @@ namespace IvyLock
                              catch (Win32Exception) { return false; }
                          }))
                         {
-                            views[path].CloseView();
-                            views[path].Dispose();
-
-                            if (views.ContainsKey(path))
-                                views.Remove(path);
+                            views[path].Close();
+                            views.Remove(path);
                         }
                         break;
 

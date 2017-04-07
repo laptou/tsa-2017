@@ -11,12 +11,12 @@ using namespace System::Security::Permissions;
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
 //
-[assembly:AssemblyTitleAttribute(L"IvyLockNative")];
-[assembly:AssemblyDescriptionAttribute(L"")];
+[assembly:AssemblyTitleAttribute(L"IvyLock.Native")];
+[assembly:AssemblyDescriptionAttribute(L"IvyLock Native Component")];
 [assembly:AssemblyConfigurationAttribute(L"")];
 [assembly:AssemblyCompanyAttribute(L"")];
-[assembly:AssemblyProductAttribute(L"IvyLockNative")];
-[assembly:AssemblyCopyrightAttribute(L"Copyright (c)  2017")];
+[assembly:AssemblyProductAttribute(L"IvyLock.Native")];
+[assembly:AssemblyCopyrightAttribute(L"Copyright (c) Ibiyemi Abiodun 2017")];
 [assembly:AssemblyTrademarkAttribute(L"")];
 [assembly:AssemblyCultureAttribute(L"")];
 

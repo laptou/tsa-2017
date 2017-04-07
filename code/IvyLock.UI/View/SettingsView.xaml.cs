@@ -10,19 +10,25 @@ namespace IvyLock.View
     /// </summary>
     public partial class SettingsView : Window
     {
+        SettingsViewModel svm;
+
         public SettingsView()
         {
             InitializeComponent();
-            (DataContext as SettingsViewModel).View = this;
+            svm = (DataContext as SettingsViewModel);
+            svm.View = this;
+
+            svm.PasswordVerified += (s, e) =>
+            {
+                pwdBox.Clear();
+            };
         }
 
         protected override void OnClosing(CancelEventArgs e)
         {
             if (IsLoaded)
             {
-                SettingsViewModel svm = ((SettingsViewModel)DataContext);
-                svm.CurrentScreen = SettingsViewModel.Screen.EnterPassword;
-                svm.Locked = true;
+                svm.CurrentScreen = Screen.EnterPassword;
                 pwdBox.Clear();
             }
 
@@ -31,6 +37,14 @@ namespace IvyLock.View
 
             e.Cancel = true;
             base.OnClosing(e);
+        }
+
+        private void pwdBox_KeyDown(object sender, System.Windows.Input.KeyEventArgs e)
+        {
+            if(e.Key == System.Windows.Input.Key.Enter)
+            {
+                svm.ValidatePassword();
+            }
         }
     }
 }

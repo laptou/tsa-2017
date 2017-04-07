@@ -128,6 +128,7 @@
     <Compile Include="ViewModel\AuthenticationViewModel.cs" />
     <Compile Include="ViewModel\DelegateCommand.cs" />
     <Compile Include="ViewModel\NotifyTaskCompletion.cs" />
+    <Compile Include="ViewModel\PasswordValidationViewModel.cs" />
     <Compile Include="ViewModel\SettingsViewModel.cs" />
     <Compile Include="ViewModel\ViewModel.cs" />
     <Compile Include="View\AuthenticationView.xaml.cs">
@@ -142,6 +143,7 @@
     <Compile Include="View\Control\TaskButton.xaml.cs">
       <DependentUpon>TaskButton.xaml</DependentUpon>
     </Compile>
+    <Compile Include="View\PathToIconConverter.cs" />
     <Compile Include="View\SettingsView.xaml.cs">
       <DependentUpon>SettingsView.xaml</DependentUpon>
     </Compile>
