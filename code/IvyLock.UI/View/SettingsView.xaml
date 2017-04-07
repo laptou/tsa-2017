@@ -8,13 +8,14 @@
         xmlns:control="clr-namespace:IvyLock.View.Control"
         xmlns:i="http://schemas.microsoft.com/expression/2010/interactivity" xmlns:ei="http://schemas.microsoft.com/expression/2010/interactions"
         xmlns:local="clr-namespace:IvyLock.View"
+        xmlns:System="clr-namespace:System;assembly=mscorlib"
         x:Class="IvyLock.View.SettingsView"
         mc:Ignorable="d"
         Title="Settings" Height="512" MinWidth="600" MaxWidth="960" Width="768"
         Background="{DynamicResource BackgroundDark}" Icon="{DynamicResource Icon}" Style="{DynamicResource IvyWindow}">
     <Window.Resources>
         <local:PathToIconConverter x:Key="PathToIconConverter"/>
-        <CollectionViewSource x:Key="Source"
+        <CollectionViewSource x:Key="SettingsSource"
                               Source="{Binding SettingGroup.Settings, BindsDirectlyToSource=True, Mode=OneWay}"
                               IsLiveGroupingRequested="True">
             <CollectionViewSource.GroupDescriptions>
@@ -37,9 +38,12 @@
 
         <ListBox
             Background="{DynamicResource BackgroundLight}" BorderBrush="{x:Null}"
-            ItemsSource="{Binding Settings}" SelectedValue="{Binding SettingGroup, Mode=TwoWay}"
+            SelectedValue="{Binding SettingGroup, Mode=TwoWay}"
             ScrollViewer.HorizontalScrollBarVisibility="Disabled" Grid.RowSpan="2"
             HorizontalContentAlignment="Stretch" Padding="0" Margin="0">
+            <ListBox.ItemsSource>
+                <Binding Path="Settings" />
+            </ListBox.ItemsSource>
             <ListBox.ItemContainerStyle>
                 <Style TargetType="{x:Type ListBoxItem}">
                     <Setter Property="Template">
@@ -173,7 +177,7 @@
                 </DataTemplate>
             </ListView.Resources>
             <ListView.ItemsSource>
-                <Binding Source="{StaticResource Source}" />
+                <Binding Source="{StaticResource SettingsSource}" />
             </ListView.ItemsSource>
             <ListView.GroupStyle>
                 <GroupStyle>
@@ -268,7 +272,7 @@
                                 <BeginStoryboard>
                                     <Storyboard>
                                         <DoubleAnimation Storyboard.TargetProperty="Opacity"
-                                                         To="15" Duration="0:0:0" />
+                                                         To="1" Duration="0:0:0" />
                                         <ObjectAnimationUsingKeyFrames Storyboard.TargetProperty="Visibility">
                                             <DiscreteObjectKeyFrame KeyTime="0:0:0"
                                                                     Value="{x:Static Visibility.Visible}" />
@@ -290,8 +294,28 @@
                 <Border.Style>
                     <Style TargetType="{x:Type Border}">
                         <Setter Property="Background" Value="Transparent" />
+
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding CurrentScreen, Mode=OneWay}" Value="Loading">
+                                <DataTrigger.ExitActions>
+                                    <BeginStoryboard>
+                                        <Storyboard>
+                                            <DoubleAnimation Storyboard.TargetProperty="Opacity"
+                                                         To="1" Duration="0:0:0.05" />
+                                            <ObjectAnimationUsingKeyFrames Storyboard.TargetProperty="Visibility">
+                                                <DiscreteObjectKeyFrame KeyTime="0:0:0.05"
+                                                                    Value="{x:Static Visibility.Visible}" />
+                                            </ObjectAnimationUsingKeyFrames>
+                                        </Storyboard>
+                                    </BeginStoryboard>
+                                </DataTrigger.ExitActions>
+                                <Setter Property="Opacity" Value="0" />
+                                <Setter Property="Visibility" Value="Collapsed" />
+                            </DataTrigger>
+                        </Style.Triggers>
                     </Style>
                 </Border.Style>
+
                 <i:Interaction.Triggers>
                     <i:EventTrigger EventName="PasswordVerified" SourceObject="{Binding Mode=OneWay}"
                                     SourceName="pwdBorder">
@@ -344,6 +368,38 @@
                 </PasswordBox>
             </Border>
 
+            <Border Grid.Row="1" Grid.ColumnSpan="3" VerticalAlignment="Center" Padding="5">
+                <Border.Style>
+                    <Style TargetType="{x:Type Border}">
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding CurrentScreen, Mode=OneWay}" Value="Loading">
+                                <DataTrigger.ExitActions>
+                                    <BeginStoryboard>
+                                        <Storyboard>
+                                            <DoubleAnimation Storyboard.TargetProperty="Opacity"
+                                                         To="0" Duration="0:0:0.05" />
+                                            <ObjectAnimationUsingKeyFrames Storyboard.TargetProperty="Visibility">
+                                                <DiscreteObjectKeyFrame KeyTime="0:0:0.05"
+                                                                    Value="{x:Static Visibility.Collapsed}" />
+                                            </ObjectAnimationUsingKeyFrames>
+                                        </Storyboard>
+                                    </BeginStoryboard>
+                                </DataTrigger.ExitActions>
+                                <Setter Property="Opacity" Value="1" />
+                                <Setter Property="Visibility" Value="Visible" />
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </Border.Style>
+                <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" Orientation="Horizontal"
+                       Grid.Row="2" Grid.ColumnSpan="3" Opacity="0.56">
+                    <TextBlock Text="Loading" />
+                    <ProgressBar HorizontalAlignment="Left" Height="1" Width="60" Margin="8,0,0,0"
+                             IsIndeterminate="True" BorderThickness="1" Background="Transparent"/>
+                </StackPanel>
+
+            </Border>
+
             <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" Orientation="Horizontal"
                        Grid.Row="2" Grid.ColumnSpan="3" Opacity="0.56">
                 <TextBlock Text="{Binding PasswordErrorMessage}" />
@@ -377,8 +433,6 @@
                     </ProgressBar.Style>
                 </ProgressBar>
             </StackPanel>
-
-
         </Grid>
     </Grid>
 </Window>

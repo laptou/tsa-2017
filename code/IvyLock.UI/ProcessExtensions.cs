@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
+using System.Threading.Tasks;
 
 namespace IvyLock
 {
@@ -152,6 +153,37 @@ namespace IvyLock
             }
         }
 
+        public static async Task<string> GetDescription(this Process process)
+        {
+            try
+            {
+                return await Task.Run(() => FileVersionInfo.GetVersionInfo(process.GetPath()).FileDescription);
+            }
+            catch
+            {
+                return null;
+            }
+        }
+
+        public static async Task<bool> HasGUI(this Process process)
+        {
+            try
+            {
+                uint result = await Task.Run(() => WaitForInputIdle(process.Handle, 5000));
+                switch (result)
+                {
+                    case 0xFFFFFFFF: // WAIT_FAILED
+                        return false;
+                    default:
+                        return process.MainWindowHandle != default(IntPtr);
+                }
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
         public static void Resume(this Process process)
         {
             if (process == null) return;
@@ -177,6 +209,9 @@ namespace IvyLock
                 SuspendThread(pOpenThread);
             }
         }
+
+        [DllImport("user32.dll")]
+        internal static extern uint WaitForInputIdle(IntPtr hProcess, uint dwMilliseconds);
 
         [DllImport("kernel32.dll")]
         internal static extern int ResumeThread(IntPtr hThread);

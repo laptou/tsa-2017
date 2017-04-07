@@ -19,18 +19,16 @@ namespace IvyLock.ViewModel
 {
     public enum Screen
     {
-        EnterPassword, SetupPassword, Main
+        Loading, EnterPassword, SetupPassword, Main
     }
 
     public sealed class SettingsViewModel : PasswordValidationViewModel
     {
         #region Fields
 
-        private Screen _currentScreen = Screen.SetupPassword;
-        private PasswordVerificationStatus _pvStatus;
+        private Screen _currentScreen = Screen.Loading;
         private SettingGroup _settingGroup;
         private ObservableCollection<SettingGroup> _settings = new ObservableCollection<SettingGroup>();
-        private CancellationTokenSource biometricCts;
         private IEncryptionService ies;
         private IProcessService ips;
         private ISettingsService iss;
@@ -42,7 +40,7 @@ namespace IvyLock.ViewModel
         public SettingsViewModel()
         {
             DesignTime(() => iss = DesignerSettingsService.Default);
-            RunTime(async () =>
+            RunTime(() => Task.Run(async () =>
             {
                 iss = XmlSettingsService.Default;
                 ips = ManagedProcessService.Default;
@@ -52,19 +50,26 @@ namespace IvyLock.ViewModel
                 {
                     Task.Run(() =>
                     {
-                        Password = null;
-                        RaisePropertyChanged("Password");
-
                         if (CurrentScreen == Screen.SetupPassword)
                             IvyLockSettings.Hash = GetUserPasswordHash();
+
+                        Password = null;
+                        RaisePropertyChanged("Password");
 
                         CurrentScreen = Screen.Main;
                     });
                 };
 
-                await LoadProcesses();
+                if (string.IsNullOrWhiteSpace(IvyLockSettings.Hash))
+                    CurrentScreen = Screen.SetupPassword;
+                else
+                    CurrentScreen = Screen.EnterPassword;
+
+                UI(() => Settings.Add(IvyLockSettings));
+
                 await LoadSettings();
-            });
+                await LoadProcesses();
+            }));
             BindingOperations.EnableCollectionSynchronization(Settings, this);
         }
 
@@ -94,7 +99,7 @@ namespace IvyLock.ViewModel
 
         public Screen CurrentScreen { get { return _currentScreen; } set { Set(value, ref _currentScreen); } }
 
-        public IvyLockSettings IvyLockSettings { get { return Settings.OfType<IvyLockSettings>().FirstOrDefault(); } }
+        public IvyLockSettings IvyLockSettings { get { return iss.OfType<IvyLockSettings>().FirstOrDefault(); } }
 
         public SecureString Password
         {
@@ -132,25 +137,17 @@ namespace IvyLock.ViewModel
         {
             int myPid = Process.GetCurrentProcess().Id;
 
-            Func<Process, bool> f = p =>
+            Func<Process, Task<bool>> f = async p =>
             {
-                try
-                {
-                    string path = p.GetPath();
-                    return
-                        p.Id != myPid &&
-                        path != null &&
-                        FileVersionInfo.GetVersionInfo(path).FileDescription != null &&
-                        p.MainWindowHandle != IntPtr.Zero;
-                }
-                catch (Win32Exception) { return false; }
-                catch (FileNotFoundException) { return false; }
-                catch (InvalidOperationException) { return false; }
+                string path = p.GetPath();
+                return
+                    p.Id != myPid &&
+                    path != null &&
+                    await p.GetDescription() != null &&
+                    await p.HasGUI();
             };
-
-            iss = XmlSettingsService.Default;
-            ips = ManagedProcessService.Default;
-            ips.ProcessChanged += (pid, path, type) =>
+            
+            ips.ProcessChanged += async (pid, path, type) =>
             {
                 if (type == ProcessOperation.Started)
                 {
@@ -160,12 +157,17 @@ namespace IvyLock.ViewModel
                         {
                             Process p = Process.GetProcessById(pid);
 
-                            if (f(p))
+                            if (await f(p))
                             {
                                 ProcessSettings ps = new ProcessSettings(p);
                                 ps.Initialize();
                                 iss.Set(ps);
-                                Settings.Add(ps);
+                                
+                                var x = Settings.FirstOrDefault(sg => sg.Name.CompareTo(ps.Name) > 0);
+                                if (x != null)
+                                    Settings.Insert(Settings.IndexOf(x) + 1, ps);
+                                else
+                                    Settings.Add(ps);
                             }
                         }
                         catch (Exception)
@@ -174,32 +176,31 @@ namespace IvyLock.ViewModel
                     }
                 }
             };
-
-            if (!iss.Any(s => s is IvyLockSettings))
-                iss.Set(new IvyLockSettings());
-
-            await Task.Run(() =>
+            
+            await AsyncParallel.ForEachAsync(Process.GetProcesses(), 50, async process =>
             {
-                foreach (
-                    Process process in
-                    from process in Process.GetProcesses()
-                    where f(process)
-                    orderby FileVersionInfo.GetVersionInfo(process.GetPath()).FileDescription
-                    select process)
+                if(await f(process))
                 {
                     string path = process.GetPath();
 
                     if (Assembly.GetEntryAssembly().Location.Equals(path))
-                        continue;
+                        return;
 
                     try
                     {
-                        if (path != null)
+                        if (path != null && !iss.OfType<ProcessSettings>().Any(ps => ps.Path.Equals(path)))
                         {
                             ProcessSettings ps = new ProcessSettings(process);
+                            ps.Initialize();
 
                             if (!iss.Any(s => s is ProcessSettings && ((ProcessSettings)s).Path == ps.Path))
                                 iss.Set(ps);
+
+                            var x = Settings.FirstOrDefault(sg => !(sg is IvyLockSettings) && sg.Name.CompareTo(ps.Name) > 0);
+                            if (x != null)
+                                Settings.Insert(Settings.IndexOf(x), ps);
+                            else
+                                Settings.Add(ps);
                         }
                     }
                     catch
@@ -213,11 +214,7 @@ namespace IvyLock.ViewModel
         {
             await Task.Run(() =>
             {
-                foreach (SettingGroup sg in iss.OrderByDescending(sg => sg is IvyLockSettings).ThenBy(sg => sg.Name))
-                    if (sg.Valid)
-                        UI(() => Settings.Add(sg));
-
-                SettingGroup = _settings.OfType<IvyLockSettings>().FirstOrDefault();
+                SettingGroup = IvyLockSettings;
                 SettingGroup.PropertyChanged += (s, e) =>
                     {
                         if (e.PropertyName == "Theme")
@@ -240,12 +237,29 @@ namespace IvyLock.ViewModel
                         }
                     };
 
-                if (string.IsNullOrWhiteSpace(IvyLockSettings.Hash))
-                    CurrentScreen = Screen.SetupPassword;
-                else CurrentScreen = Screen.EnterPassword;
-
-                RaisePropertyChanged("IvyLockSettings");
+                foreach (ProcessSettings ps in iss.OfType<ProcessSettings>())
+                {
+                    var x = Settings.FirstOrDefault(sg => !(sg is IvyLockSettings) && sg.Name.CompareTo(ps.Name) > 0);
+                    if (x != null)
+                        Settings.Insert(Settings.IndexOf(x), ps);
+                    else
+                        Settings.Add(ps);
+                }
             });
+        }
+
+        public override async Task ValidatePassword()
+        {
+            if (CurrentScreen != Screen.SetupPassword)
+                await base.ValidatePassword();
+            else
+            {
+                if (Password == null || Password.Length == 0)
+                    RaisePasswordRejected("Enter a password");
+                else if (Password.Length < 4)
+                    RaisePasswordRejected("Enter a longer password.");
+                else RaisePasswordVerified();
+            }
         }
 
         #endregion Methods

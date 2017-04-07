@@ -83,45 +83,61 @@ namespace IvyLock.ViewModel
 
         #region Methods
 
+        protected void RaisePasswordVerified(string message = null)
+        {
+            UI(() => PasswordVerified?.Invoke(this, null));
+            PasswordVerificationStatus = PasswordVerificationStatus.Verified;
+            PasswordErrorMessage = message;
+        }
+
+        protected void RaisePasswordDelayed(string message)
+        {
+            UI(() => PasswordDelayed?.Invoke(this, null));
+            PasswordVerificationStatus = PasswordVerificationStatus.Delayed;
+            PasswordErrorMessage = message;
+        }
+
+        protected void RaisePasswordRejected(string message)
+        {
+            UI(() => PasswordRejected?.Invoke(this, null));
+            PasswordVerificationStatus = PasswordVerificationStatus.Rejected;
+            PasswordErrorMessage = message;
+        }
+
         public abstract string GetPasswordHash();
 
         public abstract string GetUserPasswordHash();
 
-        public async Task ValidatePassword()
+        public virtual async Task ValidatePassword()
         {
             string pw = GetPasswordHash();
             string attempt = GetUserPasswordHash();
 
-            if (pw.Equals(attempt))
+            if (string.Equals(pw, attempt))
             {
                 attempts = 0;
-                UI(() => PasswordVerified?.Invoke(this, null));
-                PasswordVerificationStatus = PasswordVerificationStatus.Verified;
-                PasswordErrorMessage = null;
+                RaisePasswordVerified();
             }
             else
             {
+                attempts++;
+
                 if (attempts >= AttemptLimit)
                 {
-                    UI(() => PasswordDelayed?.Invoke(this, null));
-                    PasswordVerificationStatus = PasswordVerificationStatus.Delayed;
-                    PasswordErrorMessage = "Stop guessing.";
+                    if(PasswordVerificationStatus != PasswordVerificationStatus.Delayed)
+                    {
+                        attemptTimer.Stop();
+                        attemptTimeout *= 2;
+                        attemptTimer.Interval = attemptTimeout * 1000;
+                        attemptTimer.Start();
+                        RaisePropertyChanged("AttemptWait");
+                    }
+
+                    RaisePasswordDelayed("Stop guessing.");
                 }
                 else
                 {
-                    UI(() => PasswordRejected?.Invoke(this, null));
-                    PasswordVerificationStatus = PasswordVerificationStatus.Rejected;
-                    PasswordErrorMessage = "The password is incorrect.";
-
-                    attemptTimer.Stop();
-                    attemptTimer.Start();
-
-                    if (++attempts >= AttemptLimit)
-                    {
-                        attemptTimeout *= 2;
-                        attemptTimer.Interval = attemptTimeout * 1000;
-                        RaisePropertyChanged("AttemptWait");
-                    }
+                    RaisePasswordRejected("The password is incorrect.");
                 }
             }
         }

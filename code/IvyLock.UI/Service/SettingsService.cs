@@ -73,13 +73,24 @@ namespace IvyLock.Service
 
             try
             {
-                stream.Position = 0;
-
-                _values = new List<SettingGroup>(xs.Deserialize(stream) as SettingGroup[]);
-                foreach (SettingGroup sg in _values)
+                if (stream.Length == 0)
                 {
-                    sg.Initialize();
-                    sg.PropertyChanged += SettingGroupChanged;
+                    IvyLockSettings ils = new IvyLockSettings();
+                    ils.Initialize();
+
+                    _values = new List<SettingGroup>(new SettingGroup[] { ils });
+                }
+                else
+                {
+                    stream.Position = 0;
+
+                    _values = new List<SettingGroup>(xs.Deserialize(stream) as SettingGroup[]);
+
+                    foreach (SettingGroup sg in _values)
+                    {
+                        sg.Initialize();
+                        sg.PropertyChanged += SettingGroupChanged;
+                    }
                 }
             }
             catch
