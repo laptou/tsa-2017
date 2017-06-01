@@ -22,7 +22,7 @@ namespace IvyLock
     {
         #region Fields
 
-        private static Mutex mutex = new Mutex(true, "{37EFBF56-B711-42E3-B3D0-0DCDA7BC09CA}");
+        private static Mutex mutex = new Mutex(true, "{37EFBF56-B711-42E3-B3D0-0DCDA7BC09CB}");
         private IProcessService ips;
         private ISettingsService iss;
         private NotifyIcon ni;
@@ -113,11 +113,12 @@ namespace IvyLock
 
         private void ProcessChanged(int pid, string path, ProcessOperation po)
         {
-            ProcessSettings ps = iss.OfType<ProcessSettings>().FirstOrDefault(s => s.Path?.Equals(path) == true);
-            if (ps == null)
+            if (po == ProcessOperation.Modified)
                 return;
 
-            if (!ps.UsePassword)
+            ProcessSettings ps = iss.FindByPath(path);
+           
+            if (ps == null || !ps.UsePassword)
                 return;
 
             Task.Run(() =>
@@ -162,7 +163,7 @@ namespace IvyLock
                          {
                              try
                              {
-                                 return process.MainModule.FileName.Equals(path);
+                                 return process.MainModule.FileName.Equals(path, StringComparison.InvariantCultureIgnoreCase);
                              }
                              catch (Win32Exception) { return false; }
                          }))

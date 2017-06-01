@@ -65,6 +65,16 @@ namespace IvyLock.Model
             set { Set(value, ref _hash); }
         }
 
+        private string _salt;
+
+        [Setting(Hide = true)]
+        public string Salt
+        {
+            get { return _salt; }
+            set { Set(value, ref _salt); }
+        }
+
+
         [XmlIgnore]
         [Setting(Category = SettingCategory.Security, Description = "Password used to unlock IvyLock settings.")]
         public SecureString Password
@@ -76,6 +86,8 @@ namespace IvyLock.Model
             set
             {
                 Set(value, ref _password);
+
+                Salt = EncryptionService.Default.Salt();
 
                 if (value != null)
                     Hash = EncryptionService.Default.Hash(Password);
@@ -461,5 +473,10 @@ namespace IvyLock.Model
         }
 
         #endregion Methods
+
+        public override string ToString()
+        {
+            return Name;
+        }
     }
 }

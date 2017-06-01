@@ -136,11 +136,13 @@
       <DependentUpon>AuthenticationView.xaml</DependentUpon>
     </Compile>
     <Compile Include="View\BooleanToVisibilityConverter.cs" />
+    <Compile Include="View\Control\Helper.cs" />
     <Compile Include="View\Control\IvyWindow.cs" />
     <Compile Include="View\Control\NumericUpDown.xaml.cs">
       <DependentUpon>NumericUpDown.xaml</DependentUpon>
     </Compile>
-    <Compile Include="View\Control\PasswordBoxHelper.cs" />
+    <Compile Include="View\Control\PasswordHelper.cs" />
+    <Compile Include="View\Control\RippleEffectDecorator.cs" />
     <Compile Include="View\Control\TaskButton.xaml.cs">
       <DependentUpon>TaskButton.xaml</DependentUpon>
     </Compile>
@@ -168,7 +170,25 @@
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
     </EmbeddedResource>
-    <Resource Include="Content\material-icons.ttf" />
+    <Resource Include="Content\Material-Icons\MaterialIcons-Regular.ttf" />
+    <Resource Include="Content\Roboto\Roboto-Black.ttf" />
+    <Resource Include="Content\Roboto\Roboto-BlackItalic.ttf" />
+    <Resource Include="Content\Roboto\Roboto-Bold.ttf" />
+    <Resource Include="Content\Roboto\Roboto-BoldItalic.ttf" />
+    <Resource Include="Content\Roboto\Roboto-Italic.ttf" />
+    <Resource Include="Content\Roboto\Roboto-Light.ttf" />
+    <Resource Include="Content\Roboto\Roboto-LightItalic.ttf" />
+    <Resource Include="Content\Roboto\Roboto-Medium.ttf" />
+    <Resource Include="Content\Roboto\Roboto-MediumItalic.ttf" />
+    <Resource Include="Content\Roboto\Roboto-Regular.ttf" />
+    <Resource Include="Content\Roboto\Roboto-Thin.ttf" />
+    <Resource Include="Content\Roboto\Roboto-ThinItalic.ttf" />
+    <Resource Include="Content\Roboto-Condensed\RobotoCondensed-Bold.ttf" />
+    <Resource Include="Content\Roboto-Condensed\RobotoCondensed-BoldItalic.ttf" />
+    <Resource Include="Content\Roboto-Condensed\RobotoCondensed-Italic.ttf" />
+    <Resource Include="Content\Roboto-Condensed\RobotoCondensed-Light.ttf" />
+    <Resource Include="Content\Roboto-Condensed\RobotoCondensed-LightItalic.ttf" />
+    <Resource Include="Content\Roboto-Condensed\RobotoCondensed-Regular.ttf" />
     <None Include="ivylock.snk" />
     <None Include="packages.config" />
     <None Include="Properties\Settings.settings">
@@ -247,6 +267,13 @@
       <Project>{80ce7043-ee0d-4970-bdf7-c3dc030cceb8}</Project>
       <Name>IvyLock.Native</Name>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Content\Roboto\LICENSE.txt" />
+    <Resource Include="Content\Roboto-Condensed\LICENSE.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Content\ivy.jpg" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

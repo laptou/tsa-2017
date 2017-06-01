@@ -54,7 +54,7 @@ namespace IvyLock.ViewModel
 
         public int AttemptLimit { get; set; } = 6;
 
-        public Duration AttemptWait { get { return TimeSpan.FromSeconds(attempts); } }
+        public Duration AttemptWait { get { return TimeSpan.FromSeconds(attemptTimeout); } }
 
         public bool BiometricsEnabled
         {
@@ -113,15 +113,15 @@ namespace IvyLock.ViewModel
             string pw = GetPasswordHash();
             string attempt = GetUserPasswordHash();
 
-            if (string.Equals(pw, attempt))
+            if (string.IsNullOrEmpty(pw)) return;
+
+            if (attempts < AttemptLimit && string.Equals(pw, attempt))
             {
                 attempts = 0;
                 RaisePasswordVerified();
             }
             else
             {
-                attempts++;
-
                 if (attempts >= AttemptLimit)
                 {
                     if(PasswordVerificationStatus != PasswordVerificationStatus.Delayed)
@@ -131,12 +131,15 @@ namespace IvyLock.ViewModel
                         attemptTimer.Interval = attemptTimeout * 1000;
                         attemptTimer.Start();
                         RaisePropertyChanged("AttemptWait");
+                        RaisePasswordRejected(null);
                     }
-
+                    
                     RaisePasswordDelayed("Stop guessing.");
                 }
                 else
                 {
+                    attempts++;
+
                     RaisePasswordRejected("The password is incorrect.");
                 }
             }

@@ -38,13 +38,5 @@ namespace IvyLock.View
             e.Cancel = true;
             base.OnClosing(e);
         }
-
-        private void pwdBox_KeyDown(object sender, System.Windows.Input.KeyEventArgs e)
-        {
-            if(e.Key == System.Windows.Input.Key.Enter)
-            {
-                svm.ValidatePassword();
-            }
-        }
     }
 }

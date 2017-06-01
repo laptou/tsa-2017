@@ -1,11 +1,11 @@
 ﻿using System;
 using System.Runtime.InteropServices;
 using System.Windows;
-using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
 using System.Windows.Input;
 using System.Windows.Interop;
 using System.Windows.Media;
+using System.Windows.Media.Imaging;
 
 namespace IvyLock.View.Control
 {
@@ -45,6 +45,7 @@ namespace IvyLock.View.Control
         }
 
 #pragma warning disable IDE1006 // Naming Styles
+
         private static void control_MouseDoubleClick(object sender, MouseButtonEventArgs e)
 #pragma warning restore IDE1006 // Naming Styles
         {
@@ -233,6 +234,7 @@ namespace IvyLock.View.Control
         }
 
 #pragma warning disable IDE1006 // Naming Styles
+
         private static void buttonDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
 #pragma warning restore IDE1006 // Naming Styles
         {
@@ -694,5 +696,21 @@ namespace IvyLock.View.Control
         internal static extern int TrackPopupMenuEx(IntPtr hmenu, uint fuFlags, int x, int y, IntPtr hwnd, IntPtr lptpm);
 
         #endregion Methods
+    }
+
+    public class IvyWindow
+    {
+        public static string GetIcon(DependencyObject obj)
+        {
+            return (string)obj.GetValue(IconProperty);
+        }
+
+        public static void SetIcon(DependencyObject obj, string value)
+        {
+            obj.SetValue(IconProperty, value);
+        }
+
+        public static readonly DependencyProperty IconProperty =
+            DependencyProperty.RegisterAttached("Icon", typeof(string), typeof(IvyWindow), new PropertyMetadata(null));
     }
 }

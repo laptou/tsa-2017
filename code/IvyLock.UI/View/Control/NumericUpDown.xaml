@@ -6,18 +6,29 @@
              xmlns:local="clr-namespace:IvyLock.View"
              mc:Ignorable="d"
              d:DesignHeight="32" d:DesignWidth="300">
-    <Grid>
-        <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="*" />
-            <ColumnDefinition Width="13" />
-        </Grid.ColumnDefinitions>
-        <Grid.RowDefinitions>
-            <RowDefinition Height="*" />
-            <RowDefinition Height="*" />
-        </Grid.RowDefinitions>
-        <TextBox Name="NUDTextBox" Grid.Column="0" Grid.Row="0" Grid.RowSpan="2"
+    <Border CornerRadius="2">
+        <Grid>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="13" />
+            </Grid.ColumnDefinitions>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="*" />
+                <RowDefinition Height="*" />
+            </Grid.RowDefinitions>
+            <TextBox Name="NUDTextBox" Grid.Column="0" Grid.Row="0" Grid.RowSpan="2"
                  PreviewKeyDown="NUDTextBox_PreviewKeyDown" PreviewKeyUp="NUDTextBox_PreviewKeyUp" TextChanged="NUDTextBox_TextChanged" />
-        <RepeatButton Name="NUDButtonUP" Grid.Column="1" Grid.Row="0" FontSize="8" FontFamily="Segoe MDL2 Assets" VerticalContentAlignment="Center" HorizontalContentAlignment="Center" Click="NUDButtonUP_Click" Style="{StaticResource {x:Type RepeatButton}}">&#xE098;</RepeatButton>
-        <RepeatButton Name="NUDButtonDown" Grid.Column="1" Grid.Row="1" FontSize="8"  FontFamily="Segoe MDL2 Assets" VerticalContentAlignment="Center" HorizontalContentAlignment="Center" Height="13" VerticalAlignment="Bottom" Click="NUDButtonDown_Click">&#xE099;</RepeatButton>
-    </Grid>
+            <RepeatButton Name="NUDButtonUP" Grid.Column="1" Grid.Row="0" 
+                      VerticalContentAlignment="Center" HorizontalContentAlignment="Center" 
+                      Click="NUDButtonUP_Click">
+                <TextBlock FontSize="8" FontFamily="Segoe MDL2 Assets">&#xE010;</TextBlock>
+            </RepeatButton>
+            <RepeatButton Name="NUDButtonDown" Grid.Column="1" Grid.Row="1" 
+                      VerticalContentAlignment="Center" HorizontalContentAlignment="Center"
+                      Click="NUDButtonDown_Click">
+                <TextBlock FontSize="8" FontFamily="Segoe MDL2 Assets">&#xE011;</TextBlock>
+            </RepeatButton>
+        </Grid>
+    </Border>
+    
 </UserControl>

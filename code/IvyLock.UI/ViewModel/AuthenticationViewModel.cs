@@ -7,14 +7,13 @@ using System.Linq;
 using System.Collections.Specialized;
 using System.Diagnostics;
 using System.IO;
-
-using System.Linq;
-
 using System.Security;
 using System.Threading.Tasks;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Xml.Linq;
+
+using SC = System.StringComparison;
 
 namespace IvyLock.ViewModel
 {
@@ -28,7 +27,7 @@ namespace IvyLock.ViewModel
         #region Fields
 
         private static Dictionary<string, DateTime> unlockTimes = new Dictionary<string, DateTime>();
-        private SecureString _pass;
+        private SecureString password;
         private IEncryptionService ies = EncryptionService.Default;
         private IProcessService ips = ManagedProcessService.Default;
         private ISettingsService iss = XmlSettingsService.Default;
@@ -51,9 +50,15 @@ namespace IvyLock.ViewModel
                 ips.ProcessChanged += ProcessChanged;
                 Processes.CollectionChanged += ProcessCollectionChanged;
 
-                EventHandler verified = (s, e) =>
+                PropertyChanged += async (s, e) =>
                 {
-                    Unlock();
+                    if (e.PropertyName == "Password")
+                        await ValidatePassword();
+                };
+
+                EventHandler verified = async (s, e) =>
+                {
+                    await Unlock();
                     UI(CloseView);
                 };
 
@@ -70,10 +75,8 @@ namespace IvyLock.ViewModel
 
         public SecureString Password
         {
-            get { return _pass; }
-#pragma warning disable CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
-            set { _pass = value; }
-#pragma warning restore CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
+            get { return password; }
+            set { Set(value, ref password); }
         }
 
         public ObservableCollection<Process> Processes { get; set; } = new ObservableCollection<Process>();
@@ -120,9 +123,8 @@ namespace IvyLock.ViewModel
             {
                 Set(value, ref path);
                 RaisePropertyChanged("ProcessName");
-
-                ProcessSettings ps = iss?.OfType<ProcessSettings>().FirstOrDefault(s => s.Path.Equals(ProcessPath));
-                BiometricsEnabled = ps?.AllowBiometricAuthentication == true;
+                
+                BiometricsEnabled = iss?.FindByPath(ProcessPath).AllowBiometricAuthentication == true;
             }
         }
 
@@ -185,9 +187,9 @@ namespace IvyLock.ViewModel
         public override string GetPasswordHash()
         {
             IvyLockSettings ivs = iss.OfType<IvyLockSettings>().FirstOrDefault();
-            ProcessSettings ps = iss.OfType<ProcessSettings>().FirstOrDefault(s => s.Path.Equals(ProcessPath));
+            ProcessSettings ps = iss.FindByPath(ProcessPath);
 
-            return ps.Hash ?? ivs.Hash;
+            return ps?.Hash ?? ivs.Hash;
         }
 
         public override string GetUserPasswordHash()
@@ -201,7 +203,7 @@ namespace IvyLock.ViewModel
             {
                 lock (Processes)
                 {
-                    ProcessSettings ps = iss.OfType<ProcessSettings>().FirstOrDefault(s => s.Path.Equals(ProcessPath));
+                    ProcessSettings ps = iss.FindByPath(ProcessPath);
 
                     if (unlockTimes.ContainsKey(ProcessPath) &&
                         (!ps.UseLockTimeOut ||
@@ -263,7 +265,7 @@ namespace IvyLock.ViewModel
             {
                 if (po == ProcessOperation.Started)
                 {
-                    if (path?.Equals(ProcessPath) == true)
+                    if (path?.Equals(ProcessPath, SC.InvariantCultureIgnoreCase) == true)
                     {
                         Process p = Process.GetProcessById(pid);
                         Processes.Add(p);
@@ -286,7 +288,7 @@ namespace IvyLock.ViewModel
 
                 if (po == ProcessOperation.Deleted)
                 {
-                    if (path?.Equals(ProcessPath) == true)
+                    if (path?.Equals(ProcessPath, SC.InvariantCultureIgnoreCase) == true)
                     {
                         Processes.Remove(Processes.FirstOrDefault(p => p.Id == pid));
                         suspended.Remove(pid);

@@ -46,13 +46,16 @@ namespace IvyLock.ViewModel
                 ips = ManagedProcessService.Default;
                 ies = EncryptionService.Default;
 
+                PropertyChanged += async (s, e) =>
+                {
+                    if (e.PropertyName == "Password" && Password != null)
+                        await ValidatePassword();
+                };
+
                 PasswordVerified += (s, e) =>
                 {
                     Task.Run(() =>
                     {
-                        if (CurrentScreen == Screen.SetupPassword)
-                            IvyLockSettings.Hash = GetUserPasswordHash();
-
                         Password = null;
                         RaisePropertyChanged("Password");
 
@@ -101,10 +104,12 @@ namespace IvyLock.ViewModel
 
         public IvyLockSettings IvyLockSettings { get { return iss.OfType<IvyLockSettings>().FirstOrDefault(); } }
 
+        private SecureString password;
+
         public SecureString Password
         {
-            get;
-            set;
+            get => password;
+            set => Set(value, ref password);
         }
 
         public SettingGroup SettingGroup { get { return _settingGroup; } set { Set(value, ref _settingGroup); } }
@@ -143,6 +148,7 @@ namespace IvyLock.ViewModel
                 return
                     p.Id != myPid &&
                     path != null &&
+                    !p.IsUWP() &&
                     await p.GetDescription() != null &&
                     await p.HasGUI();
             };
@@ -151,7 +157,7 @@ namespace IvyLock.ViewModel
             {
                 if (type == ProcessOperation.Started)
                 {
-                    if (!iss.OfType<ProcessSettings>().Any(ps => ps.Path.Equals(path)))
+                    if (iss.FindByPath(path) == null)
                     {
                         try
                         {
@@ -159,15 +165,15 @@ namespace IvyLock.ViewModel
 
                             if (await f(p))
                             {
-                                ProcessSettings ps = new ProcessSettings(p);
-                                ps.Initialize();
-                                iss.Set(ps);
+                                ProcessSettings s = new ProcessSettings(p);
+                                s.Initialize();
+                                iss.Set(s);
                                 
-                                var x = Settings.FirstOrDefault(sg => sg.Name.CompareTo(ps.Name) > 0);
+                                var x = Settings.FirstOrDefault(sg => sg.Name.CompareTo(s.Name) > 0);
                                 if (x != null)
-                                    Settings.Insert(Settings.IndexOf(x) + 1, ps);
+                                    Settings.Insert(Settings.IndexOf(x) + 1, s);
                                 else
-                                    Settings.Add(ps);
+                                    Settings.Add(s);
                             }
                         }
                         catch (Exception)
@@ -181,20 +187,18 @@ namespace IvyLock.ViewModel
             {
                 if(await f(process))
                 {
-                    string path = process.GetPath();
+                    string path = process.GetPath()?.ToLower();
 
-                    if (Assembly.GetEntryAssembly().Location.Equals(path))
+                    if (string.Equals(Assembly.GetEntryAssembly().Location.ToLower(), path))
                         return;
 
                     try
                     {
-                        if (path != null && !iss.OfType<ProcessSettings>().Any(ps => ps.Path.Equals(path)))
+                        if (path != null && iss.FindByPath(path) == null)
                         {
                             ProcessSettings ps = new ProcessSettings(process);
                             ps.Initialize();
-
-                            if (!iss.Any(s => s is ProcessSettings && ((ProcessSettings)s).Path == ps.Path))
-                                iss.Set(ps);
+                            iss.Set(ps);
 
                             var x = Settings.FirstOrDefault(sg => !(sg is IvyLockSettings) && sg.Name.CompareTo(ps.Name) > 0);
                             if (x != null)
@@ -258,7 +262,11 @@ namespace IvyLock.ViewModel
                     RaisePasswordRejected("Enter a password");
                 else if (Password.Length < 4)
                     RaisePasswordRejected("Enter a longer password.");
-                else RaisePasswordVerified();
+                else
+                {
+                    IvyLockSettings.Hash = GetUserPasswordHash();
+                    RaisePasswordVerified();
+                }
             }
         }
 

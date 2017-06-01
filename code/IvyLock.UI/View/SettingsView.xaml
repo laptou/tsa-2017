@@ -10,9 +10,9 @@
         xmlns:local="clr-namespace:IvyLock.View"
         xmlns:System="clr-namespace:System;assembly=mscorlib"
         x:Class="IvyLock.View.SettingsView"
-        mc:Ignorable="d"
+        mc:Ignorable="d" control:IvyWindow.Icon="&#xE8B8;"
         Title="Settings" Height="512" MinWidth="600" MaxWidth="960" Width="768"
-        Background="{DynamicResource BackgroundDark}" Icon="{DynamicResource Icon}" Style="{DynamicResource IvyWindow}">
+        Background="{DynamicResource BackgroundDark}" Style="{DynamicResource IvyWindow}">
     <Window.Resources>
         <local:PathToIconConverter x:Key="PathToIconConverter"/>
         <CollectionViewSource x:Key="SettingsSource"
@@ -28,7 +28,7 @@
     </Window.DataContext>
     <Grid>
         <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="Auto" MinWidth="200" MaxWidth="300" />
+            <ColumnDefinition Width="Auto" MinWidth="240" MaxWidth="360" />
             <ColumnDefinition MinWidth="300" Width="*" />
         </Grid.ColumnDefinitions>
         <Grid.RowDefinitions>
@@ -49,30 +49,53 @@
                     <Setter Property="Template">
                         <Setter.Value>
                             <ControlTemplate TargetType="{x:Type ListBoxItem}">
-                                <Border x:Name="border" Padding="4" Margin="0" Background="Transparent">
-                                    <Grid>
+                                <control:RippleEffectDecorator
+                                    x:Name="border" Background="Transparent" Height="40"
+                                        Cursor="Hand">
+                                    <Grid Margin="14,0">
                                         <Grid.ColumnDefinitions>
                                             <ColumnDefinition Width="Auto" />
                                             <ColumnDefinition />
                                         </Grid.ColumnDefinitions>
-                                        <Image x:Name="image" Margin="2" Source="{Binding Path, Converter={StaticResource PathToIconConverter}}" Height="24" />
+                                        <Image x:Name="image" Margin="2" 
+                                               Source="{Binding Path, Converter={StaticResource PathToIconConverter}}" Height="20" />
                                         <TextBlock x:Name="text" Grid.Column="1" Text="{Binding Name}"
-                                            Foreground="{DynamicResource Foreground}" VerticalAlignment="Center" Margin="5,0" />
+                                            Foreground="{DynamicResource Foreground}" VerticalAlignment="Center" Margin="10,0" />
                                     </Grid>
-                                </Border>
+                                </control:RippleEffectDecorator>
                                 <ControlTemplate.Triggers>
                                     <Trigger Property="IsMouseOver" Value="True">
                                         <Setter TargetName="border" Property="Background" Value="{DynamicResource Control}" />
                                     </Trigger>
                                     <Trigger Property="IsSelected" Value="True">
-                                        <Setter TargetName="border" Property="Background" Value="{DynamicResource Highlight}" />
+                                        <Setter TargetName="border" Property="Background" Value="{DynamicResource AccentBrush}" />
                                     </Trigger>
                                     <DataTrigger Binding="{Binding Name}" Value="IvyLock">
-                                        <Setter TargetName="image" Property="Height" Value="48" />
+                                        <Setter TargetName="image" Property="Height" Value="40" />
                                         <Setter TargetName="image" Property="Source" Value="{DynamicResource Logo}" />
-                                        <Setter TargetName="text" Property="FontSize" Value="16" />
+                                        <Setter TargetName="text" Property="FontSize" Value="20" />
                                         <Setter TargetName="text" Property="FontFamily" Value="{DynamicResource Header}" />
+                                        <Setter TargetName="border" Property="Height" Value="60" />
+                                        <!--<Setter TargetName="border" Property="Background">
+                                            <Setter.Value>
+                                                <ImageBrush ImageSource="pack://application:,,,/Content/ivy.jpg" 
+                                                            Stretch="UniformToFill" Opacity="0.5" />
+                                            </Setter.Value>
+                                        </Setter>-->
                                     </DataTrigger>
+                                    <MultiDataTrigger>
+                                        <MultiDataTrigger.Conditions>
+                                            <Condition Binding="{Binding IsSelected, 
+                                                RelativeSource={RelativeSource TemplatedParent}}" Value="True" />
+                                            <Condition Binding="{Binding Name}" Value="IvyLock"/>
+                                        </MultiDataTrigger.Conditions>
+                                        <Setter TargetName="border" Property="Background">
+                                            <Setter.Value>
+                                                <ImageBrush ImageSource="pack://application:,,,/Content/ivy.jpg" 
+                                                            Stretch="UniformToFill" Opacity="1" />
+                                            </Setter.Value>
+                                        </Setter>
+                                    </MultiDataTrigger>
                                 </ControlTemplate.Triggers>
                             </ControlTemplate>
                         </Setter.Value>
@@ -96,11 +119,17 @@
                             <ColumnDefinition Width="Auto" />
                         </Grid.ColumnDefinitions>
                         <PasswordBox
-                                x:Name="pwdBox"
-                                control:PasswordBoxHelper.Placeholder="type to change passcode"
-                                control:PasswordBoxHelper.EncryptedPassword="{Binding Value, Mode=OneWayToSource}"
-                                control:PasswordBoxHelper.Watch="True" Template="{DynamicResource PasswordBoxControlTemplate}" />
+                            x:Name="pwdBox"
+                            control:Helper.Placeholder="press enter to save"
+                            control:Helper.UpdateOnEnter="True"
+                            control:PasswordHelper.EncryptedPassword="{Binding Value, Mode=OneWayToSource}"
+                            control:PasswordHelper.Watch="True">
+                            
+                        </PasswordBox>
                     </Grid>
+                    <DataTemplate.Triggers>
+                        
+                    </DataTemplate.Triggers>
                 </DataTemplate>
                 <DataTemplate x:Key="Enum">
                     <Grid>
@@ -110,7 +139,7 @@
                         </Grid.ColumnDefinitions>
                         <ComboBox ItemsSource="{Binding Options}" SelectedValue="{Binding Value}"
                                   Background="{DynamicResource BackgroundLight}"
-                                  IsTextSearchEnabled="False" Style="{DynamicResource {x:Type ComboBox}}" />
+                                  IsTextSearchEnabled="False" Style="{DynamicResource {x:Type ComboBox}}" Template="{DynamicResource ComboBoxControlTemplate}" />
                     </Grid>
                 </DataTemplate>
                 <DataTemplate x:Key="Action">
@@ -164,11 +193,12 @@
                             VerticalAlignment="Center" />
                 </DataTemplate>
                 <DataTemplate x:Key="String">
-                    <xctk:WatermarkTextBox
-                            Watermark="hit enter to change"
-                            Text="{Binding Value}"
-                            Grid.Column="1"
-                            VerticalAlignment="Center" />
+                    <TextBox
+                        control:Helper.Placeholder="hit enter to change"
+                        control:Helper.UpdateOnEnter="True"
+                        Text="{Binding Value, UpdateSourceTrigger=Explicit}"
+                        Grid.Column="1"
+                        VerticalAlignment="Center" />
                 </DataTemplate>
                 <DataTemplate x:Key="Boolean">
                     <CheckBox
@@ -183,9 +213,8 @@
                 <GroupStyle>
                     <GroupStyle.HeaderTemplate>
                         <DataTemplate>
-                            <Border Padding="4,10,4,4">
-                                <TextBlock FontSize="20" Text="{Binding Name}" Margin="9,0" FontWeight="Bold"
-                                       Foreground="{DynamicResource Foreground}" FontFamily="{DynamicResource Header}" />
+                            <Border Padding="16">
+                                <TextBlock Text="{Binding Name}" Style="{StaticResource Subheader}" />
                             </Border>
                         </DataTemplate>
                     </GroupStyle.HeaderTemplate>
@@ -193,26 +222,27 @@
             </ListView.GroupStyle>
             <ListView.ItemContainerStyle>
                 <Style TargetType="{x:Type ListViewItem}">
+                    <Setter Property="Margin" Value="0"/>
+                    <Setter Property="Padding" Value="0"/>
                     <Setter Property="Template">
                         <Setter.Value>
                             <ControlTemplate TargetType="{x:Type ListViewItem}">
-                                <Border x:Name="border" Padding="4" Background="Transparent" Height="32">
+                                <Border x:Name="border" Background="Transparent" Height="72" 
+                                        Padding="14,0" Margin="0">
                                     <Grid>
                                         <Grid.ColumnDefinitions>
                                             <ColumnDefinition Width="*" />
                                             <ColumnDefinition Width="200" />
                                         </Grid.ColumnDefinitions>
-                                        <Grid.RowDefinitions>
-                                            <RowDefinition />
-                                            <RowDefinition Height="Auto" />
-                                        </Grid.RowDefinitions>
-                                        <TextBlock Text="{Binding Name}"
-                                            Foreground="{DynamicResource Foreground}"
-                                            VerticalAlignment="Center" Margin="5,0" />
-                                        <TextBlock x:Name="desc" Text="{Binding Description}" FontSize="10" Grid.Row="1"
-                                            Foreground="{DynamicResource ForegroundSecondary}"
-                                            VerticalAlignment="Center" Margin="5,0" TextTrimming="CharacterEllipsis" />
-                                        <ContentPresenter x:Name="content" Margin="10,0,0,0" Grid.Column="1" Grid.RowSpan="2" HorizontalAlignment="Right" />
+                                        <StackPanel VerticalAlignment="Center">
+                                            <TextBlock Text="{Binding Name}"
+                                                       Foreground="{DynamicResource Foreground}"/>
+                                            <TextBlock x:Name="desc" Text="{Binding Description}" 
+                                                       Foreground="{DynamicResource ForegroundSecondary}"
+                                                       FontSize="9pt" TextTrimming="CharacterEllipsis" />
+                                        </StackPanel>
+                                        <ContentPresenter x:Name="content" Margin="10,0,0,0" Grid.Column="1" 
+                                                          Grid.RowSpan="2" HorizontalAlignment="Right" />
                                     </Grid>
                                 </Border>
                                 <ControlTemplate.Triggers>
@@ -221,6 +251,7 @@
                                     </Trigger>
                                     <DataTrigger Binding="{Binding Description}" Value="{x:Null}">
                                         <Setter TargetName="desc" Property="Visibility" Value="Collapsed" />
+                                        <Setter TargetName="border" Property="Height" Value="48" />
                                     </DataTrigger>
                                 </ControlTemplate.Triggers>
                             </ControlTemplate>
@@ -232,9 +263,6 @@
                 <control:SettingTemplateSelector />
             </ListView.ItemTemplateSelector>
         </ListView>
-        <Border x:Name="toast" Background="{DynamicResource BackgroundLight}" Opacity="0.5" Grid.Row="2" Grid.Column="2" Padding="5">
-            <TextBlock HorizontalAlignment="Center" VerticalAlignment="Center"><Run Text="all settings are autosaved" /></TextBlock>
-        </Border>
 
         <Grid x:Name="overlay" Background="{DynamicResource BackgroundDark}" Grid.ColumnSpan="2" Grid.RowSpan="2">
             <Grid.RowDefinitions>
@@ -256,7 +284,7 @@
                         <DataTrigger Binding="{Binding CurrentScreen, Mode=OneWay}" Value="Main">
                             <DataTrigger.EnterActions>
                                 <BeginStoryboard>
-                                    <Storyboard BeginTime="0:0:0.6">
+                                    <Storyboard BeginTime="0:0:0.25">
                                         <DoubleAnimation Storyboard.TargetProperty="Opacity"
                                                          To="0" Duration="0:0:0.05" />
                                         <ObjectAnimationUsingKeyFrames Storyboard.TargetProperty="Visibility">
@@ -293,8 +321,6 @@
                     x:Name="pwdBorder">
                 <Border.Style>
                     <Style TargetType="{x:Type Border}">
-                        <Setter Property="Background" Value="Transparent" />
-
                         <Style.Triggers>
                             <DataTrigger Binding="{Binding CurrentScreen, Mode=OneWay}" Value="Loading">
                                 <DataTrigger.ExitActions>
@@ -321,7 +347,8 @@
                                     SourceName="pwdBorder">
                         <ei:ControlStoryboardAction>
                             <ei:ControlStoryboardAction.Storyboard>
-                                <Storyboard Storyboard.TargetName="pwdBorder">
+                                <Storyboard Storyboard.TargetName="pwdBox"
+                                            Storyboard.TargetProperty="(Control.BorderBrush).(SolidColorBrush.Color)">
                                     <StaticResource ResourceKey="SuccessAnimation" />
                                 </Storyboard>
                             </ei:ControlStoryboardAction.Storyboard>
@@ -331,7 +358,8 @@
                                     SourceName="pwdBorder">
                         <ei:ControlStoryboardAction>
                             <ei:ControlStoryboardAction.Storyboard>
-                                <Storyboard Storyboard.TargetName="pwdBorder">
+                                <Storyboard Storyboard.TargetName="pwdBox"
+                                            Storyboard.TargetProperty="(Control.BorderBrush).(SolidColorBrush.Color)">
                                     <StaticResource ResourceKey="DelayAnimation" />
                                 </Storyboard>
                             </ei:ControlStoryboardAction.Storyboard>
@@ -341,26 +369,29 @@
                                     SourceName="pwdBorder">
                         <ei:ControlStoryboardAction>
                             <ei:ControlStoryboardAction.Storyboard>
-                                <Storyboard Storyboard.TargetName="pwdBorder">
+                                <Storyboard Storyboard.TargetName="pwdBox"
+                                            Storyboard.TargetProperty="(Control.BorderBrush).(SolidColorBrush.Color)">
                                     <StaticResource ResourceKey="RejectionAnimation" />
                                 </Storyboard>
                             </ei:ControlStoryboardAction.Storyboard>
                         </ei:ControlStoryboardAction>
                     </i:EventTrigger>
                 </i:Interaction.Triggers>
+
                 <PasswordBox
                     x:Name="pwdBox"
-                    control:PasswordBoxHelper.EncryptedPassword="{Binding Password, Mode=TwoWay}"
-                    control:PasswordBoxHelper.Watch="True" KeyDown="pwdBox_KeyDown"
-                    Height="32" Margin="20,0" Background="{DynamicResource BackgroundHalf}">
+                    control:Helper.UpdateOnEnter="True"
+                    control:PasswordHelper.EncryptedPassword="{Binding Password, Mode=TwoWay, UpdateSourceTrigger=Explicit}"
+                    control:PasswordHelper.Watch="True"
+                    Height="32" Margin="20,0">
                     <PasswordBox.Style>
                         <Style TargetType="{x:Type PasswordBox}" BasedOn="{StaticResource {x:Type PasswordBox}}">
                             <Style.Triggers>
                                 <DataTrigger Binding="{Binding CurrentScreen}" Value="SetupPassword">
-                                    <Setter Property="control:PasswordBoxHelper.Placeholder" Value="choose your password and hit enter" />
+                                    <Setter Property="control:Helper.Placeholder" Value="choose your password and hit enter" />
                                 </DataTrigger>
                                 <DataTrigger Binding="{Binding CurrentScreen}" Value="EnterPassword">
-                                    <Setter Property="control:PasswordBoxHelper.Placeholder" Value="enter your password and hit enter" />
+                                    <Setter Property="control:Helper.Placeholder" Value="enter your password and hit enter" />
                                 </DataTrigger>
                             </Style.Triggers>
                         </Style>

@@ -81,6 +81,14 @@ namespace IvyLock.Service
             return o is T ? (T)o : default(T);
         }
 
+        public string Salt()
+        {
+            byte[] salt = new byte[32];
+            var rng = RandomNumberGenerator.Create();
+            rng.GetBytes(salt);
+            return Convert.ToBase64String(salt);
+        }
+
         public string Encrypt<T>(T o, SecureString key)
         {
             TripleDES tdes = TripleDES.Create();

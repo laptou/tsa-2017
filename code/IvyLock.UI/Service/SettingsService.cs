@@ -16,6 +16,8 @@ namespace IvyLock.Service
         SettingGroup Get(string name);
 
         bool Set(SettingGroup value);
+
+        ProcessSettings FindByPath(string path);
     }
 
     public class XmlSettingsService : ISettingsService
@@ -85,12 +87,12 @@ namespace IvyLock.Service
                     stream.Position = 0;
 
                     _values = new List<SettingGroup>(xs.Deserialize(stream) as SettingGroup[]);
+                }
 
-                    foreach (SettingGroup sg in _values)
-                    {
-                        sg.Initialize();
-                        sg.PropertyChanged += SettingGroupChanged;
-                    }
+                foreach (SettingGroup sg in _values)
+                {
+                    sg.Initialize();
+                    sg.PropertyChanged += SettingGroupChanged;
                 }
             }
             catch
@@ -150,6 +152,7 @@ namespace IvyLock.Service
                     _values.Remove(sg);
 
                 _values.Add(value);
+                value.PropertyChanged += SettingGroupChanged;
 
                 Serialize();
                 return true;
@@ -174,6 +177,16 @@ namespace IvyLock.Service
         {
             stream?.Dispose();
         }
+
+        public ProcessSettings FindByPath(string path)
+        {
+            return this.OfType<ProcessSettings>()
+                    .FirstOrDefault(s => 
+                        string.Equals(
+                            s.Path, 
+                            path, 
+                            StringComparison.InvariantCultureIgnoreCase));
+        }
     }
 
     public class DesignerSettingsService : List<SettingGroup>, ISettingsService
@@ -184,7 +197,7 @@ namespace IvyLock.Service
         {
             get
             {
-                return Enumerable.FirstOrDefault(this, sg => sg.Name.Equals(name));
+                return Enumerable.FirstOrDefault(this, sg => sg.Name.Equals(name, StringComparison.InvariantCultureIgnoreCase));
             }
         }
 
@@ -205,6 +218,11 @@ namespace IvyLock.Service
 
         public void Dispose()
         {
+        }
+
+        public ProcessSettings FindByPath(string path)
+        {
+            throw new NotImplementedException();
         }
     }
 }

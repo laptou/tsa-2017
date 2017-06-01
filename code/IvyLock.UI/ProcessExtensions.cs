@@ -169,11 +169,15 @@ namespace IvyLock
         {
             try
             {
-                uint result = await Task.Run(() => WaitForInputIdle(process.Handle, 5000));
+                if (process.MainWindowHandle != default(IntPtr))
+                    return true;
+
+                uint result = await Task.Run(() => WaitForInputIdle(process.Handle, 15000));
                 switch (result)
                 {
                     case 0xFFFFFFFF: // WAIT_FAILED
                         return false;
+
                     default:
                         return process.MainWindowHandle != default(IntPtr);
                 }
@@ -182,6 +186,11 @@ namespace IvyLock
             {
                 return false;
             }
+        }
+
+        public static bool IsUWP(this Process process)
+        {
+            return IsImmersiveProcess(process.Handle);
         }
 
         public static void Resume(this Process process)
@@ -236,6 +245,9 @@ namespace IvyLock
         [DllImport("kernel32.dll")]
         private static extern bool QueryFullProcessImageName(IntPtr hprocess, int dwFlags,
                        StringBuilder lpExeName, out int size);
+
+        [DllImport("user32.dll")]
+        private static extern bool IsImmersiveProcess(IntPtr hProcess);
 
         #endregion Methods
 
