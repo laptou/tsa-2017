@@ -35,7 +35,6 @@
             <RowDefinition Height="*" />
             <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
-
         <ListBox
             Background="{DynamicResource BackgroundLight}" BorderBrush="{x:Null}"
             SelectedValue="{Binding SettingGroup, Mode=TwoWay}"
@@ -50,8 +49,7 @@
                         <Setter.Value>
                             <ControlTemplate TargetType="{x:Type ListBoxItem}">
                                 <control:RippleEffectDecorator
-                                    x:Name="border" Background="Transparent" Height="40"
-                                        Cursor="Hand">
+                                    x:Name="border" Height="40" Cursor="Hand">
                                     <Grid Margin="14,0">
                                         <Grid.ColumnDefinitions>
                                             <ColumnDefinition Width="Auto" />
@@ -62,13 +60,47 @@
                                         <TextBlock x:Name="text" Grid.Column="1" Text="{Binding Name}"
                                             Foreground="{DynamicResource Foreground}" VerticalAlignment="Center" Margin="10,0" />
                                     </Grid>
+                                    <control:RippleEffectDecorator.Background>
+                                        <SolidColorBrush Color="{StaticResource Accent}" Opacity="0" />
+                                    </control:RippleEffectDecorator.Background>
+                                    <control:RippleEffectDecorator.HighlightBackground>
+                                        <SolidColorBrush Color="{StaticResource Accent}" Opacity="0.5" />
+                                    </control:RippleEffectDecorator.HighlightBackground>
                                 </control:RippleEffectDecorator>
                                 <ControlTemplate.Triggers>
                                     <Trigger Property="IsMouseOver" Value="True">
                                         <Setter TargetName="border" Property="Background" Value="{DynamicResource Control}" />
                                     </Trigger>
                                     <Trigger Property="IsSelected" Value="True">
-                                        <Setter TargetName="border" Property="Background" Value="{DynamicResource AccentBrush}" />
+                                        <Trigger.EnterActions>
+                                            <BeginStoryboard>
+                                                <Storyboard Storyboard.TargetProperty="(Panel.Background).(Brush.Opacity)"
+                                                            Storyboard.TargetName="border">
+                                                    <DoubleAnimation To="1" Duration="0:0:0.5" BeginTime="0:0:0.125">
+                                                        <DoubleAnimation.EasingFunction>
+                                                            <BackEase EasingMode="EaseOut"/>
+                                                        </DoubleAnimation.EasingFunction>
+                                                    </DoubleAnimation>
+                                                </Storyboard>
+                                            </BeginStoryboard>
+                                        </Trigger.EnterActions>
+                                        <Trigger.ExitActions>
+                                            <BeginStoryboard>
+                                                <Storyboard Storyboard.TargetProperty="(Panel.Background).(Brush.Opacity)"
+                                                            Storyboard.TargetName="border">
+                                                    <DoubleAnimation To="0" Duration="0:0:0.5" BeginTime="0:0:0.125">
+                                                        <DoubleAnimation.EasingFunction>
+                                                            <BackEase EasingMode="EaseOut"/>
+                                                        </DoubleAnimation.EasingFunction>
+                                                    </DoubleAnimation>
+                                                </Storyboard>
+                                            </BeginStoryboard>
+                                        </Trigger.ExitActions>
+                                        <Setter TargetName="border" Property="Background">
+                                            <Setter.Value>
+                                                <SolidColorBrush Color="{StaticResource Accent}" Opacity="0" />
+                                            </Setter.Value>
+                                        </Setter>
                                     </Trigger>
                                     <DataTrigger Binding="{Binding Name}" Value="IvyLock">
                                         <Setter TargetName="image" Property="Height" Value="40" />
@@ -76,26 +108,13 @@
                                         <Setter TargetName="text" Property="FontSize" Value="20" />
                                         <Setter TargetName="text" Property="FontFamily" Value="{DynamicResource Header}" />
                                         <Setter TargetName="border" Property="Height" Value="60" />
-                                        <!--<Setter TargetName="border" Property="Background">
-                                            <Setter.Value>
-                                                <ImageBrush ImageSource="pack://application:,,,/Content/ivy.jpg" 
-                                                            Stretch="UniformToFill" Opacity="0.5" />
-                                            </Setter.Value>
-                                        </Setter>-->
-                                    </DataTrigger>
-                                    <MultiDataTrigger>
-                                        <MultiDataTrigger.Conditions>
-                                            <Condition Binding="{Binding IsSelected, 
-                                                RelativeSource={RelativeSource TemplatedParent}}" Value="True" />
-                                            <Condition Binding="{Binding Name}" Value="IvyLock"/>
-                                        </MultiDataTrigger.Conditions>
                                         <Setter TargetName="border" Property="Background">
                                             <Setter.Value>
-                                                <ImageBrush ImageSource="pack://application:,,,/Content/ivy.jpg" 
-                                                            Stretch="UniformToFill" Opacity="1" />
+                                                <ImageBrush ImageSource="pack://application:,,,/Content/ivy.png" 
+                                                            Stretch="UniformToFill" Opacity="1"/>
                                             </Setter.Value>
                                         </Setter>
-                                    </MultiDataTrigger>
+                                    </DataTrigger>
                                 </ControlTemplate.Triggers>
                             </ControlTemplate>
                         </Setter.Value>
@@ -122,25 +141,50 @@
                             x:Name="pwdBox"
                             control:Helper.Placeholder="press enter to save"
                             control:Helper.UpdateOnEnter="True"
-                            control:PasswordHelper.EncryptedPassword="{Binding Value, Mode=OneWayToSource}"
+                            control:PasswordHelper.EncryptedPassword="{Binding Value, Mode=OneWayToSource, UpdateSourceTrigger=Explicit}"
                             control:PasswordHelper.Watch="True">
-                            
+                            <i:Interaction.Triggers>
+                                <i:EventTrigger EventName="PropertyChanged" SourceObject="{Binding Mode=OneWay}">
+                                    <ei:ControlStoryboardAction>
+                                        <ei:ControlStoryboardAction.Storyboard>
+                                            <Storyboard Storyboard.TargetName="pwdBox"
+                                                        Storyboard.TargetProperty="(Control.BorderBrush).(SolidColorBrush.Color)">
+                                                <StaticResourceExtension ResourceKey="InfoAnimation" />
+                                            </Storyboard>
+                                        </ei:ControlStoryboardAction.Storyboard>
+                                    </ei:ControlStoryboardAction>
+                                </i:EventTrigger>
+                            </i:Interaction.Triggers>
                         </PasswordBox>
+
+                        <Ellipse Width="5" Height="5" Margin="0,0,5,0" x:Name="saveIndicator"
+                                 VerticalAlignment="Center" HorizontalAlignment="Right"
+                                 Fill="{StaticResource AccentBrush}" Opacity="0">
+                            <i:Interaction.Triggers>
+                                <i:EventTrigger EventName="PropertyChanged" SourceObject="{Binding Mode=OneWay}">
+                                    <ei:ControlStoryboardAction>
+                                        <ei:ControlStoryboardAction.Storyboard>
+                                            <Storyboard Storyboard.TargetName="saveIndicator"
+                                                        Storyboard.TargetProperty="Opacity">
+                                                <DoubleAnimation From="1" To="0"
+                                                                 Duration="0:0:0.5">
+                                                    <DoubleAnimation.EasingFunction>
+                                                        <CircleEase EasingMode="EaseOut"/>
+                                                    </DoubleAnimation.EasingFunction>
+                                                </DoubleAnimation>
+                                            </Storyboard>
+                                        </ei:ControlStoryboardAction.Storyboard>
+                                    </ei:ControlStoryboardAction>
+                                </i:EventTrigger>
+                            </i:Interaction.Triggers>
+                        </Ellipse>
                     </Grid>
-                    <DataTemplate.Triggers>
-                        
-                    </DataTemplate.Triggers>
                 </DataTemplate>
                 <DataTemplate x:Key="Enum">
-                    <Grid>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*" />
-                            <ColumnDefinition Width="Auto" />
-                        </Grid.ColumnDefinitions>
-                        <ComboBox ItemsSource="{Binding Options}" SelectedValue="{Binding Value}"
-                                  Background="{DynamicResource BackgroundLight}"
-                                  IsTextSearchEnabled="False" Style="{DynamicResource {x:Type ComboBox}}" Template="{DynamicResource ComboBoxControlTemplate}" />
-                    </Grid>
+                    <ComboBox ItemsSource="{Binding Options}" SelectedValue="{Binding Value}"
+                                  IsTextSearchEnabled="False"
+                                  Template="{DynamicResource ComboBoxControlTemplate}"
+                                  VerticalContentAlignment="Center" HorizontalContentAlignment="Center" />
                 </DataTemplate>
                 <DataTemplate x:Key="Action">
                     <Grid>
@@ -211,13 +255,22 @@
             </ListView.ItemsSource>
             <ListView.GroupStyle>
                 <GroupStyle>
-                    <GroupStyle.HeaderTemplate>
-                        <DataTemplate>
-                            <Border Padding="16">
-                                <TextBlock Text="{Binding Name}" Style="{StaticResource Subheader}" />
-                            </Border>
-                        </DataTemplate>
-                    </GroupStyle.HeaderTemplate>
+                    <GroupStyle.ContainerStyle>
+                        <Style TargetType="GroupItem">
+                            <Setter Property="Template">
+                                <Setter.Value>
+                                    <ControlTemplate>
+                                        <StackPanel>
+                                            <Border Padding="14,16">
+                                                <TextBlock Text="{Binding Name}" Style="{StaticResource Subheader}" />
+                                            </Border>
+                                            <ItemsPresenter x:Name="ItemsPresenter"/>
+                                        </StackPanel>
+                                    </ControlTemplate>
+                                </Setter.Value>
+                            </Setter>
+                        </Style>
+                    </GroupStyle.ContainerStyle>
                 </GroupStyle>
             </ListView.GroupStyle>
             <ListView.ItemContainerStyle>
@@ -284,7 +337,7 @@
                         <DataTrigger Binding="{Binding CurrentScreen, Mode=OneWay}" Value="Main">
                             <DataTrigger.EnterActions>
                                 <BeginStoryboard>
-                                    <Storyboard BeginTime="0:0:0.25">
+                                    <Storyboard>
                                         <DoubleAnimation Storyboard.TargetProperty="Opacity"
                                                          To="0" Duration="0:0:0.05" />
                                         <ObjectAnimationUsingKeyFrames Storyboard.TargetProperty="Visibility">
@@ -360,7 +413,7 @@
                             <ei:ControlStoryboardAction.Storyboard>
                                 <Storyboard Storyboard.TargetName="pwdBox"
                                             Storyboard.TargetProperty="(Control.BorderBrush).(SolidColorBrush.Color)">
-                                    <StaticResource ResourceKey="DelayAnimation" />
+                                    <StaticResource ResourceKey="WarnAnimation" />
                                 </Storyboard>
                             </ei:ControlStoryboardAction.Storyboard>
                         </ei:ControlStoryboardAction>
@@ -371,7 +424,7 @@
                             <ei:ControlStoryboardAction.Storyboard>
                                 <Storyboard Storyboard.TargetName="pwdBox"
                                             Storyboard.TargetProperty="(Control.BorderBrush).(SolidColorBrush.Color)">
-                                    <StaticResource ResourceKey="RejectionAnimation" />
+                                    <StaticResource ResourceKey="FailAnimation" />
                                 </Storyboard>
                             </ei:ControlStoryboardAction.Storyboard>
                         </ei:ControlStoryboardAction>
@@ -432,9 +485,9 @@
             </Border>
 
             <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" Orientation="Horizontal"
-                       Grid.Row="2" Grid.ColumnSpan="3" Opacity="0.56">
-                <TextBlock Text="{Binding PasswordErrorMessage}" />
-                <ProgressBar HorizontalAlignment="Left" Height="1" Width="60" Margin="8,0,0,0"
+                       Grid.Row="2" Grid.ColumnSpan="3">
+                <TextBlock Text="{Binding PasswordErrorMessage}" Opacity="0.56" />
+                <ProgressBar HorizontalAlignment="Left" Height="2" Width="60" Margin="8,0,0,0"
                              x:Name="attemptTimer" BorderThickness="1" Background="Transparent">
                     <i:Interaction.Triggers>
                         <i:EventTrigger EventName="PasswordRejected" SourceObject="{Binding Mode=OneWay}">
@@ -465,5 +518,6 @@
                 </ProgressBar>
             </StackPanel>
         </Grid>
+
     </Grid>
 </Window>

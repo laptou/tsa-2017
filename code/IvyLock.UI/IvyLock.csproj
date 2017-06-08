@@ -70,6 +70,10 @@
     <Reference Include="System.Data" />
     <Reference Include="System.Drawing" />
     <Reference Include="System.Management" />
+    <Reference Include="System.Numerics" />
+    <Reference Include="System.ValueTuple, Version=4.0.1.1, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.ValueTuple.4.3.1\lib\netstandard1.0\System.ValueTuple.dll</HintPath>
+    </Reference>
     <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Windows.Interactivity, Version=4.5.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL" />
     <Reference Include="System.Xml" />
@@ -110,30 +114,45 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <ApplicationDefinition Include="App.xaml">
+    <Page Include="App.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
-    </ApplicationDefinition>
+    </Page>
     <Compile Include="App.xaml.cs">
       <DependentUpon>App.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="AsyncParallel.cs" />
+    <Compile Include="Deconstructions.cs" />
     <Compile Include="IconExtensions.cs" />
     <Compile Include="Model\Model.cs" />
+    <Compile Include="Model\Security\RSAKey.cs" />
+    <Compile Include="Model\Security\SecurityExtensions.cs" />
     <Compile Include="Model\Setting.cs" />
     <Compile Include="ProcessExtensions.cs" />
     <Compile Include="Service\EncryptionService.cs" />
+    <Compile Include="Service\FileUsageService.cs" />
+    <Compile Include="Service\Native.cs" />
     <Compile Include="Service\ProcessService.cs" />
     <Compile Include="Service\SettingsService.cs" />
-    <Compile Include="ViewModel\AuthenticationViewModel.cs" />
+    <Compile Include="ViewModel\EnrollViewModel.cs" />
+    <Compile Include="ViewModel\FileAuthenticationViewModel.cs" />
+    <Compile Include="ViewModel\ProcessAuthenticationViewModel.cs" />
     <Compile Include="ViewModel\DelegateCommand.cs" />
     <Compile Include="ViewModel\NotifyTaskCompletion.cs" />
     <Compile Include="ViewModel\PasswordValidationViewModel.cs" />
     <Compile Include="ViewModel\SettingsViewModel.cs" />
     <Compile Include="ViewModel\ViewModel.cs" />
-    <Compile Include="View\AuthenticationView.xaml.cs">
-      <DependentUpon>AuthenticationView.xaml</DependentUpon>
+    <Compile Include="View\ComparisonBinding.cs" />
+    <Compile Include="View\DataBinder.cs" />
+    <Compile Include="View\EnrollView.xaml.cs">
+      <DependentUpon>EnrollView.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="View\FileAuthenticationView.xaml.cs">
+      <DependentUpon>FileAuthenticationView.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="View\ProcessAuthenticationView.xaml.cs">
+      <DependentUpon>ProcessAuthenticationView.xaml</DependentUpon>
     </Compile>
     <Compile Include="View\BooleanToVisibilityConverter.cs" />
     <Compile Include="View\Control\Helper.cs" />
@@ -209,7 +228,15 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="View\AuthenticationView.xaml">
+    <Page Include="View\EnrollView.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="View\FileAuthenticationView.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="View\ProcessAuthenticationView.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
@@ -274,6 +301,9 @@
   </ItemGroup>
   <ItemGroup>
     <Resource Include="Content\ivy.jpg" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Content\ivy.png" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

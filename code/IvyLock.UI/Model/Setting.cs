@@ -122,6 +122,17 @@ namespace IvyLock.Model
             }
         }
 
+        [Setting(Category = SettingCategory.Security, Name = "Enroll Fingerprint")]
+        public DelegateCommand EnrollFingerprint
+        {
+            get =>
+                new DelegateCommand(o =>
+                {
+                    App.Current.Dispatcher.Invoke(() =>
+                        new View.EnrollView().Show());
+                });
+        }
+
         #endregion Properties
     }
 
@@ -160,31 +171,8 @@ namespace IvyLock.Model
 
         #region Properties
 
-        [XmlIgnore]
-        [Setting(
-            Name = "Clear Unique Password",
-            Category = SettingCategory.Security)]
-        public AsyncDelegateCommand ClearPassword
-        {
-            get
-            {
-                return new AsyncDelegateCommand(() => Task.Run(() => Hash = null));
-            }
-        }
-
         [Setting(Hide = true)]
         public string Hash { get { return _hash; } set { Set(value, ref _hash); } }
-
-        [Setting(
-            Name = "Timeout",
-            Category = SettingCategory.Security,
-            Description = "The amount of time (in minutes) before this app requires a password to start again.",
-            MinValue = 1, MaxValue = 300)]
-        public int LockTimeOut
-        {
-            get { return lockTimeOut; }
-            set { Set(value, ref lockTimeOut); }
-        }
 
         [XmlIgnore]
         [Setting(
@@ -227,16 +215,6 @@ namespace IvyLock.Model
         }
 
         [Setting(
-            Name = "Use Timeout",
-            Category = SettingCategory.Security,
-            Description = "Whether this app should require a password to start after the first entry.")]
-        public bool UseLockTimeOut
-        {
-            get { return hasLockTimeOut; }
-            set { Set(value, ref hasLockTimeOut); }
-        }
-
-        [Setting(
             Category = SettingCategory.Security,
             Name = "Use Password",
             Description = "Whether this app is locked by IvyLock.")]
@@ -248,15 +226,47 @@ namespace IvyLock.Model
 
         [Setting(
             Category = SettingCategory.Security,
-            Name = "Allow Biometric Authentication",
+            Name = "Use Biometric Authentication",
             Description = "Whether this app can be unlocked using a fingerprint.")]
-        public bool AllowBiometricAuthentication
+        public bool UseBiometricAuthentication
         {
             get { return _allowBiometrics; }
             set { Set(value, ref _allowBiometrics); }
         }
 
+        [Setting(
+            Name = "Use Timeout",
+            Category = SettingCategory.Security,
+            Description = "Whether this app should require a password to start after the first entry.")]
+        public bool UseLockTimeOut
+        {
+            get { return hasLockTimeOut; }
+            set { Set(value, ref hasLockTimeOut); }
+        }
+
+        [Setting(
+            Name = "Timeout",
+            Category = SettingCategory.Security,
+            Description = "The amount of time (in minutes) before this app requires a password to start again.",
+            MinValue = 1, MaxValue = 300)]
+        public int LockTimeOut
+        {
+            get { return lockTimeOut; }
+            set { Set(value, ref lockTimeOut); }
+        }
+
         #endregion Properties
+
+        protected override Func<SettingGroup, bool> GetPredicate(string setting)
+        {
+            switch (setting)
+            {
+                case nameof(LockTimeOut):
+                    return s => (s as ProcessSettings).UseLockTimeOut;
+                default:
+                    return base.GetPredicate(setting);
+            }
+        }
     }
 
     public class Setting : Model
@@ -288,6 +298,8 @@ namespace IvyLock.Model
         public string Name { get; set; }
         public Array Options { get; internal set; }
         public SettingType Type { get; set; }
+        public Func<SettingGroup, bool> Predicate { get; set; }
+        public bool Enabled => Predicate?.Invoke(_settings) ?? true;
 
         public object Value
         {
@@ -313,6 +325,7 @@ namespace IvyLock.Model
 
         public SettingAttribute()
         {
+
         }
 
         #endregion Constructors
@@ -320,14 +333,12 @@ namespace IvyLock.Model
         #region Properties
 
         public SettingCategory Category { get; set; }
-        public string DependsOn { get; set; }
         public string Description { get; set; }
         public bool Hide { get; set; }
         public bool Ignore { get; set; }
         public int MaxValue { get; set; } = int.MaxValue;
         public int MinValue { get; set; } = int.MinValue;
         public string Name { get; set; }
-        public Func<object, bool> Predicate { get; set; }
 
         #endregion Properties
     }
@@ -402,7 +413,8 @@ namespace IvyLock.Model
                 Setting s = new Setting(this)
                 {
                     Key = pi.Name,
-                    Name = pi.Name
+                    Name = pi.Name,
+                    Predicate = GetPredicate(pi.Name)
                 };
 
                 if (pi.PropertyType == typeof(string))
@@ -470,6 +482,11 @@ namespace IvyLock.Model
             Setting s = sender as Setting;
             GetType().GetProperty(s.Key)?.SetValue(this, s.Value);
             RaisePropertyChanged(s.Key);
+        }
+
+        protected virtual Func<SettingGroup, bool> GetPredicate(string setting)
+        {
+            return null;
         }
 
         #endregion Methods

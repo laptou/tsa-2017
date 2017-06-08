@@ -44,18 +44,19 @@ namespace IvyLock.Service
 
         public ManagedProcessService()
         {
-            mew = new ManagementEventWatcher()
-            {
-                Query = new WqlEventQuery("__InstanceOperationEvent",
-                new TimeSpan(0, 0, 0, 1),
-                "TargetInstance isa \"Win32_Process\"")
-            };
+            mew = new ManagementEventWatcher(
+                new ManagementScope(@"\\.\root\CIMV2"),
+                new WqlEventQuery(
+                    "__InstanceOperationEvent",
+                    new TimeSpan(0, 0, 0, 1),
+                    "TargetInstance ISA \"Win32_Process\""));
             mew.Start();
             mew.EventArrived += EventArrived;
         }
 
         ~ManagedProcessService()
         {
+            mew.Stop();
             mew.Dispose();
         }
 

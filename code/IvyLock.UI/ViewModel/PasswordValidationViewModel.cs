@@ -1,12 +1,16 @@
 ﻿using IvyLock.Native;
 using System;
-using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 
 namespace IvyLock.ViewModel
 {
+    public enum PasswordVerificationStatus
+    {
+        None, Verified, Rejected, Delayed
+    }
+
     public abstract class PasswordValidationViewModel : ViewModel
     {
         #region Fields
@@ -124,7 +128,7 @@ namespace IvyLock.ViewModel
             {
                 if (attempts >= AttemptLimit)
                 {
-                    if(PasswordVerificationStatus != PasswordVerificationStatus.Delayed)
+                    if (PasswordVerificationStatus != PasswordVerificationStatus.Delayed)
                     {
                         attemptTimer.Stop();
                         attemptTimeout *= 2;
@@ -133,7 +137,7 @@ namespace IvyLock.ViewModel
                         RaisePropertyChanged("AttemptWait");
                         RaisePasswordRejected(null);
                     }
-                    
+
                     RaisePasswordDelayed("Stop guessing.");
                 }
                 else
@@ -153,89 +157,102 @@ namespace IvyLock.ViewModel
 
             if (!BiometricsEnabled) return;
 
-            var session =
-                WBF.OpenSession(BiometricType.Fingerprint, BiometricPoolType.System, BiometricSessionFlags.Default,
-                    null, BiometricDatabaseType.None);
-
-            var match = false;
-
-            try
+            await Task.Run(() =>
             {
-                while (!WBF.Verify(session, WBF.GetCurrentIdentity(), BiometricSubtype.Any,
-                    out uint unitId, out BiometricRejectDetail rejectDetail, out BiometricError error))
+                var session =
+                    WBF.OpenSession(BiometricType.Fingerprint, BiometricPoolType.System, BiometricSessionFlags.Default,
+                        null, BiometricDatabaseType.None);
+
+                var match = false;
+
+                try
                 {
-                    PasswordVerificationStatus = PasswordVerificationStatus.Rejected;
-                    UI(() => BiometricRejected?.Invoke(this, null));
-
-                    switch (error)
+                    while (!WBF.Verify(session, WBF.GetCurrentIdentity(), BiometricSubtype.Any,
+                        out uint unitId, out BiometricRejectDetail rejectDetail, out BiometricError error))
                     {
-                        case BiometricError.None:
-                            PasswordErrorMessage = "There was no error?";
-                            break;
+                        PasswordVerificationStatus = PasswordVerificationStatus.Rejected;
+                        UI(() => BiometricRejected?.Invoke(this, null));
 
-                        case BiometricError.BadCapture:
-                            switch (rejectDetail)
-                            {
-                                case BiometricRejectDetail.TooHigh:
-                                    PasswordErrorMessage = "Your finger was too high.";
-                                    break;
-                                case BiometricRejectDetail.TooLow:
-                                    PasswordErrorMessage = "Your finger was too low.";
-                                    break;
-                                case BiometricRejectDetail.TooLeft:
-                                    PasswordErrorMessage = "Your finger was too far to the left.";
-                                    break;
-                                case BiometricRejectDetail.TooRight:
-                                    PasswordErrorMessage = "Your finger was too far to the right.";
-                                    break;
-                                case BiometricRejectDetail.TooFast:
-                                    PasswordErrorMessage = "You moved your finger too quickly.";
-                                    break;
-                                case BiometricRejectDetail.TooSlow:
-                                    PasswordErrorMessage = "You moved your finger too slowly.";
-                                    break;
-                                case BiometricRejectDetail.PoorQuality:
-                                    PasswordErrorMessage = "Your fingerprint could not be read properly.";
-                                    break;
-                                case BiometricRejectDetail.TooSkewed:
-                                    PasswordErrorMessage = "The fingerprint capture was too skewed.";
-                                    break;
-                                case BiometricRejectDetail.TooShort:
-                                    PasswordErrorMessage = "Your finger was too short.";
-                                    break;
-                                case BiometricRejectDetail.MergeFailure:
-                                    PasswordErrorMessage = "Try again.";
-                                    break;
-                                default:
-                                    break;
-                            }
-                            break;
+                        switch (error)
+                        {
+                            case BiometricError.None:
+                                PasswordErrorMessage = "There was no error?";
+                                break;
 
-                        case BiometricError.EnrollmentInProgress:
-                            PasswordErrorMessage = "The sensor is currently enrolling a new fingerprint.";
-                            break;
+                            case BiometricError.BadCapture:
+                                switch (rejectDetail)
+                                {
+                                    case BiometricRejectDetail.TooHigh:
+                                        PasswordErrorMessage = "Your finger was too high.";
+                                        break;
 
-                        case BiometricError.NoMatch:
-                            PasswordErrorMessage = "The fingerprint did not match.";
-                            break;
+                                    case BiometricRejectDetail.TooLow:
+                                        PasswordErrorMessage = "Your finger was too low.";
+                                        break;
 
-                        default:
-                            break;
+                                    case BiometricRejectDetail.TooLeft:
+                                        PasswordErrorMessage = "Your finger was too far to the left.";
+                                        break;
+
+                                    case BiometricRejectDetail.TooRight:
+                                        PasswordErrorMessage = "Your finger was too far to the right.";
+                                        break;
+
+                                    case BiometricRejectDetail.TooFast:
+                                        PasswordErrorMessage = "You moved your finger too quickly.";
+                                        break;
+
+                                    case BiometricRejectDetail.TooSlow:
+                                        PasswordErrorMessage = "You moved your finger too slowly.";
+                                        break;
+
+                                    case BiometricRejectDetail.PoorQuality:
+                                        PasswordErrorMessage = "Your fingerprint could not be read properly.";
+                                        break;
+
+                                    case BiometricRejectDetail.TooSkewed:
+                                        PasswordErrorMessage = "The fingerprint capture was too skewed.";
+                                        break;
+
+                                    case BiometricRejectDetail.TooShort:
+                                        PasswordErrorMessage = "Your finger was too short.";
+                                        break;
+
+                                    case BiometricRejectDetail.MergeFailure:
+                                        PasswordErrorMessage = "Try again.";
+                                        break;
+
+                                    default:
+                                        break;
+                                }
+                                break;
+
+                            case BiometricError.EnrollmentInProgress:
+                                PasswordErrorMessage = "The sensor is currently enrolling a new fingerprint.";
+                                break;
+
+                            case BiometricError.NoMatch:
+                                PasswordErrorMessage = "The fingerprint did not match.";
+                                break;
+
+                            default:
+                                break;
+                        }
                     }
+                    match = true;
                 }
-                match = true;
-            }
-            catch
-            {
-            }
+                catch
+                {
+                }
 
-            if (match)
-            {
-                PasswordVerificationStatus = PasswordVerificationStatus.Verified;
-                UI(() => BiometricVerified?.Invoke(this, null));
-            }
+                if (match)
+                {
+                    PasswordVerificationStatus = PasswordVerificationStatus.Verified;
+                    UI(() => BiometricVerified?.Invoke(this, null));
+                }
 
-            WBF.CloseSession(session);
+                WBF.CloseSession(session);
+            });
         }
 
         #endregion Methods

@@ -11,26 +11,55 @@ using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
-using System.Windows.Forms;
+using WF = System.Windows.Forms;
 
 namespace IvyLock
 {
-    /// <summary>
-    /// Interaction logic for App.xaml
-    /// </summary>
-    public partial class App : System.Windows.Application
+    public partial class App : Application
     {
         #region Fields
 
-        private static Mutex mutex = new Mutex(true, "{37EFBF56-B711-42E3-B3D0-0DCDA7BC09CB}");
         private IProcessService ips;
+
         private ISettingsService iss;
-        private NotifyIcon ni;
-        private Dictionary<string, AuthenticationView> views = new Dictionary<string, AuthenticationView>();
+
+        private WF.NotifyIcon ni;
+
+        private Dictionary<string, ProcessAuthenticationView> views = new Dictionary<string, ProcessAuthenticationView>();
+
+        static Mutex mutex = new Mutex(true, "{D680C778-1943-460C-9907-25DEC5C912A8}");
+
+        #endregion Fields
+
+        #region Constructors
+
+        public App()
+        {
+            InitializeComponent();
+        }
+
+        [STAThread]
+        private static void Main(string[] args)
+        {
+            if (mutex.WaitOne(TimeSpan.FromSeconds(1), true))
+            {
+                App app = new App();
+                app.Run();
+                mutex.ReleaseMutex();
+            }
+            else
+            {
+                
+            }
+        }
+
+        #endregion Constructors
+
+        #region Properties
 
         public static bool IsDesigner { get { return LicenseManager.UsageMode == LicenseUsageMode.Designtime; } }
 
-        #endregion Fields
+        #endregion Properties
 
         #region Methods
 
@@ -46,68 +75,92 @@ namespace IvyLock
         protected override void OnStartup(StartupEventArgs e)
         {
             base.OnStartup(e);
-
-            if (!IsDesigner)
+            
+            if(e.Args.Length > 0)
             {
-                try
+                IEnumerable<string> args = e.Args;
+
+                if (e.Args[0].Equals("-encrypt", StringComparison.InvariantCultureIgnoreCase))
                 {
-                    if (mutex.WaitOne(TimeSpan.Zero, true))
-                        mutex.ReleaseMutex();
-                    else
+                    args = args.Skip(1);
+
+                    foreach (string arg in args)
                     {
-                        Shutdown();
-                        return;
+                        FileAuthenticationView fav = new FileAuthenticationView();
+                        FileAuthenticationViewModel favm = (FileAuthenticationViewModel)fav.DataContext;
+                        favm.Path = arg;
+                        fav.Show();
                     }
                 }
-                catch (AbandonedMutexException)
+                else 
                 {
-                    mutex.ReleaseMutex();
-                }
+                    if (e.Args[0].Equals("-decrypt", StringComparison.InvariantCultureIgnoreCase))
+                        args = args.Skip(1);
 
-                AppDomain.CurrentDomain.ProcessExit += (s, e2) =>
-                {
-                    mutex.Dispose();
-                };
-
-                // don't initialise statically! XmlSettingsService
-                // depends on Application.Current
-                ips = ManagedProcessService.Default;
-                iss = XmlSettingsService.Default;
-
-                IvyLockSettings ils = iss.OfType<IvyLockSettings>().First();
-                switch (ils.Theme)
-                {
-                    case Theme.Light:
-                        Resources.MergedDictionaries.Clear();
-                        Resources.MergedDictionaries.Add(new ResourceDictionary()
-                        {
-                            Source = new Uri("pack://application:,,,/IvyLock;component/Content/Theme.Light.xaml")
-                        });
-                        break;
-                }
-
-                ips.ProcessChanged += ProcessChanged;
-
-                ni = new NotifyIcon();
-                ni.Click += (s, e1) => MainWindow.Show();
-                ni.Icon = System.Drawing.Icon.ExtractAssociatedIcon(Assembly.GetEntryAssembly().Location);
-                ni.ContextMenu = new ContextMenu();
-                ni.ContextMenu.MenuItems.Add("Exit", (s, e2) =>
-                {
-                    SettingsViewModel svm = MainWindow.DataContext as SettingsViewModel;
-
-                    svm.PropertyChanged += (s2, e3) =>
+                    foreach (string arg in args)
                     {
-                        if (e3.PropertyName == "CurrentScreen" && svm.CurrentScreen == ViewModel.Screen.Main)
-                            Shutdown();
-                    };
-                    
-                    svm.CurrentScreen = ViewModel.Screen.EnterPassword;
+                        FileAuthenticationView fav = new FileAuthenticationView();
+                        FileAuthenticationViewModel favm = (FileAuthenticationViewModel)fav.DataContext;
+                        favm.Path = arg;
+                        fav.Show();
+                    }
+                }
 
+                return;
+            }
+
+            try
+            {
+                if (!IsDesigner)
+                {
+                    // don't initialise statically! XmlSettingsService
+                    // depends on Application.Current
+                    ips = ManagedProcessService.Default;
+                    iss = XmlSettingsService.Default;
+
+                    IvyLockSettings ils = iss.OfType<IvyLockSettings>().First();
+                    switch (ils.Theme)
+                    {
+                        case Theme.Light:
+                            Resources.MergedDictionaries.Clear();
+                            Resources.MergedDictionaries.Add(new ResourceDictionary()
+                            {
+                                Source = new Uri("pack://application:,,,/IvyLock;component/Content/Theme.Light.xaml")
+                            });
+                            break;
+                    }
+
+                    ips.ProcessChanged += ProcessChanged;
+
+                    MainWindow = new SettingsView();
                     MainWindow.Show();
                     MainWindow.Activate();
-                });
-                ni.Visible = true;
+
+                    ni = new WF.NotifyIcon();
+                    ni.Click += (s, e1) => MainWindow?.Activate();
+                    ni.Icon = System.Drawing.Icon.ExtractAssociatedIcon(Assembly.GetEntryAssembly().Location);
+                    ni.ContextMenu = new WF.ContextMenu();
+                    ni.ContextMenu.MenuItems.Add("Exit", (s, e2) =>
+                    {
+                        SettingsViewModel svm = MainWindow.DataContext as SettingsViewModel;
+
+                        svm.PropertyChanged += (s2, e3) =>
+                        {
+                            if (e3.PropertyName == "CurrentScreen" && svm.CurrentScreen == ViewModel.Screen.Main)
+                                Shutdown();
+                        };
+
+                        svm.CurrentScreen = ViewModel.Screen.EnterPassword;
+
+                        MainWindow.Show();
+                        MainWindow.Activate();
+                    });
+                    ni.Visible = true;
+                }
+            }
+            catch
+            {
+                MessageBox.Show("IvyLock could not start.");
             }
         }
 
@@ -117,7 +170,7 @@ namespace IvyLock
                 return;
 
             ProcessSettings ps = iss.FindByPath(path);
-           
+
             if (ps == null || !ps.UsePassword)
                 return;
 
@@ -130,8 +183,8 @@ namespace IvyLock
 
                         Dispatcher?.Invoke(async () =>
                         {
-                            AuthenticationView av = views.ContainsKey(path) ? views[path] : new AuthenticationView();
-                            AuthenticationViewModel avm = av.DataContext as AuthenticationViewModel;
+                            ProcessAuthenticationView av = views.ContainsKey(path) ? views[path] : new ProcessAuthenticationView();
+                            ProcessAuthenticationViewModel avm = av.DataContext as ProcessAuthenticationViewModel;
 
                             avm.ProcessPath = path;
                             avm.Processes.Add(Process.GetProcessById(pid));
@@ -178,6 +231,8 @@ namespace IvyLock
                 }
             });
         }
+
+        public void Activate() => MainWindow?.Activate();
 
         #endregion Methods
     }

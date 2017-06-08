@@ -17,12 +17,7 @@ using SC = System.StringComparison;
 
 namespace IvyLock.ViewModel
 {
-    public enum PasswordVerificationStatus
-    {
-        None, Verified, Rejected, Delayed
-    }
-
-    public sealed class AuthenticationViewModel : PasswordValidationViewModel, IDisposable
+    public sealed class ProcessAuthenticationViewModel : PasswordValidationViewModel, IDisposable
     {
         #region Fields
 
@@ -39,7 +34,7 @@ namespace IvyLock.ViewModel
 
         #region Constructors
 
-        public AuthenticationViewModel()
+        public ProcessAuthenticationViewModel()
         {
             RunTime(() =>
             {
@@ -124,7 +119,7 @@ namespace IvyLock.ViewModel
                 Set(value, ref path);
                 RaisePropertyChanged("ProcessName");
                 
-                BiometricsEnabled = iss?.FindByPath(ProcessPath).AllowBiometricAuthentication == true;
+                BiometricsEnabled = iss?.FindByPath(ProcessPath).UseBiometricAuthentication == true;
             }
         }
 

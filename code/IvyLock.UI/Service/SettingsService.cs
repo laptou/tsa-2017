@@ -22,24 +22,16 @@ namespace IvyLock.Service
 
     public class XmlSettingsService : ISettingsService
     {
-        private List<SettingGroup> _values;
+        private List<SettingGroup> values;
         private XmlSerializer xs;
         private Stream stream;
         private string path;
-        private volatile static bool initialised = false;
 
         public static ISettingsService Default { get; private set; }
-
-        static XmlSettingsService()
-        {
-            if (!initialised && Default == null && !App.IsDesigner)
-                Default = new XmlSettingsService();
-        }
+            = new XmlSettingsService();
 
         public XmlSettingsService()
         {
-            initialised = true;
-
             path = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
             path = Path.Combine(path, "IvyLock");
 
@@ -48,7 +40,7 @@ namespace IvyLock.Service
 
             path = Path.Combine(path, "settings.xml");
 
-            _values = new List<SettingGroup>();
+            values = new List<SettingGroup>();
             xs = new XmlSerializer(typeof(SettingGroup[]));
 
             try
@@ -80,16 +72,16 @@ namespace IvyLock.Service
                     IvyLockSettings ils = new IvyLockSettings();
                     ils.Initialize();
 
-                    _values = new List<SettingGroup>(new SettingGroup[] { ils });
+                    values = new List<SettingGroup>(new SettingGroup[] { ils });
                 }
                 else
                 {
                     stream.Position = 0;
 
-                    _values = new List<SettingGroup>(xs.Deserialize(stream) as SettingGroup[]);
+                    values = new List<SettingGroup>(xs.Deserialize(stream) as SettingGroup[]);
                 }
 
-                foreach (SettingGroup sg in _values)
+                foreach (SettingGroup sg in values)
                 {
                     sg.Initialize();
                     sg.PropertyChanged += SettingGroupChanged;
@@ -113,7 +105,7 @@ namespace IvyLock.Service
             {
                 stream.Position = 0;
                 stream?.SetLength(0);
-                xs.Serialize(stream, _values.ToArray());
+                xs.Serialize(stream, values.ToArray());
             }
             catch
             {
@@ -140,7 +132,7 @@ namespace IvyLock.Service
 
         public SettingGroup Get(string name)
         {
-            return _values.FirstOrDefault(sg => sg.Name == name);
+            return values.FirstOrDefault(sg => sg.Name == name);
         }
 
         public bool Set(SettingGroup value)
@@ -149,9 +141,9 @@ namespace IvyLock.Service
             {
                 SettingGroup sg = Get(value.Name);
                 if (sg != null)
-                    _values.Remove(sg);
+                    values.Remove(sg);
 
-                _values.Add(value);
+                values.Add(value);
                 value.PropertyChanged += SettingGroupChanged;
 
                 Serialize();
@@ -165,12 +157,12 @@ namespace IvyLock.Service
 
         public IEnumerator<SettingGroup> GetEnumerator()
         {
-            return _values.GetEnumerator();
+            return values.GetEnumerator();
         }
 
         IEnumerator IEnumerable.GetEnumerator()
         {
-            return _values.GetEnumerator();
+            return values.GetEnumerator();
         }
 
         public void Dispose()

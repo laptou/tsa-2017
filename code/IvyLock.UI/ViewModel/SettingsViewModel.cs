@@ -3,16 +3,12 @@ using IvyLock.Service;
 using IvyLock.View;
 using System;
 using System.Collections.ObjectModel;
-using System.ComponentModel;
 using System.Diagnostics;
-using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Security;
-using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
-using System.Windows.Controls;
 using System.Windows.Data;
 
 namespace IvyLock.ViewModel
@@ -152,7 +148,7 @@ namespace IvyLock.ViewModel
                     await p.GetDescription() != null &&
                     await p.HasGUI();
             };
-            
+
             ips.ProcessChanged += async (pid, path, type) =>
             {
                 if (type == ProcessOperation.Started)
@@ -161,14 +157,14 @@ namespace IvyLock.ViewModel
                     {
                         try
                         {
-                            Process p = Process.GetProcessById(pid);
+                            Process proc = Process.GetProcessById(pid);
 
-                            if (await f(p))
+                            if (await f(proc))
                             {
-                                ProcessSettings s = new ProcessSettings(p);
+                                ProcessSettings s = new ProcessSettings(proc);
                                 s.Initialize();
                                 iss.Set(s);
-                                
+
                                 var x = Settings.FirstOrDefault(sg => sg.Name.CompareTo(s.Name) > 0);
                                 if (x != null)
                                     Settings.Insert(Settings.IndexOf(x) + 1, s);
@@ -176,24 +172,23 @@ namespace IvyLock.ViewModel
                                     Settings.Add(s);
                             }
                         }
-                        catch (Exception)
+                        finally
                         {
                         }
                     }
                 }
             };
-            
+
             await AsyncParallel.ForEachAsync(Process.GetProcesses(), 50, async process =>
             {
-                if(await f(process))
+                try
                 {
-                    string path = process.GetPath()?.ToLower();
-
-                    if (string.Equals(Assembly.GetEntryAssembly().Location.ToLower(), path))
-                        return;
-
-                    try
+                    if (await f(process))
                     {
+                        string path = process.GetPath()?.ToLower();
+
+                        if (string.Equals(Assembly.GetEntryAssembly().Location.ToLower(), path))
+                            return;
                         if (path != null && iss.FindByPath(path) == null)
                         {
                             ProcessSettings ps = new ProcessSettings(process);
@@ -207,9 +202,9 @@ namespace IvyLock.ViewModel
                                 Settings.Add(ps);
                         }
                     }
-                    catch
-                    {
-                    }
+                }
+                finally
+                {
                 }
             });
         }

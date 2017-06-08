@@ -32,7 +32,7 @@ namespace IvyLock {
 			return *(_GUID*)data;
 		}
 
-		public enum class BiometricType : uint
+		public enum class BiometricType : WINBIO_BIOMETRIC_TYPE
 		{
 			Fingerprint = WINBIO_TYPE_FINGERPRINT,
 			Multiple = WINBIO_TYPE_MULTIPLE,
@@ -56,7 +56,7 @@ namespace IvyLock {
 			FootPrint = WINBIO_TYPE_FOOT_PRINT
 		};
 
-		public enum class BiometricRejectDetail : uint
+		public enum class BiometricRejectDetail : WINBIO_REJECT_DETAIL
 		{
 			TooHigh = WINBIO_FP_TOO_HIGH,
 			TooLow = WINBIO_FP_TOO_LOW,
@@ -70,14 +70,14 @@ namespace IvyLock {
 			MergeFailure = WINBIO_FP_MERGE_FAILURE
 		};
 
-		public enum class BiometricSensorSubtype : uint
+		public enum class BiometricSensorSubtype : WINBIO_BIOMETRIC_SENSOR_SUBTYPE
 		{
 			Unknown = WINBIO_SENSOR_SUBTYPE_UNKNOWN,
 			Swipe = WINBIO_FP_SENSOR_SUBTYPE_SWIPE,
 			Touch = WINBIO_FP_SENSOR_SUBTYPE_TOUCH
 		};
 
-		public enum class BiometricSubtype : uint
+		public enum class BiometricSubtype : WINBIO_BIOMETRIC_SUBTYPE
 		{
 			Unknown = WINBIO_SUBTYPE_NO_INFORMATION,
 			RightThumb = WINBIO_ANSI_381_POS_RH_THUMB,
@@ -96,7 +96,7 @@ namespace IvyLock {
 			Any = WINBIO_SUBTYPE_ANY
 		};
 
-		public enum class BiometricPoolType : uint
+		public enum class BiometricPoolType : WINBIO_POOL_TYPE
 		{
 			Unknown = WINBIO_POOL_UNKNOWN,
 			System = WINBIO_POOL_SYSTEM,
@@ -114,7 +114,7 @@ namespace IvyLock {
 		};
 
 		[Flags]
-		public enum class BiometricCapabilities : uint
+		public enum class BiometricCapabilities : WINBIO_CAPABILITIES
 		{
 			Sensor = WINBIO_CAPABILITY_SENSOR,
 			Matching = WINBIO_CAPABILITY_MATCHING,
@@ -181,6 +181,15 @@ namespace IvyLock {
 			Wildcard = WINBIO_ID_TYPE_WILDCARD,
 			Guid = WINBIO_ID_TYPE_GUID,
 			SID = WINBIO_ID_TYPE_SID
+		};
+
+		public enum class EnrollPrompt : uint
+		{
+			LocateSensor,
+			UseSensor,
+			NeedMoreData,
+			BadCapture,
+			Success
 		};
 
 		public value class BiometricIdentity
@@ -389,6 +398,99 @@ namespace IvyLock {
 					throw gcnew Win32Exception(hr);
 
 				return match;
+			}
+
+			static void Enroll(BiometricSubtype subFactor, Action<EnrollPrompt>^ promptCallback)
+			{
+				HRESULT hr = S_OK;
+				WINBIO_IDENTITY identity = { 0 };
+				WINBIO_SESSION_HANDLE sessionHandle = NULL;
+				WINBIO_UNIT_ID unitId = 0;
+				WINBIO_REJECT_DETAIL rejectDetail = 0;
+				BOOLEAN isNewTemplate = TRUE;
+
+				try
+				{
+					// Connect to the system pool.
+					hr = WinBioOpenSession(
+						WINBIO_TYPE_FINGERPRINT,    // Service provider
+						WINBIO_POOL_SYSTEM,         // Pool type
+						WINBIO_FLAG_DEFAULT,        // Configuration and access
+						NULL,                       // Array of biometric unit IDs
+						0,                          // Count of biometric unit IDs
+						NULL,                       // Database ID
+						&sessionHandle              // [out] Session handle
+					);
+
+					if (FAILED(hr))
+						throw gcnew Exception("WinBioOpenSession failed.", gcnew Win32Exception(hr));
+
+					if (promptCallback != nullptr)
+						promptCallback(EnrollPrompt::LocateSensor);
+
+					hr = WinBioLocateSensor(sessionHandle, &unitId);
+					if (FAILED(hr))
+						throw gcnew Exception("WinBioLocateSensor failed.", gcnew Win32Exception(hr));
+
+					hr = WinBioEnrollBegin(
+						sessionHandle,      // Handle to open biometric session
+						(WINBIO_BIOMETRIC_SUBTYPE)subFactor,          // Finger to create template for
+						unitId              // Biometric unit ID
+					);
+					if (FAILED(hr))
+						throw gcnew Exception("WinBioEnrollBegin failed.", gcnew Win32Exception(hr));
+
+					for (int swipeCount = 1;; ++swipeCount)
+					{
+						if (promptCallback != nullptr)
+							promptCallback(EnrollPrompt::UseSensor);
+
+						hr = WinBioEnrollCapture(
+							sessionHandle,  // Handle to open biometric session
+							&rejectDetail   // [out] Failure information
+						);
+
+						if (hr == WINBIO_I_MORE_DATA)
+						{
+							if (promptCallback != nullptr)
+								promptCallback(EnrollPrompt::NeedMoreData);
+							continue;
+						}
+
+						if (FAILED(hr))
+						{
+							if (hr == WINBIO_E_BAD_CAPTURE)
+							{
+								if (promptCallback != nullptr)
+									promptCallback(EnrollPrompt::NeedMoreData);
+								continue;
+							}
+							else
+								throw gcnew Exception("WinBioEnrollCapture failed.", gcnew Win32Exception(hr));
+						}
+						else break;
+					}
+
+					hr = WinBioEnrollCommit(
+						sessionHandle,      // Handle to open biometric session
+						&identity,          // WINBIO_IDENTITY object for the user
+						&isNewTemplate);    // Is this a new template
+
+					if (FAILED(hr))
+						throw gcnew Exception("WinBioEnrollCommit failed.", gcnew Win32Exception(hr));
+
+					promptCallback(EnrollPrompt::Success);
+				}
+				catch (Exception^ ex)
+				{
+					if (sessionHandle != NULL)
+					{
+						WinBioCloseSession(sessionHandle);
+						sessionHandle = NULL;
+					}
+
+					throw ex;
+				}
 			}
 
 			static array<BiometricUnitSchema>^ GetBiometricUnits(BiometricType factor) {

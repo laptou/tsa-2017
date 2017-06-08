@@ -1,4 +1,5 @@
-﻿using System;
+﻿using IvyLock.Model.Security;
+using System;
 using System.IO;
 using System.Runtime.InteropServices;
 using System.Runtime.Serialization.Formatters.Binary;
@@ -8,26 +9,7 @@ using System.Text;
 
 namespace IvyLock.Service
 {
-    public static class SecureStringExtensions
-    {
-        public static byte[] GetBytes(this SecureString ss)
-        {
-            IntPtr unmanagedString = IntPtr.Zero;
-            try
-            {
-                unmanagedString = Marshal.SecureStringToGlobalAllocUnicode(ss);
-
-                return Encoding.UTF8.GetBytes(Marshal.PtrToStringUni(unmanagedString));
-            }
-            finally
-            {
-                if (unmanagedString != IntPtr.Zero)
-                {
-                    Marshal.ZeroFreeGlobalAllocUnicode(unmanagedString);
-                }
-            }
-        }
-    }
+    
 
     public interface IEncryptionService
     {
@@ -49,25 +31,17 @@ namespace IvyLock.Service
 
         public T Decrypt<T>(string s, SecureString key)
         {
-            TripleDES tdes = TripleDES.Create();
+            Aes aes = Aes.Create();
 
-            byte[] keyBytes = key.GetBytes();
-            byte[] keyBytes16 = new byte[16];
-            byte[] keyBytes8 = new byte[8];
+            byte[] keyBytes = HashBytes(key);
 
-            Array.Copy(keyBytes, keyBytes16, Math.Min(16, keyBytes.Length));
-            Array.Copy(keyBytes, keyBytes8, Math.Min(8, keyBytes.Length));
+            Array.Copy(keyBytes, aes.Key, aes.Key.Length);
+            Array.Copy(keyBytes, aes.Key.Length, aes.IV, 0, aes.IV.Length);
             Array.Clear(keyBytes, 0, keyBytes.Length);
-
-            tdes.Key = keyBytes16;
-            tdes.IV = keyBytes8;
 
             byte[] inputBytes = Convert.FromBase64String(s);
 
-            ICryptoTransform ict = tdes.CreateDecryptor();
-
-            Array.Clear(keyBytes16, 0, 16);
-            Array.Clear(keyBytes8, 0, 8);
+            ICryptoTransform ict = aes.CreateDecryptor();
 
             MemoryStream ms = new MemoryStream(Convert.FromBase64String(s), false);
             CryptoStream cs = new CryptoStream(ms, ict, CryptoStreamMode.Read);
@@ -91,23 +65,15 @@ namespace IvyLock.Service
 
         public string Encrypt<T>(T o, SecureString key)
         {
-            TripleDES tdes = TripleDES.Create();
+            Aes aes = Aes.Create();
 
-            byte[] keyBytes = key.GetBytes();
-            byte[] keyBytes16 = new byte[16];
-            byte[] keyBytes8 = new byte[8];
+            byte[] keyBytes = HashBytes(key);
 
-            Array.Copy(keyBytes, keyBytes16, Math.Min(16, keyBytes.Length));
-            Array.Copy(keyBytes, keyBytes8, Math.Min(8, keyBytes.Length));
+            Array.Copy(keyBytes, aes.Key, aes.Key.Length);
+            Array.Copy(keyBytes, aes.Key.Length, aes.IV, 0, aes.IV.Length);
             Array.Clear(keyBytes, 0, keyBytes.Length);
 
-            tdes.Key = keyBytes16;
-            tdes.IV = keyBytes8;
-
-            ICryptoTransform ict = tdes.CreateEncryptor();
-
-            Array.Clear(keyBytes16, 0, 16);
-            Array.Clear(keyBytes8, 0, 8);
+            ICryptoTransform ict = aes.CreateEncryptor();
 
             MemoryStream ms = new MemoryStream();
             CryptoStream cs = new CryptoStream(ms, ict, CryptoStreamMode.Write);
@@ -140,6 +106,11 @@ namespace IvyLock.Service
 
         private string Hash(SecureString ss)
         {
+            return Convert.ToBase64String(HashBytes(ss));
+        }
+
+        private byte[] HashBytes(SecureString ss)
+        {
             byte[] result;
             byte[] bytes = ss.GetBytes();
             using (SHA512 sha512 = SHA512.Create())
@@ -147,7 +118,7 @@ namespace IvyLock.Service
 
             Array.Clear(bytes, 0, bytes.Length);
 
-            return Convert.ToBase64String(result);
+            return result;
         }
     }
 }

@@ -11,14 +11,14 @@ namespace IvyLock.View
     /// <summary>
     /// Interaction logic for AuthenticationView.xaml
     /// </summary>
-    public partial class AuthenticationView : Window
+    public partial class ProcessAuthenticationView : Window
     {
-        private AuthenticationViewModel avm;
+        private ProcessAuthenticationViewModel avm;
 
-        public AuthenticationView()
+        public ProcessAuthenticationView()
         {
             InitializeComponent();
-            avm = DataContext as AuthenticationViewModel;
+            avm = DataContext as ProcessAuthenticationViewModel;
         }
 
         private void AuthenticationViewModel_CloseRequested()
