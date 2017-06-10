@@ -43,20 +43,8 @@ namespace IvyLock.Service
             values = new List<SettingGroup>();
             xs = new XmlSerializer(typeof(SettingGroup[]));
 
-            try
-            {
-                stream = File.Open(path, FileMode.OpenOrCreate, FileAccess.ReadWrite);
-            }
-            catch (IOException ioex)
-            {
-                if (ioex.HResult == unchecked((int)0x80070020)) // file is in use
-                {
-                    MessageBox.Show("IvyLock settings file is in use.",
-                        "IvyLock", MessageBoxButton.OK);
-                    Application.Current.Shutdown();
-                    return;
-                }
-            }
+            
+            stream = File.Open(path, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.None);
 
             Deserialize(false);
         }

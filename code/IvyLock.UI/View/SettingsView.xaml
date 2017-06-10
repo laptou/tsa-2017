@@ -22,11 +22,25 @@
                 <PropertyGroupDescription PropertyName="Category" />
             </CollectionViewSource.GroupDescriptions>
         </CollectionViewSource>
+        <Storyboard x:Key="FadeInDropOverlay" Storyboard.Target="{x:Reference dropOverlay}">
+            <DoubleAnimation Storyboard.TargetProperty="Opacity"
+                             To="1" Duration="0:0:0.125" />
+            <ObjectAnimationUsingKeyFrames Storyboard.TargetProperty="Visibility">
+                <DiscreteObjectKeyFrame Value="{x:Static Visibility.Visible}" KeyTime="0"/>
+            </ObjectAnimationUsingKeyFrames>
+        </Storyboard>
+        <Storyboard x:Key="FadeOutDropOverlay" Storyboard.Target="{x:Reference dropOverlay}">
+            <DoubleAnimation Storyboard.TargetProperty="Opacity"
+                             To="0" Duration="0:0:0.125" />
+            <ObjectAnimationUsingKeyFrames Storyboard.TargetProperty="Visibility">
+                <DiscreteObjectKeyFrame Value="{x:Static Visibility.Collapsed}" KeyTime="0:0:0.125"/>
+            </ObjectAnimationUsingKeyFrames>
+        </Storyboard>
     </Window.Resources>
     <Window.DataContext>
         <ViewModel:SettingsViewModel />
     </Window.DataContext>
-    <Grid>
+    <Grid AllowDrop="True" Drop="OnDrop" Background="Transparent">
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="Auto" MinWidth="240" MaxWidth="360" />
             <ColumnDefinition MinWidth="300" Width="*" />
@@ -187,31 +201,27 @@
                                   VerticalContentAlignment="Center" HorizontalContentAlignment="Center" />
                 </DataTemplate>
                 <DataTemplate x:Key="Action">
-                    <Grid>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*" />
-                            <ColumnDefinition Width="Auto" />
-                        </Grid.ColumnDefinitions>
-                        <Button Command="{Binding Value}" Width="100" x:Name="btn">
+                    <control:RippleEffectDecorator>
+                        <Button Command="{Binding Value}" MinWidth="100" Height="32" BorderThickness="0" x:Name="btn">
                             <Button.Style>
                                 <Style TargetType="{x:Type Button}" BasedOn="{StaticResource {x:Type Button}}">
                                     <Setter Property="Content">
                                         <Setter.Value>
-                                            <TextBlock><Run Text="Run" /></TextBlock>
+                                            <TextBlock FontFamily="{StaticResource IconFont}">&#xE5C8;</TextBlock>
                                         </Setter.Value>
                                     </Setter>
                                     <Style.Triggers>
                                         <DataTrigger Binding="{Binding Value.Execution.IsRunning}" Value="True">
                                             <Setter Property="Content">
                                                 <Setter.Value>
-                                                    <TextBlock Foreground="#e1af33"><Run Text="Working..." /></TextBlock>
+                                                    <TextBlock FontFamily="{StaticResource IconFont}">&#xE028;</TextBlock>
                                                 </Setter.Value>
                                             </Setter>
                                         </DataTrigger>
                                         <DataTrigger Binding="{Binding Value.Execution.IsSuccessfullyCompleted}" Value="True">
                                             <Setter Property="Content">
                                                 <Setter.Value>
-                                                    <TextBlock Foreground="#1e90ff"><Run Text="Done" /></TextBlock>
+                                                    <TextBlock FontFamily="{StaticResource IconFont}">&#xE5CA;</TextBlock>
                                                 </Setter.Value>
                                             </Setter>
                                         </DataTrigger>
@@ -226,7 +236,7 @@
                                 </Style>
                             </Button.Style>
                         </Button>
-                    </Grid>
+                    </control:RippleEffectDecorator>
                 </DataTemplate>
                 <DataTemplate x:Key="Number">
                     <control:NumericUpDown
@@ -316,8 +326,9 @@
                 <control:SettingTemplateSelector />
             </ListView.ItemTemplateSelector>
         </ListView>
-
-        <Grid x:Name="overlay" Background="{DynamicResource BackgroundDark}" Grid.ColumnSpan="2" Grid.RowSpan="2">
+        <Grid 
+            x:Name="overlay" Background="{DynamicResource BackgroundDark}" 
+            Grid.ColumnSpan="2" Grid.RowSpan="2">
             <Grid.RowDefinitions>
                 <RowDefinition Height="3*" />
                 <RowDefinition />
@@ -518,6 +529,33 @@
                 </ProgressBar>
             </StackPanel>
         </Grid>
+        <Border x:Name="dropOverlay" Margin="5"
+                Grid.ColumnSpan="2" Grid.RowSpan="2"
+                Background="{DynamicResource BackgroundHalf}"
+                BorderBrush="{DynamicResource ForegroundHalf}">
+            <TextBlock HorizontalAlignment="Center" VerticalAlignment="Center">Drop here to encrypt file</TextBlock>
+            <Border.Style>
+                <Style TargetType="Border">
+                    <Setter Property="Opacity" Value="0" />
+                    <Setter Property="Visibility" Value="Hidden" />
+                </Style>
+            </Border.Style>
+        </Border>
 
+        <Grid.Style>
+            <Style TargetType="Grid">
+                <Style.Triggers>
+                    <EventTrigger RoutedEvent="DragEnter">
+                        <BeginStoryboard Storyboard="{StaticResource FadeInDropOverlay}"/>
+                    </EventTrigger>
+                    <EventTrigger RoutedEvent="DragLeave">
+                        <BeginStoryboard Storyboard="{StaticResource FadeOutDropOverlay}"/>
+                    </EventTrigger>
+                    <EventTrigger RoutedEvent="Drop">
+                        <BeginStoryboard Storyboard="{StaticResource FadeOutDropOverlay}"/>
+                    </EventTrigger>
+                </Style.Triggers>
+            </Style>
+        </Grid.Style>
     </Grid>
 </Window>

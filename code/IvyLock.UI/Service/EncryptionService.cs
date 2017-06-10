@@ -109,7 +109,7 @@ namespace IvyLock.Service
             return Convert.ToBase64String(HashBytes(ss));
         }
 
-        private byte[] HashBytes(SecureString ss)
+        public byte[] HashBytes(SecureString ss)
         {
             byte[] result;
             byte[] bytes = ss.GetBytes();

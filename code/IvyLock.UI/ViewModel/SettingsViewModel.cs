@@ -157,7 +157,9 @@ namespace IvyLock.ViewModel
                     {
                         try
                         {
-                            Process proc = Process.GetProcessById(pid);
+                            Process proc = Process.GetProcesses().FirstOrDefault(p => p.Id == pid);
+
+                            if (proc == null) return;
 
                             if (await f(proc))
                             {
@@ -247,10 +249,10 @@ namespace IvyLock.ViewModel
             });
         }
 
-        public override async Task ValidatePassword()
+        public override async Task<bool> ValidatePassword()
         {
             if (CurrentScreen != Screen.SetupPassword)
-                await base.ValidatePassword();
+                return await base.ValidatePassword();
             else
             {
                 if (Password == null || Password.Length == 0)
@@ -261,7 +263,9 @@ namespace IvyLock.ViewModel
                 {
                     IvyLockSettings.Hash = GetUserPasswordHash();
                     RaisePasswordVerified();
+                    return true;
                 }
+                return false;
             }
         }
 

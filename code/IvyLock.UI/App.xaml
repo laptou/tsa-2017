@@ -597,6 +597,7 @@
                 <Style.Triggers>
                     <Trigger Property="IsMouseOver" Value="True">
                         <Setter Property="BorderBrush" Value="{DynamicResource Foreground}" />
+                        <Setter Property="Background" Value="Transparent" />
                     </Trigger>
                     <Trigger Property="IsPressed" Value="True">
                         <Setter Property="Background" Value="{DynamicResource Control}" />
@@ -619,6 +620,7 @@
                 <Setter Property="Background" Value="Transparent" />
                 <Setter Property="Foreground" Value="{DynamicResource Foreground}" />
                 <Setter Property="CaretBrush" Value="{DynamicResource Foreground}" />
+                <Setter Property="Cursor" Value="IBeam" />
                 <Setter Property="Template" Value="{StaticResource PasswordBoxTemplate}" />
                 <Setter Property="BorderThickness" Value="0,0,0,1" />
                 <Setter Property="BorderBrush" Value="{DynamicResource Control}" />
@@ -672,6 +674,7 @@
                 <Setter Property="Background" Value="Transparent" />
                 <Setter Property="Foreground" Value="{DynamicResource Foreground}" />
                 <Setter Property="CaretBrush" Value="{DynamicResource Foreground}" />
+                <Setter Property="Cursor" Value="IBeam" />
                 <Setter Property="BorderThickness" Value="0,0,0,1" />
                 <Setter Property="TextOptions.TextRenderingMode" Value="ClearType" />
                 <Setter Property="BorderBrush" Value="{DynamicResource Control}" />

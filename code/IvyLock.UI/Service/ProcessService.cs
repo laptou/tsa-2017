@@ -106,6 +106,7 @@ namespace IvyLock.Service
                     po = ProcessOperation.Deleted;
                     break;
             }
+
             ProcessChanged?.Invoke((int)(uint)mbo["ProcessId"], (string)mbo["ExecutablePath"], po);
         }
 

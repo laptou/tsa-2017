@@ -11,7 +11,7 @@ namespace IvyLock
     {
         public static (StreamReader reader, StreamWriter writer) OpenStream(this Stream stream)
         {
-            return (new StreamReader(stream), new StreamWriter(stream));
+            return (new StreamReader(stream), new StreamWriter(stream) { AutoFlush = true });
         }
 
         public static void Deconstruct<T>(this T[] str, out T s1, out T s2)

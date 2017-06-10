@@ -112,17 +112,18 @@ namespace IvyLock.ViewModel
 
         public abstract string GetUserPasswordHash();
 
-        public virtual async Task ValidatePassword()
+        public virtual async Task<bool> ValidatePassword()
         {
             string pw = GetPasswordHash();
             string attempt = GetUserPasswordHash();
 
-            if (string.IsNullOrEmpty(pw)) return;
+            if (string.IsNullOrEmpty(pw)) return false;
 
             if (attempts < AttemptLimit && string.Equals(pw, attempt))
             {
                 attempts = 0;
                 RaisePasswordVerified();
+                return true;
             }
             else
             {
@@ -136,15 +137,18 @@ namespace IvyLock.ViewModel
                         attemptTimer.Start();
                         RaisePropertyChanged("AttemptWait");
                         RaisePasswordRejected(null);
+                        return false;
                     }
 
                     RaisePasswordDelayed("Stop guessing.");
+                    return false;
                 }
                 else
                 {
                     attempts++;
 
                     RaisePasswordRejected("The password is incorrect.");
+                    return false;
                 }
             }
         }
@@ -160,7 +164,7 @@ namespace IvyLock.ViewModel
             await Task.Run(() =>
             {
                 var session =
-                    WBF.OpenSession(BiometricType.Fingerprint, BiometricPoolType.System, BiometricSessionFlags.Default,
+                    WBF.OpenSession(BiometricType.Fingerprint,BiometricSessionFlags.Default,
                         null, BiometricDatabaseType.None);
 
                 var match = false;

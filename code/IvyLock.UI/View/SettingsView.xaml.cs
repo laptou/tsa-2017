@@ -2,6 +2,7 @@
 using IvyLock.ViewModel;
 using System.ComponentModel;
 using System.Windows;
+using System.IO;
 
 namespace IvyLock.View
 {
@@ -37,6 +38,24 @@ namespace IvyLock.View
 
             e.Cancel = true;
             base.OnClosing(e);
+        }
+
+        private void OnDrop(object sender, DragEventArgs e)
+        {
+            if (e.Data.GetDataPresent(DataFormats.FileDrop))
+            {
+                // Note that you can have more than one file.
+                string[] files = (string[])e.Data.GetData(DataFormats.FileDrop);
+
+                foreach (string file in files)
+                {
+                    FileAuthenticationView fav = new FileAuthenticationView();
+                    FileAuthenticationViewModel favm = (FileAuthenticationViewModel)fav.DataContext;
+                    favm.Path = file;
+                    favm.Encrypt = !string.Equals(Path.GetExtension(file), ".ivy", StringComparison.InvariantCultureIgnoreCase);
+                    fav.Show();
+                }
+            }
         }
     }
 }

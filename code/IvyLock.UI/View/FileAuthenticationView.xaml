@@ -32,7 +32,7 @@
         <Image Source="{DynamicResource Logo}" Margin="0" Grid.Column="1" SnapsToDevicePixels="True" Grid.RowSpan="2" />
 
         <StackPanel Orientation="Horizontal" Grid.ColumnSpan="3"  Grid.Row="1" HorizontalAlignment="Center">
-            <Image Source="{Binding ProcessPath, Converter={StaticResource PathToIconConverter}}" MinHeight="16" MaxHeight="32" />
+            <Image Source="{Binding Path, Converter={StaticResource PathToIconConverter}}" MinHeight="16" MaxHeight="32" />
             <TextBlock Margin="5,0,0,0" Text="{Binding FileName}" VerticalAlignment="Center" />
         </StackPanel>
 
@@ -84,46 +84,65 @@
                     <RowDefinition Height="*" />
                 </Grid.RowDefinitions>
 
-                <PasswordBox
-                    control:Helper.Placeholder="type password and press enter to run"
-                    control:Helper.UpdateOnEnter="True"
-                    control:PasswordHelper.EncryptedPassword="{Binding Password, Mode=TwoWay, UpdateSourceTrigger=Explicit}"
-                    control:PasswordHelper.Watch="True" Style="{StaticResource {x:Type PasswordBox}}"
-                    Height="32" MinWidth="450" x:Name="pwdBox" />
+                <Grid MinWidth="450" VerticalAlignment="Center">
+                    <PasswordBox
+                        control:Helper.UpdateOnEnter="True"
+                        control:PasswordHelper.EncryptedPassword="{Binding Password, Mode=TwoWay, UpdateSourceTrigger=Explicit}"
+                        control:PasswordHelper.Watch="True"
+                        x:Name="pwdBox">
+                        <PasswordBox.Style>
+                            <Style TargetType="PasswordBox" BasedOn="{StaticResource {x:Type PasswordBox}}">
+                                <Setter Property="control:Helper.Placeholder" Value="type password and press enter to encrypt" />
+                                <Setter Property="IsEnabled" Value="False" />
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding TransformTask}" Value="{x:Null}">
+                                        <Setter Property="IsEnabled" Value="True" />
+                                    </DataTrigger>
+                                    <DataTrigger Binding="{Binding Encrypt}" Value="False">
+                                        <Setter Property="control:Helper.Placeholder" Value="type password and press enter to decrypt" />
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </PasswordBox.Style>
+                    </PasswordBox>
+                    <ProgressBar Foreground="{StaticResource AccentBrush}"
+                                 Background="Transparent" BorderBrush="Transparent"
+                                 Height="2" VerticalAlignment="Bottom"
+                                 Value="{Binding TransformTask.Progress, Mode=OneWay}"
+                                 Maximum="100"/>
+                </Grid>
 
                 <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" Orientation="Horizontal"
                        Grid.Row="2" Grid.ColumnSpan="3" Opacity="0.56" Margin="0,10,0,0">
-                    <TextBlock Text="{Binding PasswordErrorMessage}" />
-                    <ProgressBar HorizontalAlignment="Left" Height="1" Width="60" Margin="8,0,0,0"
-                             x:Name="attemptTimer" BorderThickness="1" Background="Transparent">
-                        <i:Interaction.Triggers>
-                            <i:EventTrigger EventName="PasswordRejected" SourceObject="{Binding Mode=OneWay}">
-                                <ei:ControlStoryboardAction>
-                                    <ei:ControlStoryboardAction.Storyboard>
-                                        <Storyboard>
-                                            <DoubleAnimation 
-                                                Storyboard.TargetProperty="Value"
-                                                Storyboard.TargetName="attemptTimer"
-                                                From="100"
-                                                To="0"
-                                                Duration="{Binding AttemptWait}"/>
-                                        </Storyboard>
-                                    </ei:ControlStoryboardAction.Storyboard>
-                                </ei:ControlStoryboardAction>
-                            </i:EventTrigger>
-                        </i:Interaction.Triggers>
-                        <ProgressBar.Style>
-                            <Style TargetType="{x:Type ProgressBar}" BasedOn="{StaticResource {x:Type ProgressBar}}">
+                    <TextBlock Text="Done!">
+                        <TextBlock.Style>
+                            <Style TargetType="TextBlock" BasedOn="{StaticResource {x:Type TextBlock}}">
                                 <Setter Property="Visibility" Value="Collapsed" />
                                 <Style.Triggers>
-                                    <DataTrigger Binding="{Binding PasswordVerificationStatus}"
-                                             Value="{x:Static ViewModel:PasswordVerificationStatus.Delayed}">
+                                    <DataTrigger Binding="{Binding TransformTask.IsSuccessfullyCompleted}"
+                                                 Value="True">
                                         <Setter Property="Visibility" Value="Visible" />
                                     </DataTrigger>
                                 </Style.Triggers>
                             </Style>
-                        </ProgressBar.Style>
-                    </ProgressBar>
+                        </TextBlock.Style>
+                    </TextBlock>
+                    <TextBlock>
+                        <Run>There was an error (</Run>
+                        <Run Text="{Binding TransformTask.InnerException.Message, Mode=OneWay}" />
+                        <Run>).</Run>
+                        <TextBlock.Style>
+                            <Style TargetType="TextBlock" BasedOn="{StaticResource {x:Type TextBlock}}">
+                                <Setter Property="Visibility" Value="Collapsed" />
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding TransformTask.IsFaulted}"
+                                                 Value="True">
+                                        <Setter Property="Visibility" Value="Visible" />
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </TextBlock.Style>
+                    </TextBlock>
                 </StackPanel>
             </Grid>
         </Border>

@@ -155,14 +155,11 @@ namespace IvyLock
 
         public static async Task<string> GetDescription(this Process process)
         {
-            try
+            return await Task.Run(() =>
             {
-                return await Task.Run(() => FileVersionInfo.GetVersionInfo(process.GetPath()).FileDescription);
-            }
-            catch
-            {
-                return null;
-            }
+                try { return FileVersionInfo.GetVersionInfo(process.GetPath()).FileDescription; }
+                catch { return null; }
+            });
         }
 
         public static async Task<bool> HasGUI(this Process process)

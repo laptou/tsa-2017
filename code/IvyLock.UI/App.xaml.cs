@@ -6,6 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Threading;
@@ -27,7 +28,7 @@ namespace IvyLock
 
         private Dictionary<string, ProcessAuthenticationView> views = new Dictionary<string, ProcessAuthenticationView>();
 
-        static Mutex mutex = new Mutex(true, "{D680C778-1943-460C-9907-25DEC5C912A8}");
+        static Mutex mutex = new Mutex(true, "{D680C778-1943-460C-9907-25DEC5C912A9}");
 
         #endregion Fields
 
@@ -41,11 +42,22 @@ namespace IvyLock
         [STAThread]
         private static void Main(string[] args)
         {
-            if (mutex.WaitOne(TimeSpan.FromSeconds(1), true))
+#if DEBUG
+            if(true)
+#else
+            if (args.Length > 0 || IsDesigner || mutex.WaitOne(1000, true))
+#endif
             {
-                App app = new App();
-                app.Run();
-                mutex.ReleaseMutex();
+                try
+                {
+                    App app = new App();
+                    app.iss = XmlSettingsService.Default;
+                    app.Run();
+                }
+                catch(IOException ioex) when (ioex.HResult == unchecked((int)0x80070020)) // file in use
+                {
+
+                }
             }
             else
             {
@@ -53,15 +65,15 @@ namespace IvyLock
             }
         }
 
-        #endregion Constructors
+#endregion Constructors
 
-        #region Properties
+#region Properties
 
         public static bool IsDesigner { get { return LicenseManager.UsageMode == LicenseUsageMode.Designtime; } }
 
-        #endregion Properties
+#endregion Properties
 
-        #region Methods
+#region Methods
 
         protected override void OnExit(ExitEventArgs e)
         {
@@ -99,6 +111,9 @@ namespace IvyLock
 
                     foreach (string arg in args)
                     {
+                        if (!File.Exists(arg))
+                            continue;
+
                         FileAuthenticationView fav = new FileAuthenticationView();
                         FileAuthenticationViewModel favm = (FileAuthenticationViewModel)fav.DataContext;
                         favm.Path = arg;
@@ -113,10 +128,7 @@ namespace IvyLock
             {
                 if (!IsDesigner)
                 {
-                    // don't initialise statically! XmlSettingsService
-                    // depends on Application.Current
                     ips = ManagedProcessService.Default;
-                    iss = XmlSettingsService.Default;
 
                     IvyLockSettings ils = iss.OfType<IvyLockSettings>().First();
                     switch (ils.Theme)
@@ -137,7 +149,11 @@ namespace IvyLock
                     MainWindow.Activate();
 
                     ni = new WF.NotifyIcon();
-                    ni.Click += (s, e1) => MainWindow?.Activate();
+                    ni.Click += (s, e1) =>
+                    {
+                        MainWindow?.Show();
+                        MainWindow?.Activate();
+                    };
                     ni.Icon = System.Drawing.Icon.ExtractAssociatedIcon(Assembly.GetEntryAssembly().Location);
                     ni.ContextMenu = new WF.ContextMenu();
                     ni.ContextMenu.MenuItems.Add("Exit", (s, e2) =>
@@ -161,6 +177,7 @@ namespace IvyLock
             catch
             {
                 MessageBox.Show("IvyLock could not start.");
+                Environment.Exit(-1);
             }
         }
 
@@ -234,6 +251,6 @@ namespace IvyLock
 
         public void Activate() => MainWindow?.Activate();
 
-        #endregion Methods
+#endregion Methods
     }
 }

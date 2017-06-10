@@ -45,7 +45,7 @@ namespace IvyLock {
 			KeystrokeDynamics = WINBIO_TYPE_KEYSTROKE_DYNAMICS,
 			LipMovement = WINBIO_TYPE_LIP_MOVEMENT,
 			ThermalFaceImage = WINBIO_TYPE_THERMAL_FACE_IMAGE,
-			THERMAL_HAND_IMAGE = WINBIO_TYPE_THERMAL_HAND_IMAGE,
+			ThermalHandImage = WINBIO_TYPE_THERMAL_HAND_IMAGE,
 			Gait = WINBIO_TYPE_GAIT,
 			Scent = WINBIO_TYPE_SCENT,
 			DNA = WINBIO_TYPE_DNA,
@@ -340,9 +340,10 @@ namespace IvyLock {
 				GetCurrentUserIdentity(&ident);
 				return BiometricIdentity(ident);
 			}
-
-			static UInt32 OpenSession(BiometricType type, BiometricPoolType poolType, BiometricSessionFlags flags,
+			
+			static UInt32 OpenSession(BiometricType type, BiometricSessionFlags flags,
 				array<int>^ units, BiometricDatabaseType dbType) {
+
 				pin_ptr<int> unit = units == nullptr ? nullptr : &units[0];
 				int unitCount = units == nullptr ? 0 : units->Length;
 
@@ -350,8 +351,8 @@ namespace IvyLock {
 
 				HRESULT hr =
 					WinBioOpenSession(
-					(WINBIO_BIOMETRIC_TYPE)type,
-						(WINBIO_POOL_TYPE)poolType,
+						(WINBIO_BIOMETRIC_TYPE)type,
+						(WINBIO_POOL_TYPE)BiometricPoolType::System,
 						(WINBIO_SESSION_FLAGS)flags,
 						(WINBIO_UNIT_ID *)unit,
 						unitCount,
@@ -382,7 +383,7 @@ namespace IvyLock {
 
 				HRESULT hr =
 					WinBioVerify(
-					(WINBIO_SESSION_HANDLE)sessionHandle,
+						(WINBIO_SESSION_HANDLE)sessionHandle,
 						&nativeIdentity,
 						(WINBIO_BIOMETRIC_SUBTYPE)subFactor,
 						&uid,
@@ -481,16 +482,64 @@ namespace IvyLock {
 
 					promptCallback(EnrollPrompt::Success);
 				}
-				catch (Exception^ ex)
+				finally
 				{
 					if (sessionHandle != NULL)
 					{
 						WinBioCloseSession(sessionHandle);
 						sessionHandle = NULL;
 					}
-
-					throw ex;
 				}
+			}
+
+			static void CreatePrivatePool(Guid^ id) {
+				
+			}
+
+			static array<BiometricSubtype>^ GetEnrollments(BiometricIdentity id) {
+				// Declare variables.
+				HRESULT hr = S_OK;
+				WINBIO_IDENTITY identity = id.ToNative();
+				WINBIO_SESSION_HANDLE sessionHandle = NULL;
+				WINBIO_UNIT_ID unitId = 0;
+				PWINBIO_BIOMETRIC_SUBTYPE subFactorArray = NULL;
+				WINBIO_BIOMETRIC_SUBTYPE SubFactor = 0;
+				SIZE_T subFactorCount = 0;
+
+				// Connect to the system pool. 
+				hr = WinBioOpenSession(
+					WINBIO_TYPE_FINGERPRINT,    // Service provider
+					WINBIO_POOL_SYSTEM,         // Pool type
+					WINBIO_FLAG_DEFAULT,        // Configuration and access
+					NULL,                       // Array of biometric unit IDs
+					0,                          // Count of biometric unit IDs
+					NULL,                       // Database ID
+					&sessionHandle              // [out] Session handle
+				);
+
+				if (FAILED(hr))
+					throw gcnew Exception("WinBioOpenSession failed.", gcnew Win32Exception(hr));
+
+				hr = WinBioEnumEnrollments(
+					sessionHandle,              // Session handle
+					unitId,                     // Biometric unit ID
+					&identity,                  // Template ID
+					&subFactorArray,            // Subfactors
+					&subFactorCount             // Count of subfactors
+				);
+
+				if (FAILED(hr))
+					throw gcnew Exception("WinBioEnumEnrollments failed.", gcnew Win32Exception(hr));
+
+				array<BiometricSubtype>^ list = gcnew array<BiometricSubtype>(subFactorCount);
+
+				for (SIZE_T index = 0; index < subFactorCount; ++index)
+					list[index] = (BiometricSubtype)subFactorArray[index];
+
+				WinBioFree(subFactorArray);
+				WinBioCloseSession(sessionHandle);
+
+				return list;
 			}
 
 			static array<BiometricUnitSchema>^ GetBiometricUnits(BiometricType factor) {
