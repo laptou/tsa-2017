@@ -15,12 +15,6 @@
     {
         "Entry"
         {
-        "MsmKey" = "8:_01DF2EEFC0FC605949896B8FE2AA3774"
-        "OwnerKey" = "8:_63DB972DDD214605A7F1BBB28E531481"
-        "MsmSig" = "8:_UNDEFINED"
-        }
-        "Entry"
-        {
         "MsmKey" = "8:_069166075D568D58E220939683A9B878"
         "OwnerKey" = "8:_63DB972DDD214605A7F1BBB28E531481"
         "MsmSig" = "8:_UNDEFINED"
@@ -112,6 +106,12 @@
         "Entry"
         {
         "MsmKey" = "8:_4A98A1B56BB13A4C8F532C2BB47C976F"
+        "OwnerKey" = "8:_63DB972DDD214605A7F1BBB28E531481"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_4BF5743949E4B9D4D4354230703B9A37"
         "OwnerKey" = "8:_63DB972DDD214605A7F1BBB28E531481"
         "MsmSig" = "8:_UNDEFINED"
         }
@@ -460,6 +460,12 @@
         "Entry"
         {
         "MsmKey" = "8:_UNDEFINED"
+        "OwnerKey" = "8:_4BF5743949E4B9D4D4354230703B9A37"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_UNDEFINED"
         "OwnerKey" = "8:_61DF875EAF823F3D00A886C0503DE2C9"
         "MsmSig" = "8:_UNDEFINED"
         }
@@ -509,12 +515,6 @@
         {
         "MsmKey" = "8:_UNDEFINED"
         "OwnerKey" = "8:_C034EB398B992C646F05C452CE176546"
-        "MsmSig" = "8:_UNDEFINED"
-        }
-        "Entry"
-        {
-        "MsmKey" = "8:_UNDEFINED"
-        "OwnerKey" = "8:_01DF2EEFC0FC605949896B8FE2AA3774"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
@@ -944,37 +944,6 @@
         }
         "File"
         {
-            "{9F6F8455-1EF1-4B85-886A-4223BCC8E7F7}:_01DF2EEFC0FC605949896B8FE2AA3774"
-            {
-            "AssemblyRegister" = "3:1"
-            "AssemblyIsInGAC" = "11:FALSE"
-            "AssemblyAsmDisplayName" = "8:IvyLock.Native, Version=1.0.6369.30561, Culture=neutral, PublicKeyToken=6dc4475be8013017, processorArchitecture=x86"
-                "ScatterAssemblies"
-                {
-                    "_01DF2EEFC0FC605949896B8FE2AA3774"
-                    {
-                    "Name" = "8:IvyLock.Native.dll"
-                    "Attributes" = "3:512"
-                    }
-                }
-            "SourcePath" = "8:IvyLock.Native.dll"
-            "TargetName" = "8:"
-            "Tag" = "8:"
-            "Folder" = "8:_7C4C568703A041C6BEC6B5448588B758"
-            "Condition" = "8:"
-            "Transitive" = "11:FALSE"
-            "Vital" = "11:TRUE"
-            "ReadOnly" = "11:FALSE"
-            "Hidden" = "11:FALSE"
-            "System" = "11:FALSE"
-            "Permanent" = "11:FALSE"
-            "SharedLegacy" = "11:FALSE"
-            "PackageAs" = "3:1"
-            "Register" = "3:1"
-            "Exclude" = "11:FALSE"
-            "IsDependency" = "11:TRUE"
-            "IsolateTo" = "8:"
-            }
             "{9F6F8455-1EF1-4B85-886A-4223BCC8E7F7}:_069166075D568D58E220939683A9B878"
             {
             "AssemblyRegister" = "3:1"
@@ -1423,6 +1392,37 @@
                     }
                 }
             "SourcePath" = "8:System.Runtime.InteropServices.dll"
+            "TargetName" = "8:"
+            "Tag" = "8:"
+            "Folder" = "8:_7C4C568703A041C6BEC6B5448588B758"
+            "Condition" = "8:"
+            "Transitive" = "11:FALSE"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "PackageAs" = "3:1"
+            "Register" = "3:1"
+            "Exclude" = "11:FALSE"
+            "IsDependency" = "11:TRUE"
+            "IsolateTo" = "8:"
+            }
+            "{9F6F8455-1EF1-4B85-886A-4223BCC8E7F7}:_4BF5743949E4B9D4D4354230703B9A37"
+            {
+            "AssemblyRegister" = "3:1"
+            "AssemblyIsInGAC" = "11:FALSE"
+            "AssemblyAsmDisplayName" = "8:IvyLock.Native, Version=1.0.6369.37721, Culture=neutral, PublicKeyToken=6dc4475be8013017, processorArchitecture=x86"
+                "ScatterAssemblies"
+                {
+                    "_4BF5743949E4B9D4D4354230703B9A37"
+                    {
+                    "Name" = "8:IvyLock.Native.dll"
+                    "Attributes" = "3:512"
+                    }
+                }
+            "SourcePath" = "8:IvyLock.Native.dll"
             "TargetName" = "8:"
             "Tag" = "8:"
             "Folder" = "8:_7C4C568703A041C6BEC6B5448588B758"
@@ -2941,6 +2941,7 @@
             "IconIndex" = "3:32512"
                 "Command"
                 {
+                "Command" = "8:_63DB972DDD214605A7F1BBB28E531481"
                 }
                 "Verbs"
                 {
@@ -2958,9 +2959,9 @@
         {
             "{3C67513D-01DD-4637-8A68-80971EB9504F}:_7C4C568703A041C6BEC6B5448588B758"
             {
-            "DefaultLocation" = "8:[ProgramFilesFolder][Manufacturer]\\[ProductName]"
+            "DefaultLocation" = "8:[AppDataFolder]\\IvyLock\\"
             "Name" = "8:#1925"
-            "AlwaysCreate" = "11:FALSE"
+            "AlwaysCreate" = "11:TRUE"
             "Condition" = "8:"
             "Transitive" = "11:FALSE"
             "Property" = "8:TARGETDIR"
@@ -3039,15 +3040,15 @@
         {
         "Name" = "8:Microsoft Visual Studio"
         "ProductName" = "8:IvyLock"
-        "ProductCode" = "8:{CC956368-91CA-4F35-95FE-6A01BF553E83}"
-        "PackageCode" = "8:{A87AE294-0266-4842-88D8-BE3DE1F061C3}"
+        "ProductCode" = "8:{8342FD1F-EC4E-4311-AA33-0011BF7CCB18}"
+        "PackageCode" = "8:{C659C0BE-D214-408B-A57F-FDB8BFA63D09}"
         "UpgradeCode" = "8:{3DE5A866-0C20-4ABB-84D9-9CBFC2D045BA}"
         "AspNetVersion" = "8:4.0.30319.0"
         "RestartWWWService" = "11:FALSE"
         "RemovePreviousVersions" = "11:TRUE"
         "DetectNewerInstalledVersion" = "11:TRUE"
         "InstallAllUsers" = "11:FALSE"
-        "ProductVersion" = "8:1.3.6"
+        "ProductVersion" = "8:1.5.8"
         "Manufacturer" = "8:Ibiyemi Abiodun"
         "ARPHELPTELEPHONE" = "8:"
         "ARPHELPLINK" = "8:"
@@ -3063,7 +3064,7 @@
         "UseSystemSearchPath" = "11:TRUE"
         "TargetPlatform" = "3:0"
         "PreBuildEvent" = "8:"
-        "PostBuildEvent" = "8:\"C:\\Program Files (x86)\\Windows Kits\\10\\bin\\x86\\signtool.exe\" sign /f $(ProjectDir)ivylock.pfx /p don'thackmyivylock#3 $(BuiltOutputPath)"
+        "PostBuildEvent" = "8:"
         "RunPostBuildEvent" = "3:0"
         }
         "Registry"
@@ -3873,7 +3874,7 @@
             }
             "{5259A561-127C-4D43-A0A1-72F10C7B3BF8}:_63DB972DDD214605A7F1BBB28E531481"
             {
-            "SourcePath" = "8:..\\IvyLock.UI\\obj\\Debug\\IvyLock.exe"
+            "SourcePath" = "8:..\\IvyLock.UI\\obj\\Release\\IvyLock.exe"
             "TargetName" = "8:"
             "Tag" = "8:"
             "Folder" = "8:_7C4C568703A041C6BEC6B5448588B758"
@@ -3929,7 +3930,7 @@
             }
             "{5259A561-127C-4D43-A0A1-72F10C7B3BF8}:_F9CA7103F34B4F06AC1D963F7C14E0EC"
             {
-            "SourcePath" = "8:..\\IvyLock.Native\\Debug\\IvyLock.Native.dll"
+            "SourcePath" = "8:..\\IvyLock.Native\\Release\\IvyLock.Native.dll"
             "TargetName" = "8:"
             "Tag" = "8:"
             "Folder" = "8:_7C4C568703A041C6BEC6B5448588B758"

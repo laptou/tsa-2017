@@ -58,7 +58,6 @@ namespace IvyLock.Service
                 if (stream.Length == 0)
                 {
                     IvyLockSettings ils = new IvyLockSettings();
-                    ils.Initialize();
 
                     values = new List<SettingGroup>(new SettingGroup[] { ils });
                 }
@@ -68,6 +67,9 @@ namespace IvyLock.Service
 
                     values = new List<SettingGroup>(xs.Deserialize(stream) as SettingGroup[]);
                 }
+
+                if (!values.Any(sg => sg is IvyLockSettings))
+                    values.Add(new IvyLockSettings());
 
                 foreach (SettingGroup sg in values)
                 {

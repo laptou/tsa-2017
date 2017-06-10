@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 using System.Linq.Expressions;
@@ -11,6 +12,8 @@ namespace IvyLock.Model
     public abstract class Model : INotifyPropertyChanged,
         INotifyPropertyChanging
     {
+        private Dictionary<string, Object> properties = new Dictionary<string, object>();
+
         public event PropertyChangingEventHandler PropertyChanging;
 
         public event PropertyChangedEventHandler PropertyChanged;
@@ -31,6 +34,16 @@ namespace IvyLock.Model
                     propertyLambda.ToString()));
 
             return propInfo;
+        }
+
+        public T Get<T>([CallerMemberName] string propertyName = "")
+        {
+            return properties.TryGetValue(propertyName, out object o) && o is T ? (T)o : default(T);
+        }
+
+        public void Set<T>(T value, [CallerMemberName] string propertyName = "")
+        {
+            properties[propertyName] = value;
         }
 
         public void Set<T>(T value, ref T variable, [CallerMemberName] string propertyName = "")

@@ -49,7 +49,7 @@ namespace IvyLock.View
         {
             if(e.Key == Key.Enter)
             {
-                avm.ValidatePassword();
+                avm.VerifyPassword();
             }
         }
 

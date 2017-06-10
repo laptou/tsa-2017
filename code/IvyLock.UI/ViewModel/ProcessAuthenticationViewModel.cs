@@ -48,7 +48,7 @@ namespace IvyLock.ViewModel
                 PropertyChanged += async (s, e) =>
                 {
                     if (e.PropertyName == "Password")
-                        await ValidatePassword();
+                        await VerifyPassword();
                 };
 
                 EventHandler verified = async (s, e) =>

@@ -30,6 +30,9 @@ namespace IvyLock
 
         static Mutex mutex = new Mutex(true, "{D680C778-1943-460C-9907-25DEC5C912A9}");
 
+        static FileStream logStream = File.Create(DateTime.Now.ToString("M-dd-yyyy_HH-mm-ss") + ".log");
+
+
         #endregion Fields
 
         #region Constructors
@@ -42,6 +45,7 @@ namespace IvyLock
         [STAThread]
         private static void Main(string[] args)
         {
+            AppDomain.CurrentDomain.UnhandledException += async (s, e) => await Log(e.ExceptionObject as Exception);
 #if DEBUG
             if(true)
 #else
@@ -56,7 +60,7 @@ namespace IvyLock
                 }
                 catch(IOException ioex) when (ioex.HResult == unchecked((int)0x80070020)) // file in use
                 {
-
+                    Log(ioex).Wait();
                 }
             }
             else
@@ -154,6 +158,7 @@ namespace IvyLock
                         MainWindow?.Show();
                         MainWindow?.Activate();
                     };
+
                     ni.Icon = System.Drawing.Icon.ExtractAssociatedIcon(Assembly.GetEntryAssembly().Location);
                     ni.ContextMenu = new WF.ContextMenu();
                     ni.ContextMenu.MenuItems.Add("Exit", (s, e2) =>
@@ -174,9 +179,10 @@ namespace IvyLock
                     ni.Visible = true;
                 }
             }
-            catch
+            catch(Exception ex)
             {
                 MessageBox.Show("IvyLock could not start.");
+                Log(ex).Wait();
                 Environment.Exit(-1);
             }
         }
@@ -251,6 +257,28 @@ namespace IvyLock
 
         public void Activate() => MainWindow?.Activate();
 
-#endregion Methods
+        public static async Task Log(Exception ex, bool inner = false)
+        {
+            if (!inner) Monitor.Enter(logStream);
+
+            var (reader, writer) = logStream.OpenStream();
+
+            if (inner)
+            {
+                await writer.WriteLineAsync($"\t[InnerException] {ex.GetType().FullName}: {ex?.Message}");
+                await writer.WriteLineAsync("\t" + ex.StackTrace.Replace("\n", "\n\t"));
+            }
+            else
+            {
+                await writer.WriteLineAsync($"[Error, {DateTime.Now}] {ex.GetType().FullName}: {ex.Message}");
+                await writer.WriteLineAsync(ex.StackTrace);
+
+                if (ex.InnerException != null) await Log(ex.InnerException, true);
+            }
+
+            Monitor.Exit(logStream);
+        }
+
+        #endregion Methods
     }
 }

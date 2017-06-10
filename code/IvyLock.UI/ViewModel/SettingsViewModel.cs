@@ -45,7 +45,7 @@ namespace IvyLock.ViewModel
                 PropertyChanged += async (s, e) =>
                 {
                     if (e.PropertyName == "Password" && Password != null)
-                        await ValidatePassword();
+                        await VerifyPassword();
                 };
 
                 PasswordVerified += (s, e) =>
@@ -249,10 +249,10 @@ namespace IvyLock.ViewModel
             });
         }
 
-        public override async Task<bool> ValidatePassword()
+        public override async Task<bool> VerifyPassword()
         {
             if (CurrentScreen != Screen.SetupPassword)
-                return await base.ValidatePassword();
+                return await base.VerifyPassword();
             else
             {
                 if (Password == null || Password.Length == 0)

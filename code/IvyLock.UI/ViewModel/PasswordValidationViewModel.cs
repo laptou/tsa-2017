@@ -112,7 +112,7 @@ namespace IvyLock.ViewModel
 
         public abstract string GetUserPasswordHash();
 
-        public virtual async Task<bool> ValidatePassword()
+        public virtual async Task<bool> VerifyPassword()
         {
             string pw = GetPasswordHash();
             string attempt = GetUserPasswordHash();

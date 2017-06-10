@@ -1,7 +1,10 @@
-﻿using IvyLock.Model.Security;
+﻿using IvyLock.Model;
+using IvyLock.Model.Security;
 using IvyLock.Service;
 using System;
+using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Security;
 using System.Security.Cryptography;
 using System.Text;
@@ -28,11 +31,12 @@ namespace IvyLock.ViewModel
 
         public FileAuthenticationViewModel()
         {
-            PropertyChanged += (s, e) =>
+            PropertyChanged += async (s, e) =>
             {
                 switch (e.PropertyName)
                 {
                     case "Password":
+                        if (Hash != null) await VerifyPassword();
                         TransformTask = new NotifyTaskCompletion(TransformFile);
                         break;
                 }
@@ -75,12 +79,16 @@ namespace IvyLock.ViewModel
 
             var pass = Password.GetBytes();
             var rfc = new Rfc2898DeriveBytes(pass, Encoding.Unicode.GetBytes("victoria"), 1000);
+            Array.Clear(pass, 0, pass.Length);
             aes.Key = rfc.GetBytes(aes.KeySize / 8);
             aes.IV = rfc.GetBytes(aes.BlockSize / 8);
 
+
             if (Encrypt)
             {
-                FileStream newFs = File.Create(IOPath.ChangeExtension(Path, IOPath.GetExtension(Path) + ".ivy"));
+                string newPath = IOPath.ChangeExtension(Path, IOPath.GetExtension(Path) + ".ivy");
+
+                FileStream newFs = File.Create(newPath);
                 
                 ICryptoTransform ict = aes.CreateEncryptor();
 
@@ -100,6 +108,11 @@ namespace IvyLock.ViewModel
 
                     cs.FlushFinalBlock();
                 }
+
+                fs.Dispose();
+
+                if (XmlSettingsService.Default.OfType<IvyLockSettings>().First().DeleteFileOnEncrypt)
+                    File.Delete(path);
             }
             else
             {
@@ -108,13 +121,15 @@ namespace IvyLock.ViewModel
 
                 Hash = Convert.ToBase64String(hash);
 
-                if (!await ValidatePassword())
+                if (!await VerifyPassword())
                 {
                     TransformTask = null;
                     return;
                 }
 
-                using (FileStream newFs = File.Create(IOPath.ChangeExtension(Path, IOPath.GetExtension(Path).Replace(".ivy", ""))))
+                string newPath = IOPath.ChangeExtension(Path, IOPath.GetExtension(Path).Replace(".ivy", ""));
+
+                using (FileStream newFs = File.Create(newPath))
                 {
                     ICryptoTransform ict = aes.CreateDecryptor();
 
@@ -132,10 +147,16 @@ namespace IvyLock.ViewModel
                         cs.FlushFinalBlock();
                     }
                 }
+
+                fs.Dispose();
+
+                if (XmlSettingsService.Default.OfType<IvyLockSettings>().First().DeleteFileOnDecrypt)
+                    File.Delete(path);
+
+                if (XmlSettingsService.Default.OfType<IvyLockSettings>().First().OpenFileOnDecrypt)
+                    Process.Start(newPath);
             }
 
-            Array.Clear(pass, 0, pass.Length);
-            fs.Dispose();
         }
 
         #endregion Methods

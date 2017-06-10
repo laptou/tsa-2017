@@ -596,7 +596,7 @@ namespace IvyLock.Service
             CurrentUser.Close();
 
             // Tell explorer the file association has been changed
-            SHChangeNotify(0x08000000, 0x0000, IntPtr.Zero, IntPtr.Zero);
+            SHChangeNotify(0x08000000, 0x0000, IntPtr.  Zero, IntPtr.Zero);
         }
 
         [DllImport("shell32.dll", CharSet = CharSet.Auto, SetLastError = true)]
