@@ -1413,7 +1413,7 @@
             {
             "AssemblyRegister" = "3:1"
             "AssemblyIsInGAC" = "11:FALSE"
-            "AssemblyAsmDisplayName" = "8:IvyLock.Native, Version=1.0.6370.23165, Culture=neutral, PublicKeyToken=6dc4475be8013017, processorArchitecture=x86"
+            "AssemblyAsmDisplayName" = "8:IvyLock.Native, Version=1.0.6370.23488, Culture=neutral, PublicKeyToken=6dc4475be8013017, processorArchitecture=x86"
                 "ScatterAssemblies"
                 {
                     "_4BF5743949E4B9D4D4354230703B9A37"
@@ -3029,15 +3029,15 @@
         {
         "Name" = "8:Microsoft Visual Studio"
         "ProductName" = "8:IvyLock"
-        "ProductCode" = "8:{206E9A42-1383-4E5B-A38C-979AFFACCF1D}"
-        "PackageCode" = "8:{67AC89D8-9966-45FD-B5FB-9F1D14CAAD05}"
+        "ProductCode" = "8:{C11B0F2F-D151-47D3-8515-DD0C274DAE69}"
+        "PackageCode" = "8:{4E91728C-A505-4AD6-A69D-83D2F8FED73E}"
         "UpgradeCode" = "8:{3DE5A866-0C20-4ABB-84D9-9CBFC2D045BA}"
         "AspNetVersion" = "8:4.0.30319.0"
         "RestartWWWService" = "11:FALSE"
         "RemovePreviousVersions" = "11:TRUE"
         "DetectNewerInstalledVersion" = "11:TRUE"
         "InstallAllUsers" = "11:FALSE"
-        "ProductVersion" = "8:1.5.9"
+        "ProductVersion" = "8:1.5.95"
         "Manufacturer" = "8:Ibiyemi Abiodun"
         "ARPHELPTELEPHONE" = "8:"
         "ARPHELPLINK" = "8:"
