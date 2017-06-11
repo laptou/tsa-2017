@@ -166,11 +166,11 @@ namespace IvyLock {
 				native.PoolType = (WINBIO_POOL_TYPE)this->PoolType;
 				native.SensorSubType = (WINBIO_BIOMETRIC_SENSOR_SUBTYPE)this->SensorSubType;
 				native.Capabilities = (WINBIO_CAPABILITIES)this->Capabilities;
-				wcscpy(native.DeviceInstanceId, StringToNative(this->DeviceInstanceId));
-				wcscpy(native.Description, StringToNative(this->Description));
-				wcscpy(native.Manufacturer, StringToNative(this->Manufacturer));
-				wcscpy(native.Model, StringToNative(this->Model));
-				wcscpy(native.SerialNumber, StringToNative(this->SerialNumber));
+				wcscpy_s(native.DeviceInstanceId, StringToNative(this->DeviceInstanceId));
+				wcscpy_s(native.Description, StringToNative(this->Description));
+				wcscpy_s(native.Manufacturer, StringToNative(this->Manufacturer));
+				wcscpy_s(native.Model, StringToNative(this->Model));
+				wcscpy_s(native.SerialNumber, StringToNative(this->SerialNumber));
 				return native;
 			}
 		};
@@ -340,10 +340,9 @@ namespace IvyLock {
 				GetCurrentUserIdentity(&ident);
 				return BiometricIdentity(ident);
 			}
-			
+
 			static UInt32 OpenSession(BiometricType type, BiometricSessionFlags flags,
 				array<int>^ units, BiometricDatabaseType dbType) {
-
 				pin_ptr<int> unit = units == nullptr ? nullptr : &units[0];
 				int unitCount = units == nullptr ? 0 : units->Length;
 
@@ -351,7 +350,7 @@ namespace IvyLock {
 
 				HRESULT hr =
 					WinBioOpenSession(
-						(WINBIO_BIOMETRIC_TYPE)type,
+					(WINBIO_BIOMETRIC_TYPE)type,
 						(WINBIO_POOL_TYPE)BiometricPoolType::System,
 						(WINBIO_SESSION_FLAGS)flags,
 						(WINBIO_UNIT_ID *)unit,
@@ -383,7 +382,7 @@ namespace IvyLock {
 
 				HRESULT hr =
 					WinBioVerify(
-						(WINBIO_SESSION_HANDLE)sessionHandle,
+					(WINBIO_SESSION_HANDLE)sessionHandle,
 						&nativeIdentity,
 						(WINBIO_BIOMETRIC_SUBTYPE)subFactor,
 						&uid,
@@ -401,12 +400,11 @@ namespace IvyLock {
 				return match;
 			}
 
-			static void Enroll(BiometricSubtype subFactor, Action<EnrollPrompt>^ promptCallback)
+			static void Enroll(BiometricIdentity ident, UInt32 unitId, BiometricSubtype subFactor, Action<EnrollPrompt>^ promptCallback)
 			{
 				HRESULT hr = S_OK;
-				WINBIO_IDENTITY identity = { 0 };
+				WINBIO_IDENTITY identity = ident.ToNative();
 				WINBIO_SESSION_HANDLE sessionHandle = NULL;
-				WINBIO_UNIT_ID unitId = 0;
 				WINBIO_REJECT_DETAIL rejectDetail = 0;
 				BOOLEAN isNewTemplate = TRUE;
 
@@ -425,13 +423,6 @@ namespace IvyLock {
 
 					if (FAILED(hr))
 						throw gcnew Exception("WinBioOpenSession failed.", gcnew Win32Exception(hr));
-
-					if (promptCallback != nullptr)
-						promptCallback(EnrollPrompt::LocateSensor);
-
-					hr = WinBioLocateSensor(sessionHandle, &unitId);
-					if (FAILED(hr))
-						throw gcnew Exception("WinBioLocateSensor failed.", gcnew Win32Exception(hr));
 
 					hr = WinBioEnrollBegin(
 						sessionHandle,      // Handle to open biometric session
@@ -463,7 +454,7 @@ namespace IvyLock {
 							if (hr == WINBIO_E_BAD_CAPTURE)
 							{
 								if (promptCallback != nullptr)
-									promptCallback(EnrollPrompt::NeedMoreData);
+									promptCallback(EnrollPrompt::BadCapture);
 								continue;
 							}
 							else
@@ -492,21 +483,53 @@ namespace IvyLock {
 				}
 			}
 
-			static void CreatePrivatePool(Guid^ id) {
-				
+			static UInt32 LocateSensor() {
+				HRESULT hr = S_OK;
+				WINBIO_SESSION_HANDLE sessionHandle = NULL;
+				WINBIO_UNIT_ID unitId = 0;
+
+				try
+				{
+					// Connect to the system pool.
+					hr = WinBioOpenSession(
+						WINBIO_TYPE_FINGERPRINT,    // Service provider
+						WINBIO_POOL_SYSTEM,         // Pool type
+						WINBIO_FLAG_DEFAULT,        // Configuration and access
+						NULL,                       // Array of biometric unit IDs
+						0,                          // Count of biometric unit IDs
+						NULL,                       // Database ID
+						&sessionHandle              // [out] Session handle
+					);
+
+					if (FAILED(hr))
+						throw gcnew Exception("WinBioOpenSession failed.", gcnew Win32Exception(hr));
+
+					hr = WinBioLocateSensor(sessionHandle, &unitId);
+					if (FAILED(hr))
+						throw gcnew Exception("WinBioLocateSensor failed.", gcnew Win32Exception(hr));
+
+					return unitId;
+				}
+				finally
+				{
+					if (sessionHandle != NULL)
+					{
+						WinBioCloseSession(sessionHandle);
+						sessionHandle = NULL;
+					}
+				}
 			}
 
-			static array<BiometricSubtype>^ GetEnrollments(BiometricIdentity id) {
+			static array<BiometricSubtype>^ GetEnrollments(BiometricIdentity id, UInt32 unitId) {
 				// Declare variables.
 				HRESULT hr = S_OK;
 				WINBIO_IDENTITY identity = id.ToNative();
 				WINBIO_SESSION_HANDLE sessionHandle = NULL;
-				WINBIO_UNIT_ID unitId = 0;
 				PWINBIO_BIOMETRIC_SUBTYPE subFactorArray = NULL;
 				WINBIO_BIOMETRIC_SUBTYPE SubFactor = 0;
 				SIZE_T subFactorCount = 0;
 
-				// Connect to the system pool. 
+				// Connect to the system pool.
 				hr = WinBioOpenSession(
 					WINBIO_TYPE_FINGERPRINT,    // Service provider
 					WINBIO_POOL_SYSTEM,         // Pool type
@@ -553,7 +576,7 @@ namespace IvyLock {
 
 				List<BiometricUnitSchema>^ list = gcnew List<BiometricUnitSchema>();
 
-				for (int index = 0; index < unitCount; ++index)
+				for (unsigned int index = 0; index < unitCount; ++index)
 				{
 					list->Add(BiometricUnitSchema(unitSchema[index]));
 				}

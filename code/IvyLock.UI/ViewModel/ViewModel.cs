@@ -50,6 +50,11 @@ namespace IvyLock.ViewModel
             RaisePropertyChanged(GetPropertyInfo(propertyLambda).Name);
         }
 
+        public void RaisePropertyChanged<T>(MemberExpression property)
+        {
+            RaisePropertyChanged(property.Member.Name);
+        }
+
         public void RaisePropertyChanging(string propertyName)
         {
             Application.Current.Dispatcher.Invoke(() =>

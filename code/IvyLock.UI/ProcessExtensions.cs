@@ -119,13 +119,18 @@ namespace IvyLock
             return handles;
         }
 
+        public static IntPtr GetHandle(int id, ProcessAccessFlags paf)
+        {
+            return OpenProcess(ProcessAccessFlags.QueryLimitedInformation,
+                                          false, id);
+        }
+
         public static string GetPath(this Process process)
         {
             if (process == null) return null;
 
             var buffer = new StringBuilder(1024);
-            IntPtr hprocess = OpenProcess(ProcessAccessFlags.QueryLimitedInformation,
-                                          false, process.Id);
+            IntPtr hprocess = GetHandle(process.Id, ProcessAccessFlags.QueryLimitedInformation);
             if (hprocess != IntPtr.Zero)
             {
                 try
@@ -169,7 +174,7 @@ namespace IvyLock
                 if (process.MainWindowHandle != default(IntPtr))
                     return true;
 
-                uint result = await Task.Run(() => WaitForInputIdle(process.Handle, 15000));
+                uint result = await Task.Run(() => WaitForInputIdle(GetHandle(process.Id, ProcessAccessFlags.QueryLimitedInformation), 15000));
                 switch (result)
                 {
                     case 0xFFFFFFFF: // WAIT_FAILED
@@ -187,7 +192,7 @@ namespace IvyLock
 
         public static bool IsUWP(this Process process)
         {
-            return IsImmersiveProcess(process.Handle);
+            return IsImmersiveProcess(GetHandle(process.Id, ProcessAccessFlags.QueryLimitedInformation));
         }
 
         public static void Resume(this Process process)

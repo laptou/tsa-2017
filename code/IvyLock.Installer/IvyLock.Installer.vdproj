@@ -454,13 +454,19 @@
         "Entry"
         {
         "MsmKey" = "8:_UNDEFINED"
-        "OwnerKey" = "8:_63DB972DDD214605A7F1BBB28E531481"
+        "OwnerKey" = "8:_B4804E69DB81B0D7FCEB016B08D98375"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
         {
         "MsmKey" = "8:_UNDEFINED"
         "OwnerKey" = "8:_4BF5743949E4B9D4D4354230703B9A37"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_UNDEFINED"
+        "OwnerKey" = "8:_63DB972DDD214605A7F1BBB28E531481"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
@@ -829,12 +835,6 @@
         "OwnerKey" = "8:_1DCD8477543EC79F139CCCFF5C80725E"
         "MsmSig" = "8:_UNDEFINED"
         }
-        "Entry"
-        {
-        "MsmKey" = "8:_UNDEFINED"
-        "OwnerKey" = "8:_B4804E69DB81B0D7FCEB016B08D98375"
-        "MsmSig" = "8:_UNDEFINED"
-        }
     }
     "Configurations"
     {
@@ -907,20 +907,6 @@
     {
         "CustomAction"
         {
-            "{4AA51A2D-7D85-4A59-BA75-B0809FC8B380}:_A5ECD35E2C5C45D89BCF840F68E45DB9"
-            {
-            "Name" = "8:Launch"
-            "Condition" = "8:"
-            "Object" = "8:_63DB972DDD214605A7F1BBB28E531481"
-            "FileType" = "3:2"
-            "InstallAction" = "3:1"
-            "Arguments" = "8:"
-            "EntryPoint" = "8:"
-            "Sequence" = "3:1"
-            "Identifier" = "8:_07D104B6_34A1_4E90_B1D3_B75B413040CD"
-            "InstallerClass" = "11:TRUE"
-            "CustomActionData" = "8:"
-            }
         }
         "DefaultFeature"
         {
@@ -936,7 +922,7 @@
                 {
                 "Name" = "8:.NET Framework"
                 "Message" = "8:[VSDNETMSG]"
-                "FrameworkVersion" = "8:.NETFramework,Version=v4.5"
+                "FrameworkVersion" = "8:.NETFramework,Version=v4.5.2"
                 "AllowLaterVersions" = "11:FALSE"
                 "InstallUrl" = "8:http://go.microsoft.com/fwlink/?LinkId=395269"
                 }
@@ -1413,7 +1399,7 @@
             {
             "AssemblyRegister" = "3:1"
             "AssemblyIsInGAC" = "11:FALSE"
-            "AssemblyAsmDisplayName" = "8:IvyLock.Native, Version=1.0.6370.23488, Culture=neutral, PublicKeyToken=6dc4475be8013017, processorArchitecture=x86"
+            "AssemblyAsmDisplayName" = "8:IvyLock.Native, Version=1.0.6370.42093, Culture=neutral, PublicKeyToken=6dc4475be8013017, processorArchitecture=x86"
                 "ScatterAssemblies"
                 {
                     "_4BF5743949E4B9D4D4354230703B9A37"
@@ -2959,7 +2945,7 @@
         {
             "{3C67513D-01DD-4637-8A68-80971EB9504F}:_7C4C568703A041C6BEC6B5448588B758"
             {
-            "DefaultLocation" = "8:[AppDataFolder]\\IvyLock\\"
+            "DefaultLocation" = "8:[ProgramFilesFolder]\\IvyLock\\"
             "Name" = "8:#1925"
             "AlwaysCreate" = "11:TRUE"
             "Condition" = "8:"
@@ -3029,15 +3015,15 @@
         {
         "Name" = "8:Microsoft Visual Studio"
         "ProductName" = "8:IvyLock"
-        "ProductCode" = "8:{C11B0F2F-D151-47D3-8515-DD0C274DAE69}"
-        "PackageCode" = "8:{4E91728C-A505-4AD6-A69D-83D2F8FED73E}"
+        "ProductCode" = "8:{5D842103-379A-4170-93FC-806B9BA39AC5}"
+        "PackageCode" = "8:{8E45F0B4-0E96-4FD5-A08E-EDD75549756F}"
         "UpgradeCode" = "8:{3DE5A866-0C20-4ABB-84D9-9CBFC2D045BA}"
         "AspNetVersion" = "8:4.0.30319.0"
         "RestartWWWService" = "11:FALSE"
         "RemovePreviousVersions" = "11:TRUE"
         "DetectNewerInstalledVersion" = "11:TRUE"
         "InstallAllUsers" = "11:FALSE"
-        "ProductVersion" = "8:1.5.95"
+        "ProductVersion" = "8:1.5.99"
         "Manufacturer" = "8:Ibiyemi Abiodun"
         "ARPHELPTELEPHONE" = "8:"
         "ARPHELPLINK" = "8:"

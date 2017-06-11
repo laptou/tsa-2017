@@ -45,11 +45,11 @@ namespace IvyLock.View
             Activate();
         }
 
-        private void PasswordBox_KeyDown(object sender, KeyEventArgs e)
+        private async void PasswordBox_KeyDown(object sender, KeyEventArgs e)
         {
             if(e.Key == Key.Enter)
             {
-                avm.VerifyPassword();
+                await avm.VerifyPassword();
             }
         }
 

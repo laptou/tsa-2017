@@ -43,7 +43,9 @@ namespace IvyLock.Model
 
         public void Set<T>(T value, [CallerMemberName] string propertyName = "")
         {
+            RaisePropertyChanging(propertyName);
             properties[propertyName] = value;
+            RaisePropertyChanged(propertyName);
         }
 
         public void Set<T>(T value, ref T variable, [CallerMemberName] string propertyName = "")

@@ -297,19 +297,6 @@ namespace IvyLock.ViewModel
         private void ProcessCollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
         {
             return;
-
-            if (e.Action == NotifyCollectionChangedAction.Add)
-                foreach (Process process in e.NewItems)
-                {
-                    suspended[process.Id] = Locked;
-
-                    if (Locked)
-                        process.Suspend();
-                }
-
-            if (e.Action == NotifyCollectionChangedAction.Remove)
-                foreach (Process process in e.OldItems)
-                    suspended.Remove(process.Id);
         }
 
         #endregion Methods

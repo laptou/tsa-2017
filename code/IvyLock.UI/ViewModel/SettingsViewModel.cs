@@ -140,13 +140,20 @@ namespace IvyLock.ViewModel
 
             Func<Process, Task<bool>> f = async p =>
             {
-                string path = p.GetPath();
-                return
-                    p.Id != myPid &&
-                    path != null &&
-                    !p.IsUWP() &&
-                    await p.GetDescription() != null &&
-                    await p.HasGUI();
+                try
+                {
+                    string path = p.GetPath();
+                    return
+                        p.Id != myPid &&
+                        path != null &&
+                        !p.IsUWP() &&
+                        await p.GetDescription() != null &&
+                        await p.HasGUI();
+                }
+                catch
+                {
+                    return false;
+                }
             };
 
             ips.ProcessChanged += async (pid, path, type) =>

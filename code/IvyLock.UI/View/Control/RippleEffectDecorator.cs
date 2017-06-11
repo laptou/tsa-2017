@@ -34,7 +34,6 @@ namespace IvyLock.View.Control
             DependencyProperty.Register("HighlightBackground", typeof(Brush), typeof(RippleEffectDecorator), 
                 new PropertyMetadata(new SolidColorBrush(Color.FromArgb(0x7F, 0x00, 0x00, 0x00))));
 
-        Shape shape;
         EllipseGeometry ellipse;
         Grid grid;
         Storyboard animation;

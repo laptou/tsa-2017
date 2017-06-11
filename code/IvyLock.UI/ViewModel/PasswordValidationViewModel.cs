@@ -46,8 +46,6 @@ namespace IvyLock.ViewModel
 
         public event EventHandler PasswordVerified;
 
-        public event EventHandler BiometricDelayed;
-
         public event EventHandler BiometricRejected;
 
         public event EventHandler BiometricVerified;

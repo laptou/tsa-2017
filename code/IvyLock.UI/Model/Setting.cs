@@ -110,15 +110,9 @@ namespace IvyLock.Model
     public class ProcessSettings : SettingGroup
     {
         #region Fields
-
-        private bool _allowBiometrics = true;
-        private string _hash;
+        
         private SecureString _password;
         private string _path;
-        private bool _usePassword;
-
-        private bool hasLockTimeOut = true;
-        private int lockTimeOut = 15;
 
         #endregion Fields
 

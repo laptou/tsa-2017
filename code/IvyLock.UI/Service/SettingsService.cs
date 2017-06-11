@@ -27,9 +27,8 @@ namespace IvyLock.Service
         private Stream stream;
         private string path;
 
-        public static ISettingsService Default { get; private set; }
-            = new XmlSettingsService();
-
+        public static ISettingsService Default { get; private set; } = new XmlSettingsService();
+        
         public XmlSettingsService()
         {
             path = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);

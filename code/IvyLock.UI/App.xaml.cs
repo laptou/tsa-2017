@@ -20,6 +20,16 @@ namespace IvyLock
     {
         #region Fields
 
+        private static string logFile =
+            Path.Combine(
+                Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
+                "IvyLock",
+                DateTime.Now.ToString("M-dd-yyyy_HH-mm-ss") + ".log"
+            );
+
+        private static FileStream logStream = File.Create(logFile);
+
+        private static Mutex mutex = new Mutex(true, "{D680C778-1943-460C-9907-25DEC5C912A9}");
         private IProcessService ips;
 
         private ISettingsService iss;
@@ -27,11 +37,6 @@ namespace IvyLock
         private WF.NotifyIcon ni;
 
         private Dictionary<string, ProcessAuthenticationView> views = new Dictionary<string, ProcessAuthenticationView>();
-
-        static Mutex mutex = new Mutex(true, "{D680C778-1943-460C-9907-25DEC5C912A9}");
-
-        static FileStream logStream = File.Create(DateTime.Now.ToString("M-dd-yyyy_HH-mm-ss") + ".log");
-
 
         #endregion Fields
 
@@ -42,42 +47,39 @@ namespace IvyLock
             InitializeComponent();
         }
 
-        [STAThread]
-        private static void Main(string[] args)
-        {
-            AppDomain.CurrentDomain.UnhandledException += async (s, e) => await Log(e.ExceptionObject as Exception);
-#if DEBUG
-            if(true)
-#else
-            if (args.Length > 0 || IsDesigner || mutex.WaitOne(1000, true))
-#endif
-            {
-                try
-                {
-                    App app = new App();
-                    app.iss = XmlSettingsService.Default;
-                    app.Run();
-                }
-                catch(IOException ioex) when (ioex.HResult == unchecked((int)0x80070020)) // file in use
-                {
-                    Log(ioex).Wait();
-                }
-            }
-            else
-            {
-                
-            }
-        }
+        #endregion Constructors
 
-#endregion Constructors
-
-#region Properties
+        #region Properties
 
         public static bool IsDesigner { get { return LicenseManager.UsageMode == LicenseUsageMode.Designtime; } }
 
-#endregion Properties
+        #endregion Properties
 
-#region Methods
+        #region Methods
+
+        public static async Task Log(Exception ex, bool inner = false)
+        {
+            if (!inner) Monitor.Enter(logStream);
+
+            var (reader, writer) = logStream.OpenStream();
+
+            if (inner)
+            {
+                await writer.WriteLineAsync($"\t[InnerException] {ex.GetType().FullName}: {ex?.Message}");
+                await writer.WriteLineAsync("\t" + ex.StackTrace.Replace("\n", "\n\t"));
+            }
+            else
+            {
+                await writer.WriteLineAsync($"[Error, {DateTime.Now}] {ex.GetType().FullName}: {ex.Message}");
+                await writer.WriteLineAsync(ex.StackTrace);
+
+                if (ex.InnerException != null) await Log(ex.InnerException, true);
+            }
+
+            Monitor.Exit(logStream);
+        }
+
+        public void Activate() => MainWindow?.Activate();
 
         protected override void OnExit(ExitEventArgs e)
         {
@@ -91,8 +93,8 @@ namespace IvyLock
         protected override void OnStartup(StartupEventArgs e)
         {
             base.OnStartup(e);
-            
-            if(e.Args.Length > 0)
+
+            if (e.Args.Length > 0)
             {
                 IEnumerable<string> args = e.Args;
 
@@ -105,10 +107,12 @@ namespace IvyLock
                         FileAuthenticationView fav = new FileAuthenticationView();
                         FileAuthenticationViewModel favm = (FileAuthenticationViewModel)fav.DataContext;
                         favm.Path = arg;
-                        fav.Show();
+                        fav.ShowDialog();
                     }
+
+                    Shutdown();
                 }
-                else 
+                else
                 {
                     if (e.Args[0].Equals("-decrypt", StringComparison.InvariantCultureIgnoreCase))
                         args = args.Skip(1);
@@ -121,69 +125,93 @@ namespace IvyLock
                         FileAuthenticationView fav = new FileAuthenticationView();
                         FileAuthenticationViewModel favm = (FileAuthenticationViewModel)fav.DataContext;
                         favm.Path = arg;
-                        fav.Show();
+                        fav.ShowDialog();
                     }
+
+                    Shutdown();
                 }
 
                 return;
             }
 
-            try
+            if (!IsDesigner)
             {
-                if (!IsDesigner)
+                ips = ManagedProcessService.Default;
+                iss = XmlSettingsService.Default;
+
+                IvyLockSettings ils = iss.OfType<IvyLockSettings>().First();
+                switch (ils.Theme)
                 {
-                    ips = ManagedProcessService.Default;
+                    case Theme.Light:
+                        Resources.MergedDictionaries.Clear();
+                        Resources.MergedDictionaries.Add(new ResourceDictionary()
+                        {
+                            Source = new Uri("pack://application:,,,/IvyLock;component/Content/Theme.Light.xaml")
+                        });
+                        break;
+                }
 
-                    IvyLockSettings ils = iss.OfType<IvyLockSettings>().First();
-                    switch (ils.Theme)
+                ips.ProcessChanged += ProcessChanged;
+
+                MainWindow = new SettingsView();
+                MainWindow.Show();
+                MainWindow.Activate();
+
+                ni = new WF.NotifyIcon();
+                ni.Click += (s, e1) =>
+                {
+                    MainWindow?.Show();
+                    MainWindow?.Activate();
+                };
+
+                ni.Icon = System.Drawing.Icon.ExtractAssociatedIcon(Assembly.GetEntryAssembly().Location);
+                ni.ContextMenu = new WF.ContextMenu();
+                ni.ContextMenu.MenuItems.Add("Exit", (s, e2) =>
+                {
+                    SettingsViewModel svm = MainWindow.DataContext as SettingsViewModel;
+
+                    svm.PropertyChanged += (s2, e3) =>
                     {
-                        case Theme.Light:
-                            Resources.MergedDictionaries.Clear();
-                            Resources.MergedDictionaries.Add(new ResourceDictionary()
-                            {
-                                Source = new Uri("pack://application:,,,/IvyLock;component/Content/Theme.Light.xaml")
-                            });
-                            break;
-                    }
-
-                    ips.ProcessChanged += ProcessChanged;
-
-                    MainWindow = new SettingsView();
-                    MainWindow.Show();
-                    MainWindow.Activate();
-
-                    ni = new WF.NotifyIcon();
-                    ni.Click += (s, e1) =>
-                    {
-                        MainWindow?.Show();
-                        MainWindow?.Activate();
+                        if (e3.PropertyName == "CurrentScreen" && svm.CurrentScreen == ViewModel.Screen.Main)
+                            Shutdown();
                     };
 
-                    ni.Icon = System.Drawing.Icon.ExtractAssociatedIcon(Assembly.GetEntryAssembly().Location);
-                    ni.ContextMenu = new WF.ContextMenu();
-                    ni.ContextMenu.MenuItems.Add("Exit", (s, e2) =>
-                    {
-                        SettingsViewModel svm = MainWindow.DataContext as SettingsViewModel;
+                    svm.CurrentScreen = ViewModel.Screen.EnterPassword;
 
-                        svm.PropertyChanged += (s2, e3) =>
-                        {
-                            if (e3.PropertyName == "CurrentScreen" && svm.CurrentScreen == ViewModel.Screen.Main)
-                                Shutdown();
-                        };
-
-                        svm.CurrentScreen = ViewModel.Screen.EnterPassword;
-
-                        MainWindow.Show();
-                        MainWindow.Activate();
-                    });
-                    ni.Visible = true;
-                }
+                    MainWindow.Show();
+                    MainWindow.Activate();
+                });
+                ni.Visible = true;
             }
-            catch(Exception ex)
+        }
+
+        [STAThread]
+        private static void Main(string[] args)
+        {
+            AppDomain.CurrentDomain.UnhandledException += async (s, e) => await Log(e.ExceptionObject as Exception);
+            AppDomain.CurrentDomain.ProcessExit += (s, e) =>
             {
-                MessageBox.Show("IvyLock could not start.");
+                if (logStream.Length == 0)
+                {
+                    logStream.Dispose();
+                    File.Delete(logFile);
+                }
+            };
+
+            try
+            {
+                App app = new App();
+                app.Run();
+            }
+            catch (IOException ex) when (ex.HResult != unchecked((int)0x80070020)) // file in use
+            {
+            }
+            catch (AggregateException ex) when (ex.InnerException.HResult != unchecked((int)0x80070020)) // file in use
+            {
+            }
+            catch (Exception ex)
+            {
                 Log(ex).Wait();
-                Environment.Exit(-1);
             }
         }
 
@@ -253,30 +281,6 @@ namespace IvyLock
                         break;
                 }
             });
-        }
-
-        public void Activate() => MainWindow?.Activate();
-
-        public static async Task Log(Exception ex, bool inner = false)
-        {
-            if (!inner) Monitor.Enter(logStream);
-
-            var (reader, writer) = logStream.OpenStream();
-
-            if (inner)
-            {
-                await writer.WriteLineAsync($"\t[InnerException] {ex.GetType().FullName}: {ex?.Message}");
-                await writer.WriteLineAsync("\t" + ex.StackTrace.Replace("\n", "\n\t"));
-            }
-            else
-            {
-                await writer.WriteLineAsync($"[Error, {DateTime.Now}] {ex.GetType().FullName}: {ex.Message}");
-                await writer.WriteLineAsync(ex.StackTrace);
-
-                if (ex.InnerException != null) await Log(ex.InnerException, true);
-            }
-
-            Monitor.Exit(logStream);
         }
 
         #endregion Methods

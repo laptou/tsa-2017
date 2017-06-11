@@ -10,7 +10,7 @@ namespace IvyLock.ViewModel
     {
         #region Fields
 
-        private BiometricSubtype bioSubtype = BiometricSubtype.Any;
+        private BiometricSubtype bioSubtype = BiometricSubtype.Unknown;
 
         private string message;
 
@@ -20,21 +20,32 @@ namespace IvyLock.ViewModel
 
         public EnrollViewModel()
         {
+            BiometricSubtypeNames =
+                new Dictionary<BiometricSubtype, string>
+                {
+                    { BiometricSubtype.LeftIndexFinger, "Left Index Finger" },
+                    { BiometricSubtype.LeftMiddleFinger, "Left Middle Finger" },
+                    { BiometricSubtype.LeftRingFinger, "Left Ring Finger" },
+                    { BiometricSubtype.LeftLittleFinger, "Left Little Finger" },
+                    { BiometricSubtype.LeftThumb, "Left Thumb" },
+                    { BiometricSubtype.RightIndexFinger, "Right Index Finger" },
+                    { BiometricSubtype.RightMiddleFinger, "Right Middle Finger" },
+                    { BiometricSubtype.RightRingFinger, "Right Ring Finger" },
+                    { BiometricSubtype.RightLittleFinger, "Right Little Finger" },
+                    { BiometricSubtype.RightThumb, "Right Thumb" }
+                };
+
             PropertyChanged += async (s, e) =>
             {
-                if(e.PropertyName == "Finger")
+                if(e.PropertyName == "Finger" && Finger != BiometricSubtype.Any)
                     await Task.Run(() =>
                     {
                         try
                         {
-                            WBF.Enroll(Finger, ep =>
+                            WBF.Enroll(WBF.GetCurrentIdentity(), Sensor, Finger, ep =>
                             {
                                 switch (ep)
                                 {
-                                    case EnrollPrompt.LocateSensor:
-                                        Message = "Please touch or swipe the sensor you want to use.";
-                                        break;
-
                                     case EnrollPrompt.UseSensor:
                                         Message = "Please touch or swipe the sensor again.";
                                         break;
@@ -62,6 +73,20 @@ namespace IvyLock.ViewModel
                         }
                     });
             };
+
+            Task.Run(() =>
+            {
+                Message = "Swipe or touch the sensor that you wish to use.";
+                Sensor = WBF.LocateSensor();
+                Finger = BiometricSubtype.Any;
+
+                var fingers = WBF.GetEnrollments(WBF.GetCurrentIdentity(), Sensor);
+                BiometricSubtypeNames =
+                   (from kv in BiometricSubtypeNames
+                    where !fingers.Contains(kv.Key)
+                    select kv).ToDictionary(kv => kv.Key, kv => kv.Value);
+                RaisePropertyChanged(nameof(BiometricSubtypeNames));
+            });
         }
 
         #endregion Constructors
@@ -86,20 +111,8 @@ namespace IvyLock.ViewModel
 
         public Dictionary<BiometricSubtype, string> BiometricSubtypeNames
         {
-            get =>
-                new Dictionary<BiometricSubtype, string>
-                {
-                    { BiometricSubtype.LeftIndexFinger, "Left Index Finger" },
-                    { BiometricSubtype.LeftMiddleFinger, "Left Middle Finger" },
-                    { BiometricSubtype.LeftRingFinger, "Left Ring Finger" },
-                    { BiometricSubtype.LeftLittleFinger, "Left Little Finger" },
-                    { BiometricSubtype.LeftThumb, "Left Thumb" },
-                    { BiometricSubtype.RightIndexFinger, "Right Index Finger" },
-                    { BiometricSubtype.RightMiddleFinger, "Right Middle Finger" },
-                    { BiometricSubtype.RightRingFinger, "Right Ring Finger" },
-                    { BiometricSubtype.RightLittleFinger, "Right Little Finger" },
-                    { BiometricSubtype.RightThumb, "Right Thumb" }
-                };
+            get;
+            private set;
         }
 
         public string Message
@@ -107,6 +120,8 @@ namespace IvyLock.ViewModel
             get => message;
             set => Set(value, ref message);
         }
+
+        public uint Sensor { get; set; }
 
         #endregion Properties
     }
