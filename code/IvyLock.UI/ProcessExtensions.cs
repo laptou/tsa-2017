@@ -174,7 +174,10 @@ namespace IvyLock
                 if (process.MainWindowHandle != default(IntPtr))
                     return true;
 
-                uint result = await Task.Run(() => WaitForInputIdle(GetHandle(process.Id, ProcessAccessFlags.QueryLimitedInformation), 15000));
+                IntPtr handle = GetHandle(process.Id, ProcessAccessFlags.QueryLimitedInformation);
+                uint result = await Task.Run(() => WaitForInputIdle(handle, 15000));
+                CloseHandle(handle);
+
                 switch (result)
                 {
                     case 0xFFFFFFFF: // WAIT_FAILED

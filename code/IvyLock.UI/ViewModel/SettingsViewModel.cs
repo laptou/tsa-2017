@@ -22,9 +22,9 @@ namespace IvyLock.ViewModel
     {
         #region Fields
 
-        private Screen _currentScreen = Screen.Loading;
-        private SettingGroup _settingGroup;
-        private ObservableCollection<SettingGroup> _settings = new ObservableCollection<SettingGroup>();
+        private Screen currentScreen = Screen.Loading;
+        private SettingGroup settingGroup;
+        private ObservableCollection<SettingGroup> settings = new ObservableCollection<SettingGroup>();
         private IEncryptionService ies;
         private IProcessService ips;
         private ISettingsService iss;
@@ -96,7 +96,7 @@ namespace IvyLock.ViewModel
             }
         }
 
-        public Screen CurrentScreen { get { return _currentScreen; } set { Set(value, ref _currentScreen); } }
+        public Screen CurrentScreen { get { return currentScreen; } set { Set(value, ref currentScreen); } }
 
         public IvyLockSettings IvyLockSettings { get { return iss.OfType<IvyLockSettings>().FirstOrDefault(); } }
 
@@ -108,9 +108,9 @@ namespace IvyLock.ViewModel
             set => Set(value, ref password);
         }
 
-        public SettingGroup SettingGroup { get { return _settingGroup; } set { Set(value, ref _settingGroup); } }
+        public SettingGroup SettingGroup { get { return settingGroup; } set { Set(value, ref settingGroup); } }
 
-        public ObservableCollection<SettingGroup> Settings { get { return _settings; } set { Set(value, ref _settings); } }
+        public ObservableCollection<SettingGroup> Settings { get { return settings; } set { Set(value, ref settings); } }
 
         public SettingsView View
         {
@@ -136,24 +136,35 @@ namespace IvyLock.ViewModel
 
         private async Task LoadProcesses()
         {
-            int myPid = Process.GetCurrentProcess().Id;
-
+            var ignoreCase = StringComparison.InvariantCultureIgnoreCase;
+            var me = Process.GetCurrentProcess();
+            string myPath = me.GetPath();
+            byte[] myKey = Assembly.GetEntryAssembly().GetName().GetPublicKey();
+            
             Func<Process, Task<bool>> f = async p =>
             {
+                string path = null;
+                byte[] key = new byte[0];
+
                 try
                 {
-                    string path = p.GetPath();
-                    return
-                        p.Id != myPid &&
-                        path != null &&
-                        !p.IsUWP() &&
-                        await p.GetDescription() != null &&
-                        await p.HasGUI();
+                    path = p.GetPath();
+
+                    if (path == null) return false;
+
+                    key = AssemblyName.GetAssemblyName(path).GetPublicKey();
                 }
+                catch (BadImageFormatException) { }
                 catch
                 {
                     return false;
                 }
+
+                return
+                    !string.Equals(path, myPath, ignoreCase) &&
+                    !Enumerable.SequenceEqual(myKey, key) &&
+                    !p.IsUWP() &&
+                    await p.HasGUI();
             };
 
             ips.ProcessChanged += async (pid, path, type) =>
@@ -194,11 +205,9 @@ namespace IvyLock.ViewModel
                 {
                     if (await f(process))
                     {
-                        string path = process.GetPath()?.ToLower();
+                        string path = process.GetPath();
 
-                        if (string.Equals(Assembly.GetEntryAssembly().Location.ToLower(), path))
-                            return;
-                        if (path != null && iss.FindByPath(path) == null)
+                        if (iss.FindByPath(path) == null)
                         {
                             ProcessSettings ps = new ProcessSettings(process);
                             ps.Initialize();

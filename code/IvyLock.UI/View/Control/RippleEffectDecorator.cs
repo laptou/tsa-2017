@@ -1,14 +1,12 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Text;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
-using System.Windows.Shapes;
 
 namespace IvyLock.View.Control
 {
@@ -16,7 +14,7 @@ namespace IvyLock.View.Control
     {
         static RippleEffectDecorator()
         {
-            DefaultStyleKeyProperty.OverrideMetadata(typeof(RippleEffectDecorator), 
+            DefaultStyleKeyProperty.OverrideMetadata(typeof(RippleEffectDecorator),
                 new FrameworkPropertyMetadata(typeof(RippleEffectDecorator)));
         }
 
@@ -29,14 +27,14 @@ namespace IvyLock.View.Control
             get { return (Brush)GetValue(HighlightBackgroundProperty); }
             set { SetValue(HighlightBackgroundProperty, value); }
         }
-        
+
         public static readonly DependencyProperty HighlightBackgroundProperty =
-            DependencyProperty.Register("HighlightBackground", typeof(Brush), typeof(RippleEffectDecorator), 
+            DependencyProperty.Register("HighlightBackground", typeof(Brush), typeof(RippleEffectDecorator),
                 new PropertyMetadata(new SolidColorBrush(Color.FromArgb(0x7F, 0x00, 0x00, 0x00))));
 
-        EllipseGeometry ellipse;
-        Grid grid;
-        Storyboard animation;
+        private EllipseGeometry ellipse;
+        private Grid grid;
+        private Storyboard animation;
 
         public override void OnApplyTemplate()
         {
@@ -45,7 +43,6 @@ namespace IvyLock.View.Control
             ellipse = GetTemplateChild("PART_ellipse") as EllipseGeometry;
             grid = GetTemplateChild("PART_grid") as Grid;
             animation = grid.FindResource("PART_animation") as Storyboard;
-
 
             //var transform = new TransformGroup();
             //var scale = new ScaleTransform();

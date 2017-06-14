@@ -5,7 +5,6 @@ using IvyLock.ViewModel;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -27,7 +26,7 @@ namespace IvyLock
                 DateTime.Now.ToString("M-dd-yyyy_HH-mm-ss") + ".log"
             );
 
-        private static FileStream logStream = File.Create(logFile);
+        private static Stream logStream = IsDesigner ? new MemoryStream() : (Stream)File.Create(logFile);
 
         private static Mutex mutex = new Mutex(true, "{D680C778-1943-460C-9907-25DEC5C912A9}");
         private IProcessService ips;
@@ -35,8 +34,6 @@ namespace IvyLock
         private ISettingsService iss;
 
         private WF.NotifyIcon ni;
-
-        private Dictionary<string, ProcessAuthenticationView> views = new Dictionary<string, ProcessAuthenticationView>();
 
         #endregion Fields
 
@@ -76,7 +73,7 @@ namespace IvyLock
                 if (ex.InnerException != null) await Log(ex.InnerException, true);
             }
 
-            Monitor.Exit(logStream);
+            if (!inner) Monitor.Exit(logStream);
         }
 
         public void Activate() => MainWindow?.Activate();
@@ -137,6 +134,7 @@ namespace IvyLock
             if (!IsDesigner)
             {
                 ips = ManagedProcessService.Default;
+                XmlSettingsService.Init();
                 iss = XmlSettingsService.Default;
 
                 IvyLockSettings ils = iss.OfType<IvyLockSettings>().First();
@@ -203,10 +201,10 @@ namespace IvyLock
                 App app = new App();
                 app.Run();
             }
-            catch (IOException ex) when (ex.HResult != unchecked((int)0x80070020)) // file in use
+            catch (IOException ex) when (ex.HResult == unchecked((int)0x80070020)) // file in use
             {
             }
-            catch (AggregateException ex) when (ex.InnerException.HResult != unchecked((int)0x80070020)) // file in use
+            catch (AggregateException ex) when (ex.InnerException.HResult == unchecked((int)0x80070020)) // file in use
             {
             }
             catch (Exception ex)
@@ -234,47 +232,8 @@ namespace IvyLock
 
                         Dispatcher?.Invoke(async () =>
                         {
-                            ProcessAuthenticationView av = views.ContainsKey(path) ? views[path] : new ProcessAuthenticationView();
-                            ProcessAuthenticationViewModel avm = av.DataContext as ProcessAuthenticationViewModel;
-
-                            avm.ProcessPath = path;
-                            avm.Processes.Add(Process.GetProcessById(pid));
-
-                            await avm.Lock();
-
-                            if (!avm.Locked)
-                            {
-                                avm.Dispose();
-                                return;
-                            }
-
-                            if (!views.ContainsKey(path))
-                                av.Closed += (s, e) => views.Remove(path);
-
-                            views[path] = av;
-                            views[path].Show();
-                            views[path].Activate();
+                            await ProcessAuthenticationViewModel.Lock(path);
                         });
-                        break;
-
-                    case ProcessOperation.Modified:
-                        break;
-
-                    case ProcessOperation.Deleted:
-                        if (path == null || !views.ContainsKey(path)) return;
-
-                        if (!Process.GetProcesses().Any(process =>
-                         {
-                             try
-                             {
-                                 return process.MainModule.FileName.Equals(path, StringComparison.InvariantCultureIgnoreCase);
-                             }
-                             catch (Win32Exception) { return false; }
-                         }))
-                        {
-                            views[path].Close();
-                            views.Remove(path);
-                        }
                         break;
 
                     default:

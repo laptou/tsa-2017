@@ -33,7 +33,7 @@
 
         <Grid Background="{StaticResource Foreground}" Height="72" Width="72" x:Name="fingerprint"
               HorizontalAlignment="Center" VerticalAlignment="Center" Grid.Column="1" RenderTransformOrigin="0.5,1">
-            <Rectangle x:Name="fingerprintProgress" VerticalAlignment="Bottom" Height="0" Fill="{StaticResource AccentBrush}"/>
+            <Rectangle x:Name="fingerprintProgress" VerticalAlignment="Bottom" Height="0" Fill="{StaticResource AccentBrush}" />
             <i:Interaction.Triggers>
                 <i:EventTrigger EventName="FingerprintCompleted" SourceObject="{Binding Mode=OneWay}">
                     <ei:ControlStoryboardAction>
@@ -62,10 +62,10 @@
                                 Storyboard.TargetName="fingerprint"
                                 Storyboard.TargetProperty="(Panel.Background).(SolidColorBrush.Color)">
                                 <StaticResourceExtension ResourceKey="SuccessAnimation" />
-                                <DoubleAnimation 
+                                <DoubleAnimation
                                     Storyboard.TargetName="fingerprintProgress"
                                     Storyboard.TargetProperty="Height"
-                                    By="14.4" Duration="0:0:0.25"/>
+                                    By="14.4" Duration="0:0:0.25" />
                             </Storyboard>
                         </ei:ControlStoryboardAction.Storyboard>
                     </ei:ControlStoryboardAction>
@@ -85,13 +85,13 @@
             <Grid.RenderTransform>
                 <TransformGroup>
                     <RotateTransform x:Name="rotateFingerprint" />
-                    <ScaleTransform x:Name="scaleFingerprint"/>
+                    <ScaleTransform x:Name="scaleFingerprint" />
                 </TransformGroup>
             </Grid.RenderTransform>
             <Grid.OpacityMask>
                 <VisualBrush Stretch="None">
                     <VisualBrush.Visual>
-                        <TextBlock FontFamily="{StaticResource IconFont}" Text="&#xE90D;" FontSize="72"/>
+                        <TextBlock FontFamily="{StaticResource IconFont}" Text="&#xE90D;" FontSize="72" />
                     </VisualBrush.Visual>
                 </VisualBrush>
             </Grid.OpacityMask>
@@ -125,8 +125,8 @@
             </i:Interaction.Triggers>
             <TextBlock.RenderTransform>
                 <TransformGroup>
-                    <RotateTransform Angle="180" x:Name="rotateCheck"/>
-                    <ScaleTransform ScaleX="0" ScaleY="0" x:Name="scaleCheck"/>
+                    <RotateTransform Angle="180" x:Name="rotateCheck" />
+                    <ScaleTransform ScaleX="0" ScaleY="0" x:Name="scaleCheck" />
                 </TransformGroup>
             </TextBlock.RenderTransform>
         </TextBlock>
@@ -150,7 +150,7 @@
                                             Duration="0:0:0.25" To="1" />
                                         <ObjectAnimationUsingKeyFrames
                                             Storyboard.TargetProperty="Visibility">
-                                            <DiscreteObjectKeyFrame Value="{x:Static Visibility.Visible}" KeyTime="0:0:0.25"/>
+                                            <DiscreteObjectKeyFrame Value="{x:Static Visibility.Visible}" KeyTime="0:0:0.25" />
                                         </ObjectAnimationUsingKeyFrames>
                                     </Storyboard>
                                 </BeginStoryboard>
@@ -163,7 +163,7 @@
                                             Duration="0:0:0.25" To="0" />
                                         <ObjectAnimationUsingKeyFrames
                                             Storyboard.TargetProperty="Visibility">
-                                            <DiscreteObjectKeyFrame Value="{x:Static Visibility.Collapsed}" KeyTime="0:0:0.25"/>
+                                            <DiscreteObjectKeyFrame Value="{x:Static Visibility.Collapsed}" KeyTime="0:0:0.25" />
                                         </ObjectAnimationUsingKeyFrames>
                                     </Storyboard>
                                 </BeginStoryboard>
@@ -172,10 +172,10 @@
                     </Style.Triggers>
                 </Style>
             </Border.Style>
-            <Grid HorizontalAlignment="Center" VerticalAlignment="Center" >
-                <Border Background="{DynamicResource BackgroundLight}" >
+            <Grid HorizontalAlignment="Center" VerticalAlignment="Center">
+                <Border Background="{DynamicResource BackgroundLight}">
                     <Border.Effect>
-                        <DropShadowEffect ShadowDepth="0"/>
+                        <DropShadowEffect ShadowDepth="0" />
                     </Border.Effect>
                 </Border>
                 <StackPanel Margin="10" MinWidth="200">
@@ -189,8 +189,8 @@
                                 <Setter Property="Template">
                                     <Setter.Value>
                                         <ControlTemplate TargetType="ListBoxItem">
-                                            <RadioButton GroupName="Fingers" Margin="5" 
-                                                         IsChecked="{Binding IsSelected, Mode=TwoWay, 
+                                            <RadioButton GroupName="Fingers" Margin="5"
+                                                         IsChecked="{Binding IsSelected, Mode=TwoWay,
                                                             RelativeSource={RelativeSource TemplatedParent}}">
                                                 <TextBlock Text="{Binding Value}" Foreground="{DynamicResource Foreground}" />
                                             </RadioButton>

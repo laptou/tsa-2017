@@ -4,7 +4,6 @@ using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Windows;
 using System.Xml.Serialization;
 
 namespace IvyLock.Service
@@ -27,8 +26,13 @@ namespace IvyLock.Service
         private Stream stream;
         private string path;
 
-        public static ISettingsService Default { get; private set; } = new XmlSettingsService();
-        
+        public static ISettingsService Default { get; private set; }
+
+        public static void Init()
+        {
+            Default = new XmlSettingsService();
+        }
+
         public XmlSettingsService()
         {
             path = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
@@ -42,10 +46,26 @@ namespace IvyLock.Service
             values = new List<SettingGroup>();
             xs = new XmlSerializer(typeof(SettingGroup[]));
 
-            
             stream = File.Open(path, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.None);
-
+            
             Deserialize(false);
+        }
+
+        class SGCompare : EqualityComparer<SettingGroup>
+        {
+            public override bool Equals(SettingGroup x, SettingGroup y)
+            {
+                if (x is IvyLockSettings && y is IvyLockSettings)
+                    return true;
+                if (x is ProcessSettings px && y is ProcessSettings py)
+                    return string.Equals(px.Path, py.Path);
+                return false;
+            }
+
+            public override int GetHashCode(SettingGroup obj)
+            {
+                return obj.GetHashCode();
+            }
         }
 
         private void Deserialize(bool notify)
@@ -70,6 +90,17 @@ namespace IvyLock.Service
                 if (!values.Any(sg => sg is IvyLockSettings))
                     values.Add(new IvyLockSettings());
 
+                values = values.Where(sg =>
+                {
+                    if (sg is IvyLockSettings) return true;
+
+                    var psg = sg as ProcessSettings;
+
+                    if (!File.Exists(psg.Path)) return false;
+
+                    return true;
+                }).Distinct(new SGCompare()).ToList();
+
                 foreach (SettingGroup sg in values)
                 {
                     sg.Initialize();
@@ -78,6 +109,15 @@ namespace IvyLock.Service
             }
             catch
             {
+                IvyLockSettings ils = new IvyLockSettings();
+
+                values = new List<SettingGroup>(new SettingGroup[] { ils });
+
+                foreach (SettingGroup sg in values)
+                {
+                    sg.Initialize();
+                    sg.PropertyChanged += SettingGroupChanged;
+                }
             }
         }
 
@@ -162,10 +202,10 @@ namespace IvyLock.Service
         public ProcessSettings FindByPath(string path)
         {
             return this.OfType<ProcessSettings>()
-                    .FirstOrDefault(s => 
+                    .FirstOrDefault(s =>
                         string.Equals(
-                            s.Path, 
-                            path, 
+                            s.Path,
+                            path,
                             StringComparison.InvariantCultureIgnoreCase));
         }
     }

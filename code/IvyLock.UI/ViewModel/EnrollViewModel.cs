@@ -4,6 +4,9 @@ using System.Linq;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
+using System.Linq;
+using System.Threading.Tasks;
+
 namespace IvyLock.ViewModel
 {
     public class EnrollViewModel : ViewModel
@@ -37,7 +40,7 @@ namespace IvyLock.ViewModel
 
             PropertyChanged += async (s, e) =>
             {
-                if(e.PropertyName == "Finger" && Finger != BiometricSubtype.Any)
+                if (e.PropertyName == "Finger" && Finger != BiometricSubtype.Any)
                     await Task.Run(() =>
                     {
                         try

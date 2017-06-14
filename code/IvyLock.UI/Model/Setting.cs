@@ -33,11 +33,13 @@ namespace IvyLock.Model
     public class IvyLockSettings : SettingGroup
     {
         private SecureString _password;
+
         #region Constructors
 
         public IvyLockSettings()
         {
             Name = "IvyLock";
+            OpenFileOnDecrypt = true;
         }
 
         public IvyLockSettings(SerializationInfo info, StreamingContext context) : base(info, context)
@@ -74,6 +76,9 @@ namespace IvyLock.Model
             Description = "Automatically delete the encrypted file after decrypting it.")]
         public bool DeleteFileOnDecrypt { get => Get<bool>(); set => Set(value); }
 
+        [Setting(Category = SettingCategory.Aesthetic, Name = "Disable Ivy Picture")]
+        public bool DisableIvyPicture { get => Get<bool>(); set => Set(value); }
+
         [XmlIgnore]
         [Setting(Category = SettingCategory.Security, Description = "Password used to unlock IvyLock settings.")]
         public SecureString Password
@@ -101,8 +106,12 @@ namespace IvyLock.Model
         [Setting(Category = SettingCategory.Aesthetic)]
         public Theme Theme { get => Get<Theme>(); set => Set(value); }
 
-        [Setting(Category = SettingCategory.Security, Description = "Amount of time before this window requires a password again.")]
+        [Setting(Category = SettingCategory.Security, Description = "Number of minutes before this window requires a password again.")]
         public int Timeout { get => Get<int>(); set => Set(value); }
+
+        [XmlIgnore]
+        [Setting(ReadOnly = true, Category = SettingCategory.Misc)]
+        public string Version { get => Assembly.GetEntryAssembly().GetName().Version.ToString(); }
 
         #endregion Properties
     }
@@ -110,7 +119,7 @@ namespace IvyLock.Model
     public class ProcessSettings : SettingGroup
     {
         #region Fields
-        
+
         private SecureString _password;
         private string _path;
 
@@ -196,11 +205,22 @@ namespace IvyLock.Model
             Description = "Whether this app should require a password to start after the first entry.")]
         public bool UseLockTimeOut { get => Get<bool>(); set => Set(value); }
 
-        [Setting(
-                            Category = SettingCategory.Security,
+        [Setting(Category = SettingCategory.Security,
             Name = "Use Password",
             Description = "Whether this app is locked by IvyLock.")]
         public bool UsePassword { get => Get<bool>(); set => Set(value); }
+
+        [Setting(Category = SettingCategory.Security,
+            Name = "Lock App")]
+        public AsyncDelegateCommand LockApp
+        {
+            get => new AsyncDelegateCommand(LockAppCommand);
+        }
+
+        private async Task LockAppCommand()
+        {
+            await ProcessAuthenticationViewModel.Lock(Path, true);
+        }
 
         #endregion Properties
 
@@ -259,6 +279,8 @@ namespace IvyLock.Model
             set { Set(value, ref _value); }
         }
 
+        public bool ReadOnly { get; internal set; }
+
         #endregion Properties
 
         #region Methods
@@ -290,6 +312,7 @@ namespace IvyLock.Model
         public int MaxValue { get; set; } = int.MaxValue;
         public int MinValue { get; set; } = int.MinValue;
         public string Name { get; set; }
+        public bool ReadOnly { get; set; }
 
         #endregion Properties
     }
@@ -411,6 +434,7 @@ namespace IvyLock.Model
                     s.Name = attr.Name ?? s.Name;
                     s.Category = attr.Category;
                     s.Description = attr.Description;
+                    s.ReadOnly = attr.ReadOnly;
 
                     if (s.Type != SettingType.Password)
                         s.Value = pi.GetValue(this);

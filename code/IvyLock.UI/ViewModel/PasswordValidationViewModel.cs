@@ -162,7 +162,7 @@ namespace IvyLock.ViewModel
             await Task.Run(() =>
             {
                 var session =
-                    WBF.OpenSession(BiometricType.Fingerprint,BiometricSessionFlags.Default,
+                    WBF.OpenSession(BiometricType.Fingerprint, BiometricSessionFlags.Default,
                         null, BiometricDatabaseType.None);
 
                 var match = false;

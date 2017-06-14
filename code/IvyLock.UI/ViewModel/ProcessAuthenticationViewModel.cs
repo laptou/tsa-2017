@@ -1,18 +1,24 @@
 ﻿using IvyLock.Model;
 using IvyLock.Service;
 using System;
+using IvyLock.View;
+
+using System;
+
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Collections.Specialized;
 using System.Diagnostics;
 using System.IO;
+
+using System.Linq;
+
 using System.Security;
 using System.Threading.Tasks;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Xml.Linq;
-
 using SC = System.StringComparison;
 
 namespace IvyLock.ViewModel
@@ -118,7 +124,7 @@ namespace IvyLock.ViewModel
             {
                 Set(value, ref path);
                 RaisePropertyChanged("ProcessName");
-                
+
                 BiometricsEnabled = iss?.FindByPath(ProcessPath).UseBiometricAuthentication == true;
             }
         }
@@ -192,18 +198,24 @@ namespace IvyLock.ViewModel
             return ies.Hash(Password);
         }
 
-        public async Task Lock()
+        public async Task Lock(bool manual = false)
         {
             await Task.Run(() =>
             {
                 lock (Processes)
                 {
-                    ProcessSettings ps = iss.FindByPath(ProcessPath);
+                    if (!manual) {
+                        ProcessSettings ps = iss.FindByPath(ProcessPath);
 
-                    if (unlockTimes.ContainsKey(ProcessPath) &&
-                        (!ps.UseLockTimeOut ||
-                            (DateTime.Now - unlockTimes[ProcessPath]).TotalMinutes < ps.LockTimeOut))
-                        return;
+                        if (!unlockTimes.TryGetValue(ProcessPath, out DateTime value))
+                            unlockTimes[ProcessPath] = DateTime.MinValue;
+
+                        var time = (DateTime.Now - value);
+
+                        if (unlockTimes.ContainsKey(ProcessPath) &&
+                            (!ps.UseLockTimeOut || time.TotalMinutes < ps.LockTimeOut))
+                            return;
+                    }
 
                     if (Locked)
                         return;
@@ -225,6 +237,38 @@ namespace IvyLock.ViewModel
                     });
                 }
             });
+        }
+
+        private static Dictionary<string, ProcessAuthenticationView> views =
+            new Dictionary<string, ProcessAuthenticationView>();
+
+        public async static Task Lock(string path, bool manual = false)
+        {
+            ProcessAuthenticationView av = views.ContainsKey(path) ? views[path] : new ProcessAuthenticationView();
+            ProcessAuthenticationViewModel avm = av.DataContext as ProcessAuthenticationViewModel;
+
+            avm.ProcessPath = path;
+            var processes = Process.GetProcesses().Where(p =>
+                string.Equals(p.GetPath(), path, SC.InvariantCultureIgnoreCase));
+
+            if (processes.Count() == 0) return;
+
+            foreach (var proc in processes) avm.Processes.Add(proc);
+
+            await avm.Lock(manual);
+
+            if (!avm.Locked)
+            {
+                avm.Dispose();
+                return;
+            }
+
+            if (!views.ContainsKey(path))
+                av.Closed += (s, e) => views.Remove(path);
+
+            views[path] = av;
+            views[path].Show();
+            views[path].Activate();
         }
 
         public async Task Unlock()
@@ -288,6 +332,9 @@ namespace IvyLock.ViewModel
                         Processes.Remove(Processes.FirstOrDefault(p => p.Id == pid));
                         suspended.Remove(pid);
                     }
+
+                    if (Processes.Count == 0)
+                        CloseView();
                 }
             }
             catch
