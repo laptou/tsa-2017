@@ -3,5 +3,5 @@
 	    DisplayName="IvyLock"
       ShowNameOnSquare150x150Logo='on'
       ForegroundText='dark'
-      BackgroundColor='#ffffff'/>
+      BackgroundColor='#ffffff' />
 </Application>

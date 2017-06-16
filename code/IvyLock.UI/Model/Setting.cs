@@ -1,5 +1,6 @@
 ﻿using IvyLock.Service;
 using IvyLock.ViewModel;
+using Microsoft.Win32;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -16,13 +17,14 @@ namespace IvyLock.Model
 {
     public enum SettingCategory
     {
-        Security, Misc,
-        Aesthetic
+        Security,
+        Aesthetic,
+        Misc
     }
 
     public enum SettingType
     {
-        Number, Enum, String, Password, Boolean, Action
+        Number, Enum, String, Password, Boolean, Action, File
     }
 
     public enum Theme
@@ -40,6 +42,9 @@ namespace IvyLock.Model
         {
             Name = "IvyLock";
             OpenFileOnDecrypt = true;
+            EnableLockScreenPicture = true;
+            EnableSelectionPicture = true;
+            AestheticPicture = "pack://application:,,,/IvyLock;component/Content/ivy.png";
         }
 
         public IvyLockSettings(SerializationInfo info, StreamingContext context) : base(info, context)
@@ -76,8 +81,33 @@ namespace IvyLock.Model
             Description = "Automatically delete the encrypted file after decrypting it.")]
         public bool DeleteFileOnDecrypt { get => Get<bool>(); set => Set(value); }
 
-        [Setting(Category = SettingCategory.Aesthetic, Name = "Disable Ivy Picture")]
-        public bool DisableIvyPicture { get => Get<bool>(); set => Set(value); }
+        [XmlIgnore]
+        [Setting(Category = SettingCategory.Aesthetic, Name = "Choose Aesthetic Picture")]
+        public AsyncDelegateCommand SetAestheticPictureCommand => new AsyncDelegateCommand(SetAestheticPictureAsync);
+
+        [XmlIgnore]
+        [Setting(Category = SettingCategory.Aesthetic, Name = "Reset Aesthetic Picture")]
+        public AsyncDelegateCommand ResetAestheticPictureCommand => 
+            new AsyncDelegateCommand(() => AestheticPicture = "pack://application:,,,/Content/ivy.png");
+
+        private async Task SetAestheticPictureAsync()
+        {
+            OpenFileDialog ofd = new OpenFileDialog();
+            ofd.CheckFileExists = true;
+            ofd.ValidateNames = true;
+            ofd.Filter = "Image|*.jpg;*.png;*.gif;*.tif;*.tiff";
+            await App.Current.Dispatcher.InvokeAsync(ofd.ShowDialog);
+            AestheticPicture = ofd.FileName;
+        }
+
+        [Setting(Category = SettingCategory.Aesthetic, Hide = true)]
+        public string AestheticPicture { get => Get<string>(); set => Set(value); }
+
+        [Setting(Category = SettingCategory.Aesthetic, Name = "Enable Lock Screen Picture")]
+        public bool EnableLockScreenPicture { get => Get<bool>(); set => Set(value); }
+
+        [Setting(Category = SettingCategory.Aesthetic, Name = "Enable Selection Picture")]
+        public bool EnableSelectionPicture { get => Get<bool>(); set => Set(value); }
 
         [XmlIgnore]
         [Setting(Category = SettingCategory.Security, Description = "Password used to unlock IvyLock settings.")]
@@ -313,6 +343,7 @@ namespace IvyLock.Model
         public int MinValue { get; set; } = int.MinValue;
         public string Name { get; set; }
         public bool ReadOnly { get; set; }
+        public SettingType? Type { get; set; }
 
         #endregion Properties
     }
@@ -435,6 +466,8 @@ namespace IvyLock.Model
                     s.Category = attr.Category;
                     s.Description = attr.Description;
                     s.ReadOnly = attr.ReadOnly;
+
+                    s.Type = attr.Type ?? s.Type;
 
                     if (s.Type != SettingType.Password)
                         s.Value = pi.GetValue(this);

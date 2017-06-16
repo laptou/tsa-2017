@@ -5,27 +5,10 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
+using static IvyLock.Service.Native.NativeMethods;
 
 namespace IvyLock
 {
-    [Flags]
-    public enum ProcessAccessFlags : uint
-    {
-        All = 0x001F0FFF,
-        Terminate = 0x00000001,
-        CreateThread = 0x00000002,
-        VirtualMemoryOperation = 0x00000008,
-        VirtualMemoryRead = 0x00000010,
-        VirtualMemoryWrite = 0x00000020,
-        DuplicateHandle = 0x00000040,
-        CreateProcess = 0x000000080,
-        SetQuota = 0x00000100,
-        SetInformation = 0x00000200,
-        QueryInformation = 0x00000400,
-        QueryLimitedInformation = 0x00001000,
-        Synchronize = 0x00100000
-    }
-
     public enum ShowWindow
     {
         Hide = 0,
@@ -195,7 +178,10 @@ namespace IvyLock
 
         public static bool IsUWP(this Process process)
         {
-            return IsImmersiveProcess(GetHandle(process.Id, ProcessAccessFlags.QueryLimitedInformation));
+            var handle = GetHandle(process.Id, ProcessAccessFlags.QueryLimitedInformation);
+            var uwp = IsImmersiveProcess(handle);
+            CloseHandle(handle);
+            return uwp;
         }
 
         public static void Resume(this Process process)
@@ -233,16 +219,9 @@ namespace IvyLock
         [DllImport("kernel32.dll")]
         internal static extern uint SuspendThread(IntPtr hThread);
 
-        [DllImport("kernel32.dll", SetLastError = true)]
-        private static extern bool CloseHandle(IntPtr hHandle);
-
         [DllImport("user32.dll")]
         private static extern bool EnumThreadWindows(int dwThreadId, EnumThreadDelegate lpfn,
             IntPtr lParam);
-
-        [DllImport("kernel32.dll")]
-        private static extern IntPtr OpenProcess(ProcessAccessFlags dwDesiredAccess,
-                       bool bInheritHandle, int dwProcessId);
 
         [DllImport("kernel32.dll")]
         private static extern IntPtr OpenThread(ThreadAccess dwDesiredAccess, bool bInheritHandle, uint dwThreadId);

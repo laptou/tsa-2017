@@ -14,9 +14,12 @@ namespace IvyLock.View.Control
             if (container is FrameworkElement element && item != null && item is Setting)
             {
                 Setting setting = item as Setting;
+                string type = setting.Type.ToString();
 
-                return element.FindResource(setting.Type.ToString())
-                            as DataTemplate;
+                if (setting.ReadOnly)
+                    type = "Info";
+
+                return element.FindResource(type) as DataTemplate;
             }
 
             return null;

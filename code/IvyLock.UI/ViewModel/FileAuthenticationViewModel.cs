@@ -83,13 +83,12 @@ namespace IvyLock.ViewModel
             aes.Key = rfc.GetBytes(aes.KeySize / 8);
             aes.IV = rfc.GetBytes(aes.BlockSize / 8);
 
-
             if (Encrypt)
             {
                 string newPath = IOPath.ChangeExtension(Path, IOPath.GetExtension(Path) + ".ivy");
 
                 FileStream newFs = File.Create(newPath);
-                
+
                 ICryptoTransform ict = aes.CreateEncryptor();
 
                 using (CryptoStream cs = new CryptoStream(newFs, ict, CryptoStreamMode.Write))
@@ -111,7 +110,8 @@ namespace IvyLock.ViewModel
 
                 fs.Dispose();
 
-                if (XmlSettingsService.Default.OfType<IvyLockSettings>().First().DeleteFileOnEncrypt)
+                if (XmlSettingsService.Default != null &&
+                    XmlSettingsService.Default?.OfType<IvyLockSettings>().First().DeleteFileOnEncrypt == true)
                     File.Delete(path);
             }
             else
@@ -136,7 +136,7 @@ namespace IvyLock.ViewModel
                     using (CryptoStream cs = new CryptoStream(newFs, ict, CryptoStreamMode.Write))
                     {
                         byte[] block = new byte[81920];
-                        
+
                         do
                         {
                             await cs.WriteAsync(block, 0, await fs.ReadAsync(block, 0, 81920));
@@ -150,13 +150,17 @@ namespace IvyLock.ViewModel
 
                 fs.Dispose();
 
-                if (XmlSettingsService.Default.OfType<IvyLockSettings>().First().DeleteFileOnDecrypt)
-                    File.Delete(path);
+                var settings = XmlSettingsService.Default != null ? XmlSettingsService.Default.OfType<IvyLockSettings>().First() : null;
 
-                if (XmlSettingsService.Default.OfType<IvyLockSettings>().First().OpenFileOnDecrypt)
-                    Process.Start(newPath);
+                if (settings != null)
+                {
+                    if (settings.DeleteFileOnDecrypt)
+                        File.Delete(path);
+
+                    if (settings.OpenFileOnDecrypt)
+                        Process.Start(newPath);
+                }
             }
-
         }
 
         #endregion Methods

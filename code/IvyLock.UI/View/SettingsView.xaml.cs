@@ -1,8 +1,11 @@
 ﻿using System;
 using IvyLock.ViewModel;
+
+using System;
+
 using System.ComponentModel;
-using System.Windows;
 using System.IO;
+using System.Windows;
 
 namespace IvyLock.View
 {
@@ -11,7 +14,7 @@ namespace IvyLock.View
     /// </summary>
     public partial class SettingsView : Window
     {
-        SettingsViewModel svm;
+        private SettingsViewModel svm;
 
         public SettingsView()
         {

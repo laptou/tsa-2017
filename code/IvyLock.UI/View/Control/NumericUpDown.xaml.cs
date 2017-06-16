@@ -20,7 +20,7 @@ namespace IvyLock.View.Control
             get { return (int)GetValue(ValueProperty); }
             set { SetValue(ValueProperty, Math.Min(Math.Max(value, MinValue), MaxValue)); }
         }
-        
+
         public static readonly DependencyProperty ValueProperty =
             DependencyProperty.Register("Value", typeof(int), typeof(NumericUpDown), new PropertyMetadata(0, ValueChanged));
 
@@ -48,7 +48,7 @@ namespace IvyLock.View.Control
             get { return (int)GetValue(MinValueProperty); }
             set { SetValue(MinValueProperty, value); }
         }
-        
+
         public static readonly DependencyProperty MinValueProperty =
             DependencyProperty.Register("MinValue", typeof(int), typeof(NumericUpDown), new PropertyMetadata(0));
 

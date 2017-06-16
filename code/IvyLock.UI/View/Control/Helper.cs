@@ -1,7 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Text;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
@@ -89,7 +88,7 @@ namespace IvyLock.View.Control
         {
             obj.SetValue(PlaceholderProperty, value);
         }
-        
+
         public static readonly DependencyProperty PlaceholderProperty =
             DependencyProperty.RegisterAttached("Placeholder", typeof(string), typeof(Helper), new PropertyMetadata(null));
     }

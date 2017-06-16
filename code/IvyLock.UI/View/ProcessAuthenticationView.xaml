@@ -80,7 +80,7 @@
                     <RowDefinition Height="*" />
                     <RowDefinition Height="*" />
                 </Grid.RowDefinitions>
-                
+
                 <PasswordBox
                     control:Helper.Placeholder="type password and press enter to run"
                     control:Helper.UpdateOnEnter="True"
@@ -100,17 +100,6 @@
                                         Storyboard.TargetName="biometricSymbol"
                                         Storyboard.TargetProperty="(TextBlock.Foreground).(SolidColorBrush.Color)">
                                         <StaticResourceExtension ResourceKey="SuccessAnimation" />
-                                    </Storyboard>
-                                </ei:ControlStoryboardAction.Storyboard>
-                            </ei:ControlStoryboardAction>
-                        </i:EventTrigger>
-                        <i:EventTrigger EventName="BiometricDelayed" SourceObject="{Binding Mode=OneWay}">
-                            <ei:ControlStoryboardAction>
-                                <ei:ControlStoryboardAction.Storyboard>
-                                    <Storyboard
-                                        Storyboard.TargetName="biometricSymbol"
-                                        Storyboard.TargetProperty="(TextBlock.Foreground).(SolidColorBrush.Color)">
-                                        <StaticResourceExtension ResourceKey="WarnAnimation" />
                                     </Storyboard>
                                 </ei:ControlStoryboardAction.Storyboard>
                             </ei:ControlStoryboardAction>
@@ -144,12 +133,12 @@
                                 <ei:ControlStoryboardAction>
                                     <ei:ControlStoryboardAction.Storyboard>
                                         <Storyboard>
-                                            <DoubleAnimation 
+                                            <DoubleAnimation
                                                 Storyboard.TargetProperty="Value"
                                                 Storyboard.TargetName="attemptTimer"
                                                 From="100"
                                                 To="0"
-                                                Duration="{Binding AttemptWait}"/>
+                                                Duration="{Binding AttemptWait}" />
                                         </Storyboard>
                                     </ei:ControlStoryboardAction.Storyboard>
                                 </ei:ControlStoryboardAction>

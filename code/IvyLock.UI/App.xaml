@@ -4,7 +4,7 @@
     xmlns:control="clr-namespace:IvyLock.View.Control"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" xmlns:xctk="http://schemas.xceed.com/wpf/xaml/toolkit"
-    xmlns:Themes="clr-namespace:Microsoft.Windows.Themes;assembly=PresentationFramework.Aero2" mc:Ignorable="d"
+    xmlns:Themes="clr-namespace:Microsoft.Windows.Themes;assembly=PresentationFramework.Aero" mc:Ignorable="d"
     x:Class="IvyLock.App" ShutdownMode="OnExplicitShutdown">
     <Application.Resources>
         <ResourceDictionary>
@@ -242,7 +242,15 @@
                             <RowDefinition Height="*" />
                         </Grid.RowDefinitions>
 
-                        <Grid Grid.Row="0">
+                        <Border Grid.Row="1" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" Background="{TemplateBinding Background}">
+                            <Grid>
+                                <AdornerDecorator>
+                                    <ContentPresenter x:Name="WindowContent" />
+                                </AdornerDecorator>
+                                <ResizeGrip  x:Name="WindowResizeGrip" HorizontalAlignment="Right" IsTabStop="false" Visibility="Collapsed" VerticalAlignment="Bottom" />
+                            </Grid>
+                        </Border>
+                        <Grid Grid.Row="0" Background="{DynamicResource BackgroundQuarter}">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="Auto" MinWidth="20" />
                                 <ColumnDefinition Width="*" />
@@ -279,14 +287,6 @@
                                 </Button>
                             </StackPanel>
                         </Grid>
-                        <Border Grid.Row="1" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" Background="{TemplateBinding Background}">
-                            <Grid>
-                                <AdornerDecorator>
-                                    <ContentPresenter x:Name="WindowContent" />
-                                </AdornerDecorator>
-                                <ResizeGrip  x:Name="WindowResizeGrip" HorizontalAlignment="Right" IsTabStop="false" Visibility="Collapsed" VerticalAlignment="Bottom" />
-                            </Grid>
-                        </Border>
                     </Grid>
                     <Thumb x:Name="ThumbTop" Height="6" Margin="14,0" VerticalAlignment="Top" Cursor="SizeNS"  Opacity="0" control:WindowResizeBehavior.TopResize="{Binding RelativeSource={RelativeSource AncestorType={x:Type Window}, Mode=FindAncestor}}" />
                     <Thumb x:Name="ThumbTopLeft" Height="6" Width="6" VerticalAlignment="Top" HorizontalAlignment="Left" Cursor="SizeNWSE"  Opacity="0" control:WindowResizeBehavior.TopLeftResize="{Binding RelativeSource={RelativeSource AncestorType={x:Type Window}, Mode=FindAncestor}}" />
@@ -705,7 +705,7 @@
             <Style TargetType="{x:Type Button}" x:Key="WindowButton">
                 <Setter Property="Height" Value="40" />
                 <Setter Property="Width" Value="54" />
-                <Setter Property="Background" Value="{DynamicResource BackgroundDark}" />
+                <Setter Property="Background" Value="Transparent" />
                 <Setter Property="Foreground" Value="{DynamicResource Foreground}" />
                 <Setter Property="FontFamily" Value="{DynamicResource IconFont}" />
                 <Setter Property="Template" Value="{StaticResource ButtonTemplate}" />

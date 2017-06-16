@@ -4,10 +4,10 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:control="clr-namespace:IvyLock.View.Control"
-        xmlns:ViewModel="clr-namespace:IvyLock.ViewModel" xmlns:i="http://schemas.microsoft.com/expression/2010/interactivity" 
-        xmlns:ei="http://schemas.microsoft.com/expression/2010/interactions" xmlns:xctk="http://schemas.xceed.com/wpf/xaml/toolkit" 
+        xmlns:ViewModel="clr-namespace:IvyLock.ViewModel" xmlns:i="http://schemas.microsoft.com/expression/2010/interactivity"
+        xmlns:ei="http://schemas.microsoft.com/expression/2010/interactions" xmlns:xctk="http://schemas.xceed.com/wpf/xaml/toolkit"
         xmlns:local="clr-namespace:IvyLock.View" x:Class="IvyLock.View.FileAuthenticationView"
-        mc:Ignorable="d" Title="{Binding FileName}" Height="512" Width="768" FontFamily="Roboto" 
+        mc:Ignorable="d" Title="{Binding FileName}" Height="512" Width="768" FontFamily="Roboto"
         Style="{DynamicResource IvyWindow}">
     <Window.Resources>
         <local:PathToIconConverter x:Key="PathToIconConverter" />
@@ -109,7 +109,7 @@
                                  Background="Transparent" BorderBrush="Transparent"
                                  Height="2" VerticalAlignment="Bottom"
                                  Value="{Binding TransformTask.Progress, Mode=OneWay}"
-                                 Maximum="100"/>
+                                 Maximum="100" />
                 </Grid>
 
                 <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" Orientation="Horizontal"

@@ -57,6 +57,7 @@ namespace IvyLock.View
 
         #endregion Properties
     }
+
     // Thie IValueConverter is used by the StyleBinding to implement
     // the logical comparisson. ConvertBack isn’t supported. Convert
     // returns null if the condition is met, non-null otherwise.
@@ -93,7 +94,7 @@ namespace IvyLock.View
             // Simple check for null
             if (value == null || _styleBinding.Comparand == null)
             {
-                if(_styleBinding.Operator == ComparisonOperators.NE)
+                if (_styleBinding.Operator == ComparisonOperators.NE)
                     return ReturnHelper(value != _styleBinding.Comparand);
                 else
                     return ReturnHelper(value == _styleBinding.Comparand);

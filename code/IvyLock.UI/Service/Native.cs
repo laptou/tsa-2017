@@ -1,10 +1,78 @@
-﻿using Microsoft.Win32;
-using System;
+﻿using System;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Linq;
 using System.Runtime.InteropServices;
+using System.Text;
+using System.Threading.Tasks;
 
-namespace IvyLock.Service
+namespace IvyLock.Service.Native
 {
-    public static class Native
+    public enum AccessMode
+    {
+        NOT_USED_ACCESS = 0,
+        GRANT_ACCESS,
+        SET_ACCESS,
+        DENY_ACCESS,
+        REVOKE_ACCESS,
+        SET_AUDIT_SUCCESS,
+        SET_AUDIT_FAILURE
+    }
+
+    public enum MultipleTrusteeOperation
+    {
+        NO_MULTIPLE_TRUSTEE,
+        TRUSTEE_IS_IMPERSONATE
+    }
+
+    public enum TrusteeForm
+    {
+        TRUSTEE_IS_SID,
+        TRUSTEE_IS_NAME,
+        TRUSTEE_BAD_FORM,
+        TRUSTEE_IS_OBJECTS_AND_SID,
+        TRUSTEE_IS_OBJECTS_AND_NAME
+    }
+
+    public enum TrusteeType
+    {
+        TRUSTEE_IS_UNKNOWN,
+        TRUSTEE_IS_USER,
+        TRUSTEE_IS_GROUP,
+        TRUSTEE_IS_DOMAIN,
+        TRUSTEE_IS_ALIAS,
+        TRUSTEE_IS_WELL_KNOWN_GROUP,
+        TRUSTEE_IS_DELETED,
+        TRUSTEE_IS_INVALID,
+        TRUSTEE_IS_COMPUTER
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    public struct ExplicitAccess
+    {
+        private int grfAccessPermissions;
+        private AccessMode grfAccessMode;
+        private int grfInheritance;
+        private Trustee Trustee;
+    }
+
+    public struct Trustee
+    {
+        #region Fields
+
+        private MultipleTrusteeOperation MultipleTrusteeOperation;
+        private IntPtr pMultipleTrustee;
+
+        [MarshalAs(UnmanagedType.LPTStr)]
+        private string ptstrName;
+
+        private TrusteeForm TrusteeForm;
+        private TrusteeType TrusteeType;
+
+        #endregion Fields
+    }
+
+    public static class NativeMethods
     {
         #region Enums
 
@@ -570,36 +638,355 @@ namespace IvyLock.Service
 
         #endregion Enums
 
-        public static void SetAssociation(string Extension, string KeyName, string OpenWith, string FileDescription)
+        #region Methods
+
+        [DllImport("kernel32.dll", SetLastError = true)]
+        public static extern bool CloseHandle(IntPtr handle);
+
+        [DllImport("kernel32.dll", CharSet = CharSet.Auto, SetLastError = true)]
+        public static extern IntPtr GetCurrentProcess();
+
+        [DllImport("kernel32.dll", SetLastError = true, CharSet = CharSet.Auto)]
+        public static extern uint GetFinalPathNameByHandle(
+            IntPtr hFile,
+            [MarshalAs(UnmanagedType.LPTStr)] StringBuilder lpszFilePath,
+            uint cchFilePath,
+            uint dwFlags);
+
+        public static async Task<IEnumerable<SystemHandleExtended>> GetHandles(int pid)
         {
-            RegistryKey BaseKey;
-            RegistryKey OpenMethod;
-            RegistryKey Shell;
-            RegistryKey CurrentUser;
+            NTStatus status;
+            uint handleInfoSize = 0x10000;
+            IntPtr handleInfo = Marshal.AllocHGlobal((IntPtr)handleInfoSize);
 
-            BaseKey = Registry.ClassesRoot.CreateSubKey(Extension);
-            BaseKey.SetValue("", KeyName);
+            do
+            {
+                handleInfo = Marshal.ReAllocHGlobal(handleInfo, (IntPtr)handleInfoSize);
+                status = NtQuerySystemInformation(
+                    SystemInformationClass.SystemExtendedHandleInformation,
+                    handleInfo,
+                    handleInfoSize,
+                    out handleInfoSize);
+            } while (status == NTStatus.InfoLengthMismatch);
 
-            OpenMethod = Registry.ClassesRoot.CreateSubKey(KeyName);
-            OpenMethod.SetValue("", FileDescription);
-            OpenMethod.CreateSubKey("DefaultIcon").SetValue("", "\"" + OpenWith + "\",0");
-            Shell = OpenMethod.CreateSubKey("Shell");
-            Shell.CreateSubKey("edit").CreateSubKey("command").SetValue("", "\"" + OpenWith + "\"" + " \"%1\"");
-            Shell.CreateSubKey("open").CreateSubKey("command").SetValue("", "\"" + OpenWith + "\"" + " \"%1\"");
-            BaseKey.Close();
-            OpenMethod.Close();
-            Shell.Close();
+            if (status != NTStatus.Success)
+                throw new Win32Exception($"NtQuerySystemInformation failed ({status})");
 
-            // Delete the key instead of trying to change it
-            CurrentUser = Registry.CurrentUser.OpenSubKey("Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\FileExts\\" + Extension, true);
-            CurrentUser.DeleteSubKey("UserChoice", false);
-            CurrentUser.Close();
+            SystemHandleInformationExtended shi = Marshal.PtrToStructure<SystemHandleInformationExtended>(handleInfo);
 
-            // Tell explorer the file association has been changed
-            SHChangeNotify(0x08000000, 0x0000, IntPtr.  Zero, IntPtr.Zero);
+            SystemHandleExtended[] systemHandles = new SystemHandleExtended[(long)shi.NumberOfHandles];
+
+            int size = Marshal.SizeOf<SystemHandleExtended>();
+            int offset = IntPtr.Size * 2;
+            await Task.Run(
+                () => Parallel.For(
+                    0,
+                    (int)shi.NumberOfHandles,
+                    (int i) =>
+                        systemHandles[i] = Marshal.PtrToStructure<SystemHandleExtended>(handleInfo + offset + i * size)));
+
+            Marshal.FreeHGlobal(handleInfo);
+
+            int[] pids = systemHandles.Select(x => x.GetPid()).Distinct().ToArray();
+
+            return from handle in systemHandles where handle.GetPid() == pid select handle;
         }
 
-        [DllImport("shell32.dll", CharSet = CharSet.Auto, SetLastError = true)]
-        public static extern void SHChangeNotify(uint wEventId, uint uFlags, IntPtr dwItem1, IntPtr dwItem2);
+        public static async Task<SystemProcessInformation[]> GetProcessInfo(int pid)
+        {
+            NTStatus status;
+            uint handleInfoSize = 0x10000;
+            IntPtr handleInfo = Marshal.AllocHGlobal((IntPtr)handleInfoSize);
+
+            do
+            {
+                handleInfo = Marshal.ReAllocHGlobal(handleInfo, (IntPtr)handleInfoSize);
+                status = NtQuerySystemInformation(
+                    SystemInformationClass.SystemProcessInformation,
+                    handleInfo,
+                    handleInfoSize,
+                    out handleInfoSize);
+            } while (status == NTStatus.InfoLengthMismatch);
+
+            if (status != NTStatus.Success)
+                throw new Win32Exception($"NtQuerySystemInformation failed ({status})");
+
+            int size = Marshal.SizeOf<SystemProcessInformation>();
+
+            SystemProcessInformation[] info = new SystemProcessInformation[handleInfoSize / size];
+            SystemProcessInformation last;
+            int i = 0;
+            int o = 0;
+
+            do
+            {
+                info[i++] = last = Marshal.PtrToStructure<SystemProcessInformation>(handleInfo + o);
+                o += (int)last.NextEntryOffset;
+            } while (last.NextEntryOffset > 0);
+
+            Marshal.FreeHGlobal(handleInfo);
+
+            return info;
+        }
+
+        [DllImport("ntdll.dll")]
+        public static extern NTStatus NtDuplicateObject(
+            IntPtr SourceProcessHandle,
+            IntPtr SourceHandle,
+            IntPtr TargetProcessHandle,
+            IntPtr TargetHandle,
+            uint DesiredAccess,
+            uint Attributes,
+            uint Options);
+
+        [DllImport("ntdll.dll")]
+        public static extern NTStatus NtQueryObject(
+            IntPtr objectHandle,
+            ObjectInformationClass informationClass,
+            IntPtr informationPtr,
+            uint informationLength,
+            ref uint returnLength);
+
+        [DllImport("ntdll.dll")]
+        public static extern NTStatus NtQuerySystemInformation(
+            SystemInformationClass InfoClass,
+            IntPtr Info,
+            uint Size,
+            out uint Length);
+
+        [DllImport("kernel32.dll", SetLastError = true)]
+        public static extern IntPtr OpenProcess(
+             ProcessAccessFlags processAccess,
+             bool bInheritHandle,
+             int processId);
+
+        #endregion Methods
+
+        #region Structs
+
+        [StructLayout(LayoutKind.Sequential)]
+        public struct GenericMapping
+        {
+            private uint GenericRead;
+            private uint GenericWrite;
+            private uint GenericExecute;
+            private uint GenericAll;
+        }
+
+        public struct ObjectNameInformation
+        {
+            #region Fields
+
+            public UnicodeString Name;
+
+            #endregion Fields
+        }
+
+        [StructLayout(LayoutKind.Sequential)]
+        public struct ObjectTypeInformation
+        {
+            public UnicodeString Name;
+            public uint TotalNumberOfObjects;
+            public uint TotalNumberOfHandles;
+            public uint TotalPagedPoolUsage;
+            public uint TotalNonPagedPoolUsage;
+            public uint TotalNamePoolUsage;
+            public uint TotalHandleTableUsage;
+            public uint HighWaterNumberOfObjects;
+            public uint HighWaterNumberOfHandles;
+            public uint HighWaterPagedPoolUsage;
+            public uint HighWaterNonPagedPoolUsage;
+            public uint HighWaterNamePoolUsage;
+            public uint HighWaterHandleTableUsage;
+            public uint InvalidAttributes;
+            public GenericMapping GenericMapping;
+            public uint ValidAccess;
+            public bool SecurityRequired;
+            public bool MaintainHandleCount;
+            public ushort MaintainTypeList;
+            public PoolType PoolType;
+            public uint PagedPoolUsage;
+            public uint NonPagedPoolUsage;
+        }
+
+        [StructLayout(LayoutKind.Sequential, Pack = 1)]
+        public struct SystemHandle
+        {
+            public IntPtr ProcessId;
+            public byte ObjectTypeNumber;
+            public byte Flags;
+            public ushort Handle;
+            public IntPtr Object;
+            public int GrantedAccess;
+
+            internal int GetPid() => IntPtr.Size == 4 ? (int)ProcessId : (int)((long)ProcessId >> 32);
+        }
+
+        [StructLayout(LayoutKind.Sequential)]
+        public struct SystemHandleInformation // Size=20
+        {
+            public uint NumberOfHandles; // Size=4 Offset=0
+            public SystemHandle Handles; // Size=16 Offset=4
+        }
+
+        [StructLayout(LayoutKind.Sequential)]
+        public struct SystemProcessInformation
+        {
+            public uint NextEntryOffset;            // 0x00
+            public uint NumberOfThreads;            // 0x04
+            public long WorkingSetPrivateSize;      // 0x08
+            public uint HardFaultCount;             // 0x10
+            public uint NumberOfThreadsHighWatermark; // 0x14
+            public ulong CycleTime;                 // 0x18
+            public long CreateTime;                 // 0x20
+            public long UserTime;                   // 0x28
+            public long KernelTime;                 // 0x30
+            public UnicodeString ImageName;         // 0x38
+            public long BasePriority;               // 0x48
+            public IntPtr UniqueProcessId;          // 0x50
+            public IntPtr InheritedFromUniqueProcessId; // 0x58
+            public uint HandleCount;                // 0x60
+            public uint SessionId;                  // 0x64
+            public UIntPtr UniqueProcessKey;        // 0x68
+            public UIntPtr PeakVirtualSize;         
+            public UIntPtr VirtualSize;
+            public uint PageFaultCount;
+            public UIntPtr PeakWorkingSetSize;
+            public UIntPtr WorkingSetSize;
+            public UIntPtr QuotaPeakPagedPoolUsage;
+            public UIntPtr QuotaPagedPoolUsage;
+            public UIntPtr QuotaPeakNonPagedPoolUsage;
+            public UIntPtr QuotaNonPagedPoolUsage;
+            public UIntPtr PagefileUsage;
+            public UIntPtr PeakPagefileUsage;
+            public UIntPtr PrivatePageCount;
+            public long ReadOperationCount;
+            public long WriteOperationCount;
+            public long OtherOperationCount;
+            public long ReadTransferCount;
+            public long WriteTransferCount;
+            public long OtherTransferCount;
+            public IntPtr Threads;
+        }
+
+        [StructLayout(LayoutKind.Sequential)]
+        public struct SystemThreadInformation
+        {
+            private long KernelTime;
+            private long UserTime;
+            private long CreateTime;
+            private uint WaitTime;
+            private IntPtr StartAddress;
+            private CLIENT_ID ClientId;
+            private long Priority;
+            private int BasePriority;
+            private uint ContextSwitches;
+            private uint ThreadState;
+            private KWAIT_REASON WaitReason;
+        }
+
+        [StructLayout(LayoutKind.Sequential)]
+        public struct CLIENT_ID
+        {
+            private IntPtr UniqueProcess;
+            private IntPtr UniqueThread;
+        }
+
+        public enum KWAIT_REASON
+        {
+            Executive = 0,
+            FreePage = 1,
+            PageIn = 2,
+            PoolAllocation = 3,
+            DelayExecution = 4,
+            Suspended = 5,
+            UserRequest = 6,
+            WrExecutive = 7,
+            WrFreePage = 8,
+            WrPageIn = 9,
+            WrPoolAllocation = 10,
+            WrDelayExecution = 11,
+            WrSuspended = 12,
+            WrUserRequest = 13,
+            WrEventPair = 14,
+            WrQueue = 15,
+            WrLpcReceive = 16,
+            WrLpcReply = 17,
+            WrVirtualMemory = 18,
+            WrPageOut = 19,
+            WrRendezvous = 20,
+            Spare2 = 21,
+            Spare3 = 22,
+            Spare4 = 23,
+            Spare5 = 24,
+            WrCalloutStack = 25,
+            WrKernel = 26,
+            WrResource = 27,
+            WrPushLock = 28,
+            WrMutex = 29,
+            WrQuantumEnd = 30,
+            WrDispatchInt = 31,
+            WrPreempted = 32,
+            WrYieldExecution = 33,
+            WrFastMutex = 34,
+            WrGuardedMutex = 35,
+            WrRundown = 36,
+            MaximumWaitReason = 37
+        }
+
+        [StructLayout(LayoutKind.Sequential)]
+        public struct SystemHandleInformationExtended // Size=20
+        {
+            public IntPtr NumberOfHandles;
+            public IntPtr Reserved;
+            public SystemHandleExtended Handles;
+        }
+
+        [StructLayout(LayoutKind.Sequential)]
+        public struct UnicodeString : IDisposable
+        {
+            public ushort Length;
+            public ushort MaximumLength;
+            private IntPtr buffer;
+
+            public UnicodeString(string s)
+            {
+                Length = (ushort)(s.Length * 2);
+                MaximumLength = (ushort)(Length + 2);
+                buffer = Marshal.StringToHGlobalUni(s);
+            }
+
+            public void Dispose()
+            {
+                Marshal.FreeHGlobal(buffer);
+                buffer = IntPtr.Zero;
+            }
+
+            public override string ToString()
+            {
+                return Marshal.PtrToStringUni(buffer);
+            }
+        }
+
+        #endregion Structs
+
+        #region Classes
+
+        [StructLayout(LayoutKind.Sequential, Pack = 1)]
+        public class SystemHandleExtended
+        {
+            public IntPtr Object;
+            public IntPtr ProcessId;
+            public IntPtr HandleValue;
+            public uint GrantedAccess;
+            public ushort CreatorBackTraceIndex;
+            public ushort ObjectTypeIndex;
+            public uint HandleAttributes;
+            public uint Reserved;
+
+            internal int GetPid() => (int)ProcessId;
+        }
+
+        #endregion Classes
     }
 }

@@ -1,16 +1,12 @@
 ﻿using IvyLock.Model.Security;
 using System;
 using System.IO;
-using System.Runtime.InteropServices;
 using System.Runtime.Serialization.Formatters.Binary;
 using System.Security;
 using System.Security.Cryptography;
-using System.Text;
 
 namespace IvyLock.Service
 {
-    
-
     public interface IEncryptionService
     {
         string Encrypt<T>(T o, SecureString key);

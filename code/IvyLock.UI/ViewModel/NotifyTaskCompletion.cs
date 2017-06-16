@@ -185,7 +185,7 @@ namespace IvyLock.ViewModel
             catch
             {
             }
-            
+
             RaisePropertyChanged("Status");
             RaisePropertyChanged("IsCompleted");
             RaisePropertyChanged("IsNotCompleted");

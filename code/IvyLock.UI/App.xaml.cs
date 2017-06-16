@@ -93,6 +93,8 @@ namespace IvyLock
 
             if (e.Args.Length > 0)
             {
+                XmlSettingsService.Init(true);
+
                 IEnumerable<string> args = e.Args;
 
                 if (e.Args[0].Equals("-encrypt", StringComparison.InvariantCultureIgnoreCase))
@@ -134,7 +136,7 @@ namespace IvyLock
             if (!IsDesigner)
             {
                 ips = ManagedProcessService.Default;
-                XmlSettingsService.Init();
+                XmlSettingsService.Init(false);
                 iss = XmlSettingsService.Default;
 
                 IvyLockSettings ils = iss.OfType<IvyLockSettings>().First();

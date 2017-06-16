@@ -53,6 +53,7 @@ namespace IvyLock.ViewModel
         private Func<Task> task;
 
         public event EventHandler CanExecuteChanged;
+
         public event PropertyChangedEventHandler PropertyChanged;
 
         public AsyncDelegateCommand(Func<Task> task)

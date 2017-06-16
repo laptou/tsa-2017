@@ -16,7 +16,7 @@ namespace IvyLock.View.Control
         {
             obj.SetValue(EncryptedPasswordProperty, value);
         }
-        
+
         public static readonly DependencyProperty EncryptedPasswordProperty =
             DependencyProperty.RegisterAttached("EncryptedPassword", typeof(SecureString), typeof(PasswordHelper),
                 new PropertyMetadata());

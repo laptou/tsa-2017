@@ -28,12 +28,12 @@ namespace IvyLock.Service
 
         public static ISettingsService Default { get; private set; }
 
-        public static void Init()
+        public static void Init(bool readOnly)
         {
-            Default = new XmlSettingsService();
+            Default = new XmlSettingsService(readOnly);
         }
 
-        public XmlSettingsService()
+        private XmlSettingsService(bool readOnly)
         {
             path = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
             path = Path.Combine(path, "IvyLock");
@@ -46,7 +46,10 @@ namespace IvyLock.Service
             values = new List<SettingGroup>();
             xs = new XmlSerializer(typeof(SettingGroup[]));
 
-            stream = File.Open(path, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.None);
+            if(readOnly)
+                stream = File.Open(path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
+            else
+                stream = File.Open(path, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.Read);
             
             Deserialize(false);
         }
@@ -128,7 +131,7 @@ namespace IvyLock.Service
 
         private void Serialize()
         {
-            if (stream == null) return;
+            if (stream == null || !stream.CanWrite) return;
 
             try
             {

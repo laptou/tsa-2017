@@ -17,21 +17,20 @@
                 <RowDefinition Height="*" />
             </Grid.RowDefinitions>
             <TextBox Name="NUDTextBox" Grid.Column="0" Grid.Row="0" Grid.RowSpan="2"
-                 PreviewKeyDown="NUDTextBox_PreviewKeyDown" PreviewKeyUp="NUDTextBox_PreviewKeyUp" 
+                 PreviewKeyDown="NUDTextBox_PreviewKeyDown" PreviewKeyUp="NUDTextBox_PreviewKeyUp"
                      TextChanged="NUDTextBox_TextChanged" />
-            <RepeatButton Name="NUDButtonUP" Grid.Column="1" Grid.Row="0" 
-                      VerticalContentAlignment="Center" HorizontalContentAlignment="Center" 
+            <RepeatButton Name="NUDButtonUP" Grid.Column="1" Grid.Row="0"
+                      VerticalContentAlignment="Center" HorizontalContentAlignment="Center"
                       Click="NUDButtonUP_Click" BorderThickness="0">
-                <TextBlock FontSize="12" FontFamily="/IvyLock;component/Content/Material-Icons/#Material Icons" 
+                <TextBlock FontSize="12" FontFamily="/IvyLock;component/Content/Material-Icons/#Material Icons"
                            HorizontalAlignment="Center">&#xE5CE;</TextBlock>
             </RepeatButton>
-            <RepeatButton Name="NUDButtonDown" Grid.Column="1" Grid.Row="1" 
+            <RepeatButton Name="NUDButtonDown" Grid.Column="1" Grid.Row="1"
                       VerticalContentAlignment="Center" HorizontalContentAlignment="Center"
                       Click="NUDButtonDown_Click" BorderThickness="0">
-                <TextBlock FontSize="12" FontFamily="/IvyLock;component/Content/Material-Icons/#Material Icons" 
+                <TextBlock FontSize="12" FontFamily="/IvyLock;component/Content/Material-Icons/#Material Icons"
                            HorizontalAlignment="Center">&#xE5CF;</TextBlock>
             </RepeatButton>
         </Grid>
     </Border>
-    
 </UserControl>
