@@ -2972,15 +2972,15 @@
         {
         "Name" = "8:Microsoft Visual Studio"
         "ProductName" = "8:IvyLock"
-        "ProductCode" = "8:{C46F112E-87B5-4D7E-9DAA-D9ED706A4BA1}"
-        "PackageCode" = "8:{AFC5C635-18B1-4633-99AC-D35B1BD406B5}"
+        "ProductCode" = "8:{0D4A6229-AF4B-4058-96EA-1E8857D38753}"
+        "PackageCode" = "8:{2ECC2C53-9296-4A69-BA3C-D3ACBCEAFEFA}"
         "UpgradeCode" = "8:{3DE5A866-0C20-4ABB-84D9-9CBFC2D045BA}"
         "AspNetVersion" = "8:4.0.30319.0"
         "RestartWWWService" = "11:FALSE"
         "RemovePreviousVersions" = "11:TRUE"
         "DetectNewerInstalledVersion" = "11:TRUE"
         "InstallAllUsers" = "11:FALSE"
-        "ProductVersion" = "8:1.6.0"
+        "ProductVersion" = "8:1.6.02"
         "Manufacturer" = "8:Ibiyemi Abiodun"
         "ARPHELPTELEPHONE" = "8:"
         "ARPHELPLINK" = "8:"
@@ -3550,7 +3550,7 @@
             }
             "{5259A561-127C-4D43-A0A1-72F10C7B3BF8}:_63DB972DDD214605A7F1BBB28E531481"
             {
-            "SourcePath" = "8:..\\IvyLock.UI\\obj\\Release\\IvyLock.exe"
+            "SourcePath" = "8:..\\IvyLock.UI\\obj\\Debug\\IvyLock.exe"
             "TargetName" = "8:"
             "Tag" = "8:"
             "Folder" = "8:_7C4C568703A041C6BEC6B5448588B758"
@@ -3606,7 +3606,7 @@
             }
             "{5259A561-127C-4D43-A0A1-72F10C7B3BF8}:_F9CA7103F34B4F06AC1D963F7C14E0EC"
             {
-            "SourcePath" = "8:..\\IvyLock.Native\\Release\\IvyLock.Native.dll"
+            "SourcePath" = "8:..\\IvyLock.Native\\Debug\\IvyLock.Native.dll"
             "TargetName" = "8:"
             "Tag" = "8:"
             "Folder" = "8:_7C4C568703A041C6BEC6B5448588B758"

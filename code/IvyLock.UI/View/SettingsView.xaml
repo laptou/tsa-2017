@@ -11,7 +11,7 @@
         xmlns:System="clr-namespace:System;assembly=mscorlib"
         x:Class="IvyLock.View.SettingsView"
         mc:Ignorable="d" control:IvyWindow.Icon="&#xE8B8;"
-        Title="Settings" Height="512" MinWidth="600" MaxWidth="960" Width="768"
+        Title="Settings" Height="512" MinWidth="600" Width="768"
         Background="{DynamicResource BackgroundDark}" Style="{DynamicResource IvyWindow}">
     <Window.Resources>
         <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
@@ -349,9 +349,117 @@
                 <control:SettingTemplateSelector />
             </ListView.ItemTemplateSelector>
         </ListView>
-        <Grid
-            x:Name="overlay" Background="{DynamicResource BackgroundDark}"
-            Grid.ColumnSpan="2" Grid.RowSpan="2">
+
+        <Grid x:Name="settingOverlay" Background="{DynamicResource BackgroundDark}"
+              Grid.Column="1" Grid.RowSpan="2">
+            <Grid.Style>
+                <Style TargetType="{x:Type Grid}">
+                    <Setter Property="Visibility" Value="Collapsed" />
+                    <Style.Triggers>
+                        <DataTrigger Binding="{Binding SettingViewModel.Locked, Mode=OneWay}" Value="True">
+                            <Setter Property="Visibility" Value="Visible" />
+                        </DataTrigger>
+                    </Style.Triggers>
+                </Style>
+            </Grid.Style>
+
+            <Border Visibility="{Binding IvyLockSettings.EnableLockScreenPicture,
+                    Converter={StaticResource BooleanToVisibilityConverter}}">
+                <Border.Background>
+                    <VisualBrush Stretch="UniformToFill" Viewbox="0.025,0.025,0.95,0.95">
+                        <VisualBrush.Visual>
+                            <Image Source="{Binding IvyLockSettings.AestheticPicture}"
+                                   Stretch="UniformToFill" Opacity="0.75" Width="2000">
+                                <Image.Effect>
+                                    <BlurEffect Radius="25" />
+                                </Image.Effect>
+                            </Image>
+                        </VisualBrush.Visual>
+                    </VisualBrush>
+                </Border.Background>
+            </Border>
+
+            <StackPanel VerticalAlignment="Center" DataContext="{Binding SettingViewModel}"
+                        Background="{DynamicResource BackgroundHalf}">
+                <i:Interaction.Triggers>
+                    <i:EventTrigger EventName="PasswordVerified" SourceObject="{Binding Mode=OneWay}">
+                        <ei:ControlStoryboardAction>
+                            <ei:ControlStoryboardAction.Storyboard>
+                                <Storyboard Storyboard.TargetName="subPwdBox"
+                                            Storyboard.TargetProperty="(Control.BorderBrush).(SolidColorBrush.Color)">
+                                    <StaticResource ResourceKey="SuccessAnimation" />
+                                </Storyboard>
+                            </ei:ControlStoryboardAction.Storyboard>
+                        </ei:ControlStoryboardAction>
+                    </i:EventTrigger>
+                    <i:EventTrigger EventName="PasswordDelayed" SourceObject="{Binding Mode=OneWay}">
+                        <ei:ControlStoryboardAction>
+                            <ei:ControlStoryboardAction.Storyboard>
+                                <Storyboard Storyboard.TargetName="subPwdBox"
+                                            Storyboard.TargetProperty="(Control.BorderBrush).(SolidColorBrush.Color)">
+                                    <StaticResource ResourceKey="WarnAnimation" />
+                                </Storyboard>
+                            </ei:ControlStoryboardAction.Storyboard>
+                        </ei:ControlStoryboardAction>
+                    </i:EventTrigger>
+                    <i:EventTrigger EventName="PasswordRejected" SourceObject="{Binding Mode=OneWay}">
+                        <ei:ControlStoryboardAction>
+                            <ei:ControlStoryboardAction.Storyboard>
+                                <Storyboard Storyboard.TargetName="subPwdBox"
+                                            Storyboard.TargetProperty="(Control.BorderBrush).(SolidColorBrush.Color)">
+                                    <StaticResource ResourceKey="FailAnimation" />
+                                </Storyboard>
+                            </ei:ControlStoryboardAction.Storyboard>
+                        </ei:ControlStoryboardAction>
+                    </i:EventTrigger>
+                </i:Interaction.Triggers>
+                <PasswordBox
+                    x:Name="subPwdBox"
+                    control:Helper.UpdateOnEnter="True"
+                    control:PasswordHelper.EncryptedPassword="{Binding Password, Mode=TwoWay, UpdateSourceTrigger=Explicit}"
+                    control:PasswordHelper.Watch="True"
+                    control:Helper.Placeholder="enter this app's password to view settings"
+                    Height="32" Margin="20,8">
+                    <PasswordBox.Style>
+                        <Style TargetType="PasswordBox" BasedOn="{StaticResource {x:Type PasswordBox}}">
+                            <Setter Property="BorderBrush" Value="{DynamicResource ForegroundHalf}" />
+                        </Style>
+                    </PasswordBox.Style>
+                </PasswordBox>
+                <ProgressBar HorizontalAlignment="Center" Height="2" Width="120" Margin="0,8,0,0"
+                             x:Name="subAttemptTimer" BorderThickness="1" Background="Transparent">
+                    <i:Interaction.Triggers>
+                        <i:EventTrigger EventName="PasswordRejected" SourceObject="{Binding Mode=OneWay}">
+                            <ei:ControlStoryboardAction>
+                                <ei:ControlStoryboardAction.Storyboard>
+                                    <Storyboard>
+                                        <DoubleAnimation Storyboard.TargetProperty="Value"
+                                                         Storyboard.TargetName="subAttemptTimer"
+                                                         From="100"
+                                                         To="0"
+                                                         Duration="{Binding AttemptWait}" />
+                                    </Storyboard>
+                                </ei:ControlStoryboardAction.Storyboard>
+                            </ei:ControlStoryboardAction>
+                        </i:EventTrigger>
+                    </i:Interaction.Triggers>
+                    <ProgressBar.Style>
+                        <Style TargetType="{x:Type ProgressBar}" BasedOn="{StaticResource {x:Type ProgressBar}}">
+                            <Setter Property="Visibility" Value="Collapsed" />
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding PasswordVerificationStatus}"
+                                             Value="{x:Static ViewModel:PasswordVerificationStatus.Delayed}">
+                                    <Setter Property="Visibility" Value="Visible" />
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </ProgressBar.Style>
+                </ProgressBar>
+            </StackPanel>
+        </Grid>
+
+        <Grid x:Name="mainOverlay" Background="{DynamicResource BackgroundDark}"
+              Grid.ColumnSpan="2" Grid.RowSpan="2">
             <Grid.RowDefinitions>
                 <RowDefinition Height="3*" />
                 <RowDefinition />
@@ -368,7 +476,7 @@
                     <Setter Property="Visibility" Value="Visible" />
 
                     <Style.Triggers>
-                        <DataTrigger Binding="{Binding CurrentScreen, Mode=OneWay}" Value="Main">
+                        <DataTrigger Binding="{Binding Screen, Mode=OneWay}" Value="Main">
                             <DataTrigger.EnterActions>
                                 <BeginStoryboard>
                                     <Storyboard>
@@ -403,10 +511,10 @@
             <Border Grid.ColumnSpan="3" Visibility="{Binding IvyLockSettings.EnableLockScreenPicture,
                     Converter={StaticResource BooleanToVisibilityConverter}}" Margin="0,-40,0,0">
                 <Border.Background>
-                    <VisualBrush Stretch="UniformToFill" ViewboxUnits="Absolute" Viewbox="0,0,1920,720">
+                    <VisualBrush Stretch="UniformToFill" Viewbox="0.025,0.025,0.95,0.95">
                         <VisualBrush.Visual>
                             <Image Source="{Binding IvyLockSettings.AestheticPicture}"
-                                   Stretch="UniformToFill" Opacity="0.75" Width="1970">
+                                   Stretch="UniformToFill" Opacity="0.75" Width="2000">
                                 <Image.Effect>
                                     <BlurEffect Radius="25" />
                                 </Image.Effect>
@@ -428,7 +536,7 @@
                 <Border.Style>
                     <Style TargetType="{x:Type Border}">
                         <Style.Triggers>
-                            <DataTrigger Binding="{Binding CurrentScreen, Mode=OneWay}" Value="Loading">
+                            <DataTrigger Binding="{Binding Screen, Mode=OneWay}" Value="Loading">
                                 <DataTrigger.ExitActions>
                                     <BeginStoryboard>
                                         <Storyboard>
@@ -493,11 +601,14 @@
                     <PasswordBox.Style>
                         <Style TargetType="{x:Type PasswordBox}" BasedOn="{StaticResource {x:Type PasswordBox}}">
                             <Style.Triggers>
-                                <DataTrigger Binding="{Binding CurrentScreen}" Value="SetupPassword">
+                                <DataTrigger Binding="{Binding Screen}" Value="SetupPassword">
                                     <Setter Property="control:Helper.Placeholder" Value="choose your password and hit enter" />
                                 </DataTrigger>
-                                <DataTrigger Binding="{Binding CurrentScreen}" Value="EnterPassword">
+                                <DataTrigger Binding="{Binding Screen}" Value="EnterPassword">
                                     <Setter Property="control:Helper.Placeholder" Value="enter your password and hit enter" />
+                                </DataTrigger>
+                                <DataTrigger Binding="{Binding Screen}" Value="Exit">
+                                    <Setter Property="control:Helper.Placeholder" Value="enter your password to exit IvyLock" />
                                 </DataTrigger>
                             </Style.Triggers>
                         </Style>
@@ -528,12 +639,6 @@
                         </Style.Triggers>
                     </Style>
                 </Border.Style>
-                <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" Orientation="Horizontal"
-                       Grid.Row="2" Grid.ColumnSpan="3" Opacity="0.56">
-                    <TextBlock Text="Loading" />
-                    <ProgressBar HorizontalAlignment="Left" Height="1" Width="60" Margin="8,0,0,0"
-                             IsIndeterminate="True" BorderThickness="1" Background="Transparent" />
-                </StackPanel>
             </Border>
 
             <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" Orientation="Horizontal"
@@ -570,6 +675,7 @@
                 </ProgressBar>
             </StackPanel>
         </Grid>
+        
         <Border x:Name="dropOverlay" Margin="5"
                 Grid.ColumnSpan="2" Grid.RowSpan="2"
                 Background="{DynamicResource BackgroundHalf}"
